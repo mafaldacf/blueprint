@@ -67,6 +67,6 @@ STORAGE_SERVICE_SERVICE_THRIFT_DIAL_ADDR=storage_service_service:12349
 
 ```
 # UploadPost (text) -> postId
-curl http://localhost:12345/UploadPost?text=helloworld\&username=mafalda
-curl http://localhost:12345/FetchPost?postID=123
+curl http://localhost:12348/UploadPost?text=helloworld\&username=mafalda
+curl http://localhost:12348/FetchPost?postID=123
 ```

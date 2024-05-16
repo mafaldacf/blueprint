@@ -13,7 +13,7 @@ import (
 // it defines Run that runs workers that pull messages from the queue
 type NotifyService interface {
 	Run(ctx context.Context) error 
-	//Notify(ctx context.Context, message Message, dummy models.Dummy) error
+	/* Notify(ctx context.Context, message Message) error */
 }
 
 type NotifyServiceImpl struct {
@@ -27,7 +27,7 @@ func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, qu
 	return n, nil
 }
 
-/* func (n *NotifyServiceImpl) Notify(ctx context.Context, message Message, dummy models.Dummy) error {
+/* func (n *NotifyServiceImpl) Notify(ctx context.Context, message Message) error {
 	
 	reqID, err := common.StringToInt64(message.ReqID)
 	if err != nil {
@@ -38,7 +38,6 @@ func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, qu
 		return nil
 	}
 	_, err = n.storageService.ReadPost(ctx, reqID, postID)
-	//u.database.GetCollection(ctx, "post", "post").FindOne(ctx, post)
 	return err
 } */
 
