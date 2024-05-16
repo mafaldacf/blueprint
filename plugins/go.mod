@@ -1,8 +1,8 @@
 module github.com/blueprint-uservices/blueprint/plugins
 
-go 1.21
+go 1.22
 
-toolchain go1.22.1
+toolchain go1.22.2
 
 require golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f
 
@@ -32,7 +32,6 @@ require (
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/tracingplane/tracingplane-go v0.0.0-20171025152126-8c4e6f79b148 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
-	github.com/vmihailenco/tagparser v0.1.2 // indirect
 	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
