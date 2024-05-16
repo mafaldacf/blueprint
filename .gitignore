@@ -1,2 +1,9 @@
 .vs
+# original apps
+examples/dsb_hotel/build
 examples/dsb_sn/build
+examples/leaf/build
+examples/sockshop/build
+examples/trainticket/build
+# new custom apps
+examples/postnotification/build

@@ -20,6 +20,8 @@ use (
 	./examples/train_ticket/tests
 	./examples/train_ticket/wiring
 	./examples/train_ticket/workflow
+	./examples/postnotification/workflow
+	./examples/postnotification/wiring
 	./plugins
 	./runtime
 	./test/wiring
