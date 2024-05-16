@@ -135,7 +135,7 @@ type (
 		Primitive types that don't need import statements
 	*/
 	BasicType struct {
-		TypeName
+		TypeName `json:"-"`
 		Name string
 	}
 
@@ -144,7 +144,7 @@ type (
 		go.mod requires statement
 	*/
 	UserType struct {
-		TypeName
+		TypeName `json:"-"`
 		Package string
 		Name    string // Name of the type within the package
 	}
@@ -153,7 +153,7 @@ type (
 		A slice or fixed-size array, e.g. []byte
 	*/
 	Slice struct {
-		TypeName
+		TypeName `json:"-"`
 		SliceOf TypeName // Slice of TypeName
 	}
 
@@ -161,7 +161,7 @@ type (
 		Ellipsis type used in function arguments, e.g. ...string
 	*/
 	Ellipsis struct {
-		TypeName
+		TypeName `json:"-"`
 		EllipsisOf TypeName // Elipsis of TypeName
 	}
 
@@ -169,7 +169,7 @@ type (
 		Pointer to a type, e.g. *string, *MyType, *context.Context
 	*/
 	Pointer struct {
-		TypeName
+		TypeName `json:"-"`
 		PointerTo TypeName // Pointer to TypeName
 	}
 
@@ -177,7 +177,7 @@ type (
 		Map type, e.g. map[string]context.Context
 	*/
 	Map struct {
-		TypeName
+		TypeName `json:"-"`
 		KeyType   TypeName
 		ValueType TypeName
 	}
@@ -186,7 +186,7 @@ type (
 		Bidirectional Channel, e.g. chan string, chan *MyType
 	*/
 	Chan struct {
-		TypeName
+		TypeName `json:"-"`
 		ChanOf TypeName
 	}
 
@@ -194,7 +194,7 @@ type (
 		Receive-only Channel, e.g. <-chan string, <-chan *MyType
 	*/
 	ReceiveChan struct {
-		TypeName
+		TypeName `json:"-"`
 		ReceiveType TypeName
 	}
 
@@ -202,7 +202,7 @@ type (
 		Send-only Channel, e.g. chan<- string, chan<- *MyType
 	*/
 	SendChan struct {
-		TypeName
+		TypeName `json:"-"`
 		SendType TypeName
 	}
 
@@ -213,14 +213,14 @@ type (
 		declaration here
 	*/
 	InterfaceType struct {
-		TypeName
+		TypeName `json:"-"`
 	}
 
 	/*
 		The 'any' type which is just interface{}
 	*/
 	AnyType struct {
-		TypeName
+		TypeName `json:"-"`
 	}
 
 	/*
@@ -230,7 +230,7 @@ type (
 		declaration here
 	*/
 	FuncType struct {
-		TypeName
+		TypeName `json:"-"`
 	}
 
 	/*
@@ -239,21 +239,21 @@ type (
 		we don't bother unravelling and representing the struct here
 	*/
 	StructType struct {
-		TypeName
+		TypeName `json:"-"`
 	}
 
 	/*
 		A struct with generics. For now blueprint doesn't support generics in service declarations
 	*/
 	GenericType struct {
-		TypeName
+		TypeName `json:"-"`
 		BaseType  TypeName
 		TypeParam TypeName
 	}
 
 	// The type parameter of a generic struct or func
 	GenericTypeParam struct {
-		TypeName
+		TypeName `json:"-"`
 		ParamName string
 	}
 )

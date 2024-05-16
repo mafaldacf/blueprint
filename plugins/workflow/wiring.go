@@ -69,10 +69,10 @@ var strtype = &gocode.BasicType{Name: "string"}
 func Service[ServiceType any](spec wiring.WiringSpec, serviceName string, serviceArgs ...string) string {
 	// Define the service
 	handlerName := serviceName + ".handler"
-	spec.Define(handlerName, &workflowHandler{}, func(namespace wiring.Namespace) (ir.IRNode, error) {
+	spec.Define(handlerName, &WorkflowHandler{}, func(namespace wiring.Namespace) (ir.IRNode, error) {
 		// Create the IR node for the handler
-		handler := &workflowHandler{}
-		if err := initWorkflowNode[ServiceType](&handler.workflowNode, serviceName); err != nil {
+		handler := &WorkflowHandler{}
+		if err := initWorkflowNode[ServiceType](&handler.WorkflowNode, serviceName); err != nil {
 			return nil, err
 		}
 
@@ -99,14 +99,14 @@ func Service[ServiceType any](spec wiring.WiringSpec, serviceName string, servic
 	})
 
 	// Create a pointer to the handler
-	ptr := pointer.CreatePointer[*workflowNode](spec, serviceName, handlerName)
+	ptr := pointer.CreatePointer[*WorkflowNode](spec, serviceName, handlerName)
 
 	// Add a "service.client" node for convenience
 	clientName := serviceName + ".client"
 	clientNext := ptr.AddSrcModifier(spec, clientName)
-	spec.Define(clientName, &workflowClient{}, func(namespace wiring.Namespace) (ir.IRNode, error) {
-		client := &workflowClient{}
-		if err := initWorkflowNode[ServiceType](&client.workflowNode, clientName); err != nil {
+	spec.Define(clientName, &WorkflowClient{}, func(namespace wiring.Namespace) (ir.IRNode, error) {
+		client := &WorkflowClient{}
+		if err := initWorkflowNode[ServiceType](&client.WorkflowNode, clientName); err != nil {
 			return nil, err
 		}
 		return client, namespace.Get(clientNext, &client.Wrapped)

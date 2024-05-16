@@ -13,7 +13,7 @@ import (
 )
 
 // This Node represents a Golang Workflow spec service in the Blueprint IR.
-type workflowNode struct {
+type WorkflowNode struct {
 	// IR node types
 	golang.Service
 
@@ -25,21 +25,21 @@ type workflowNode struct {
 }
 
 // The client-side of a workflow service
-type workflowClient struct {
-	workflowNode
+type WorkflowClient struct {
+	WorkflowNode
 
 	Wrapped ir.IRNode // The next client
 }
 
 // The server-side of a workflow service
-type workflowHandler struct {
-	workflowNode
+type WorkflowHandler struct {
+	WorkflowNode
 
 	// IR Nodes of arguments that will be passed in to the generated code
 	Args []ir.IRNode
 }
 
-func initWorkflowNode[ServiceType any](n *workflowNode, name string) (err error) {
+func initWorkflowNode[ServiceType any](n *WorkflowNode, name string) (err error) {
 	n.InstanceName = name
 	n.ServiceInfo, err = workflowspec.GetService[ServiceType]()
 	if err != nil {
@@ -50,30 +50,30 @@ func initWorkflowNode[ServiceType any](n *workflowNode, name string) (err error)
 	return nil
 }
 
-func (node *workflowNode) Name() string {
+func (node *WorkflowNode) Name() string {
 	return node.InstanceName
 }
 
-func (node *workflowNode) GetInterface(ctx ir.BuildContext) (service.ServiceInterface, error) {
+func (node *WorkflowNode) GetInterface(ctx ir.BuildContext) (service.ServiceInterface, error) {
 	return node.ServiceInfo.Iface.ServiceInterface(ctx), nil
 }
 
 // Both the client and the handler need to add interfaces to modules that use them.
-func (node *workflowNode) AddInterfaces(builder golang.ModuleBuilder) error {
+func (node *WorkflowNode) AddInterfaces(builder golang.ModuleBuilder) error {
 	return node.ServiceInfo.AddToModule(builder)
 }
 
 // Client and handler side both need to add the service interface to the output
-func (node *workflowNode) AddToWorkspace(builder golang.WorkspaceBuilder) error {
+func (node *WorkflowNode) AddToWorkspace(builder golang.WorkspaceBuilder) error {
 	return golang.AddToWorkspace(builder, node.ServiceInfo.Iface.File.Package.Module)
 }
 
 // The handler node needs to add the constructor package to the output
-func (node *workflowHandler) AddToWorkspace(builder golang.WorkspaceBuilder) error {
+func (node *WorkflowHandler) AddToWorkspace(builder golang.WorkspaceBuilder) error {
 	return node.ServiceInfo.AddToWorkspace(builder)
 }
 
-func (node *workflowHandler) AddInstantiation(builder golang.NamespaceBuilder) error {
+func (node *WorkflowHandler) AddInstantiation(builder golang.NamespaceBuilder) error {
 	// Only generate instantiation code for this instance once
 	if builder.Visited(node.InstanceName) {
 		return nil
@@ -88,7 +88,7 @@ type workflowClientTemplateArgs struct {
 	WrappedName string
 }
 
-func (node *workflowClient) AddInstantiation(builder golang.NamespaceBuilder) error {
+func (node *WorkflowClient) AddInstantiation(builder golang.NamespaceBuilder) error {
 	// Only generate instantiation code for this instance once
 	if builder.Visited(node.InstanceName) {
 		return nil
@@ -114,7 +114,7 @@ func (node *workflowClient) AddInstantiation(builder golang.NamespaceBuilder) er
 
 	slog.Info(fmt.Sprintf("Instantiating %v %v in %v/%v", node.ServiceType, node.InstanceName, builder.Info().Package.PackageName, builder.Info().FileName))
 
-	code, err := gogen.ExecuteTemplate("workflowClient.AddInstantiation", template, templateArgs)
+	code, err := gogen.ExecuteTemplate("WorkflowClient.AddInstantiation", template, templateArgs)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (node *workflowClient) AddInstantiation(builder golang.NamespaceBuilder) er
 	return builder.Declare(node.InstanceName, code)
 }
 
-func (n *workflowClient) String() string {
+func (n *WorkflowClient) String() string {
 	var b strings.Builder
 	b.WriteString(n.InstanceName)
 	b.WriteString(" = ")
@@ -131,7 +131,7 @@ func (n *workflowClient) String() string {
 	return b.String()
 }
 
-func (n *workflowHandler) String() string {
+func (n *WorkflowHandler) String() string {
 	var b strings.Builder
 	b.WriteString(n.InstanceName)
 	b.WriteString(" = ")
@@ -149,5 +149,5 @@ func (n *workflowHandler) String() string {
 	return b.String()
 }
 
-func (node *workflowNode) ImplementsGolangNode()    {}
-func (node *workflowNode) ImplementsGolangService() {}
+func (node *WorkflowNode) ImplementsGolangNode()    {}
+func (node *WorkflowNode) ImplementsGolangService() {}

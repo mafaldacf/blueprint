@@ -181,7 +181,7 @@ func (spec *WorkflowSpec) findConstructorsOfIface(iface *goparser.ParsedInterfac
 	for _, mod := range spec.Modules.Modules {
 		for _, pkg := range mod.Packages {
 			for _, f := range pkg.Funcs {
-				if isConstructorOfIface(f, iface) {
+				if IsConstructorOfIface(f, iface) {
 					constructors = append(constructors, f)
 				}
 			}
@@ -235,7 +235,7 @@ func validateConstructorSignature(f *goparser.ParsedFunc) error {
 	return nil
 }
 
-func isConstructorOfIface(f *goparser.ParsedFunc, iface *goparser.ParsedInterface) bool {
+func IsConstructorOfIface(f *goparser.ParsedFunc, iface *goparser.ParsedInterface) bool {
 	err := validateConstructorSignature(f)
 	if err != nil {
 		return false
