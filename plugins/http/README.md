@@ -60,7 +60,7 @@ type GolangHttpClient struct {
     golang.Instantiable
 
     InstanceName string
-    ServerAddr   *address.Address[*golangHttpServer]
+    ServerAddr   *address.Address[*GolangHttpServer]
     // contains filtered or unexported fields
 }
 ```

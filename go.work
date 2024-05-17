@@ -22,6 +22,8 @@ use (
 	./examples/train_ticket/workflow
 	./examples/postnotification/workflow
 	./examples/postnotification/wiring
+	./examples/foobar/workflow
+	./examples/foobar/wiring
 	./plugins
 	./runtime
 	./test/wiring

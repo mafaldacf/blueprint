@@ -46,15 +46,15 @@ func Deploy(spec wiring.WiringSpec, serviceName string) {
 	}
 
 	// Define the address that will be used by clients and the server
-	address.Define[*golangHttpServer](spec, httpAddr, httpServer)
+	address.Define[*GolangHttpServer](spec, httpAddr, httpServer)
 
 	// Add the client-side modifier
 	//
 	// The client-side modifier creates an HTTP client and dials the server address.
-	// It assumes that the next src modifier node will be a golangHttpServer address.
+	// It assumes that the next src modifier node will be a GolangHttpServer address.
 	clientNext := ptr.AddSrcModifier(spec, httpClient)
 	spec.Define(httpClient, &GolangHttpClient{}, func(ns wiring.Namespace) (ir.IRNode, error) {
-		addr, err := address.Dial[*golangHttpServer](ns, clientNext)
+		addr, err := address.Dial[*GolangHttpServer](ns, clientNext)
 		if err != nil {
 			return nil, blueprint.Errorf("HTTP client %s expected %s to be an address, but encountered %s", httpClient, clientNext, err)
 		}
@@ -63,7 +63,7 @@ func Deploy(spec wiring.WiringSpec, serviceName string) {
 
 	// Add the server-side modifier, which is an address that PointsTo the grpcServer
 	serverNext := ptr.AddAddrModifier(spec, httpAddr)
-	spec.Define(httpServer, &golangHttpServer{}, func(ns wiring.Namespace) (ir.IRNode, error) {
+	spec.Define(httpServer, &GolangHttpServer{}, func(ns wiring.Namespace) (ir.IRNode, error) {
 		var wrapped golang.Service
 		if err := ns.Get(serverNext, &wrapped); err != nil {
 			return nil, blueprint.Errorf("HTTP server %s expected %s to be a golang.Service, but encountered %s", httpServer, serverNext, err)
@@ -74,7 +74,7 @@ func Deploy(spec wiring.WiringSpec, serviceName string) {
 			return nil, err
 		}
 
-		err = address.Bind[*golangHttpServer](ns, httpAddr, server, &server.Bind)
+		err = address.Bind[*GolangHttpServer](ns, httpAddr, server, &server.Bind)
 		return server, err
 	})
 }

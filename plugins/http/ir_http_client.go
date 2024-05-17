@@ -20,12 +20,12 @@ type GolangHttpClient struct {
 	golang.Instantiable
 
 	InstanceName string
-	ServerAddr   *address.Address[*golangHttpServer]
+	ServerAddr   *address.Address[*GolangHttpServer]
 
 	outputPackage string
 }
 
-func newGolangHttpClient(name string, addr *address.Address[*golangHttpServer]) (*GolangHttpClient, error) {
+func newGolangHttpClient(name string, addr *address.Address[*GolangHttpServer]) (*GolangHttpClient, error) {
 	node := &GolangHttpClient{}
 	node.InstanceName = name
 	node.ServerAddr = addr
