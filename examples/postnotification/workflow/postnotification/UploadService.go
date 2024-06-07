@@ -29,6 +29,7 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 		ReqID:     reqID,
 		PostID:    rand.Int63(),
 		Text:      text,
+		Creator:   "some wild creator",
 	}
 	u.storageService.StorePost(ctx, post.ReqID, post)
 

@@ -5,6 +5,7 @@ type Post struct {
 	PostID 		int64
 	Text 		string
 	Timestamp 	int64
+	Creator 	string
 }
 
 type Message struct {

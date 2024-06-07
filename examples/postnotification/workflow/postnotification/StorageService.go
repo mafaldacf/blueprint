@@ -23,11 +23,7 @@ func NewStorageServiceImpl(ctx context.Context, cache backend.Cache) (StorageSer
 
 func (u *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, post Post) error {
 	postIDStr := strconv.FormatInt(post.PostID, 10)
-	err := u.cache.Put(ctx, postIDStr, post)
-	if err != nil {
-		return err
-	}
-	return nil
+	return u.cache.Put(ctx, postIDStr, post)
 }
 
 func (u *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error) {
