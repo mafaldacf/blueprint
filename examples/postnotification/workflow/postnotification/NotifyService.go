@@ -4,22 +4,22 @@ import (
 	"context"
 	"sync"
 
-	"github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common"
-
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+
+	"github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common"
 )
 
 // does not expose any methods to other services
 // it defines Run that runs workers that pull messages from the queue
 type NotifyService interface {
-	Run(ctx context.Context) error 
+	Run(ctx context.Context) error
 	/* Notify(ctx context.Context, message Message) error */
 }
 
 type NotifyServiceImpl struct {
-	storageService  StorageService
-	queue      		backend.Queue
-	numWorkers 		int
+	storageService StorageService
+	queue          backend.Queue
+	numWorkers     int
 }
 
 func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, queue backend.Queue) (NotifyService, error) {
@@ -28,7 +28,7 @@ func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, qu
 }
 
 /* func (n *NotifyServiceImpl) Notify(ctx context.Context, message Message) error {
-	
+
 	reqID, err := common.StringToInt64(message.ReqID)
 	if err != nil {
 		return nil
@@ -50,8 +50,8 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 	if err != nil {
 		return err
 	}
-	
-	_, err = n.storageService.ReadPost(ctx, reqID, postID)
+
+	_, err = n.storageService.ReadPostNoSQL(ctx, reqID, postID)
 	if err != nil {
 		return err
 	}
@@ -63,9 +63,9 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 	go func() {
 		var message map[string]interface{}
 		n.queue.Pop(ctx, &message)
-		notification := Message {
-			ReqID: message["ReqID"].(string),
-			PostID: message["PostID"].(string),
+		notification := Message{
+			ReqID:     message["ReqID"].(string),
+			PostID:    message["PostID"].(string),
 			Timestamp: message["Timestamp"].(string),
 		}
 		/* reqID, _ := common.StringToInt64(notification.ReqID)
@@ -94,7 +94,7 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 			backend.GetLogger().Error(ctx, "error retrieving message from queue: %s", err.Error())
 			time.Sleep(1 * time.Second)
 			return
-		} 
+		}
 		if !result {
 			backend.GetLogger().Error(ctx, "could not retrieve message from queue")
 			return

@@ -7,10 +7,11 @@ import (
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/coreplugins/backend"
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/coreplugins/service"
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/ir"
-	"github.com/blueprint-uservices/blueprint/plugins/golang"
-	"github.com/blueprint-uservices/blueprint/plugins/workflow/workflowspec"
 	"github.com/blueprint-uservices/blueprint/runtime/plugins/rabbitmq"
 	"golang.org/x/exp/slog"
+
+	"github.com/blueprint-uservices/blueprint/plugins/golang"
+	"github.com/blueprint-uservices/blueprint/plugins/workflow/workflowspec"
 )
 
 // Blueprint IR Node that represents the generated client for the rabbitmq container

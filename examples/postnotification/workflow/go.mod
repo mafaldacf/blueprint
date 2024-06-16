@@ -2,10 +2,12 @@ module github.com/blueprint-uservices/blueprint/examples/postnotification/workfl
 
 go 1.20
 
-require github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240405152959-f078915d2306
+require (
+	github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240405152959-f078915d2306
+	go.mongodb.org/mongo-driver v1.12.1
+)
 
 require (
-	go.mongodb.org/mongo-driver v1.12.1 // indirect
 	go.opentelemetry.io/otel v1.21.0 // indirect
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
