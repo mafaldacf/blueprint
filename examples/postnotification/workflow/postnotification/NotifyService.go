@@ -52,6 +52,7 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 	}
 
 	_, err = n.storageService.ReadPostNoSQL(ctx, reqID, postID)
+	//_, err = n.storageService.ReadPost(ctx, reqID, postID)
 	if err != nil {
 		return err
 	}
@@ -68,9 +69,9 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 			PostID:    message["PostID"].(string),
 			Timestamp: message["Timestamp"].(string),
 		}
-		/* reqID, _ := common.StringToInt64(notification.ReqID)
-		postID, _ := common.StringToInt64(notification.PostID)
-		n.storageService.ReadPost(ctx, reqID, postID) */
+		//reqID, _ := common.StringToInt64(notification.ReqID)
+		//postID, _ := common.StringToInt64(notification.PostID)
+		//n.storageService.ReadPost(ctx, reqID, postID)
 		n.handleMessage(ctx, notification)
 	}()
 	<-forever

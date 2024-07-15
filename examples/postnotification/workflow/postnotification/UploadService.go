@@ -25,16 +25,21 @@ func NewUploadServiceImpl(ctx context.Context, storageService StorageService, qu
 
 func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
 	reqID := rand.Int63()
+	postID := rand.Int63()
+	timestamp := rand.Int63()
+	mentions := []string{"alice", "bob"}
 	post := Post{
-		ReqID:   reqID,
-		PostID:  rand.Int63(),
-		Text:    text,
+		ReqID:     reqID,
+		PostID:    postID,
+		Text:      text,
+		Mentions:  mentions,
+		Timestamp: timestamp,
 		Creator: Creator{
 			Username: "some username",
 		},
 	}
-	u.storageService.StorePost(ctx, post.ReqID, post)
 	u.storageService.StorePostNoSQL(ctx, post.ReqID, post)
+	//u.storageService.StorePost(ctx, post.ReqID, post)
 
 	message := Message{
 		ReqID:  common.Int64ToString(post.ReqID),

@@ -5,10 +5,11 @@ import (
 	"reflect"
 
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/blueprint"
+	"golang.org/x/exp/slog"
+
 	"github.com/blueprint-uservices/blueprint/plugins/golang"
 	"github.com/blueprint-uservices/blueprint/plugins/golang/gocode"
 	"github.com/blueprint-uservices/blueprint/plugins/golang/goparser"
-	"golang.org/x/exp/slog"
 )
 
 // A service in the workflow spec
@@ -195,7 +196,7 @@ func (spec *WorkflowSpec) findConstructorsOfStruct(struc *goparser.ParsedStruct)
 	for _, mod := range spec.Modules.Modules {
 		for _, pkg := range mod.Packages {
 			for _, f := range pkg.Funcs {
-				if isConstructorOfStruct(f, struc) {
+				if IsConstructorOfStruct(f, struc) {
 					constructors = append(constructors, f)
 				}
 			}
@@ -255,7 +256,7 @@ func IsConstructorOfIface(f *goparser.ParsedFunc, iface *goparser.ParsedInterfac
 	return true
 }
 
-func isConstructorOfStruct(f *goparser.ParsedFunc, struc *goparser.ParsedStruct) bool {
+func IsConstructorOfStruct(f *goparser.ParsedFunc, struc *goparser.ParsedStruct) bool {
 	err := validateConstructorSignature(f)
 	if err != nil {
 		return false

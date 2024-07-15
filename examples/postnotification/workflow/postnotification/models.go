@@ -5,9 +5,10 @@ type Creator struct {
 }
 
 type Post struct {
-	ReqID     int64   //`json:"reqid"`
-	PostID    int64   //`json:"postid"`
-	Text      string  //`json:"text"`
+	ReqID     int64  //`json:"reqid"`
+	PostID    int64  //`json:"postid"`
+	Text      string //`json:"text"`
+	Mentions  []string
 	Timestamp int64   //`json:"timestamp"`
 	Creator   Creator //`json:"creator"`
 }

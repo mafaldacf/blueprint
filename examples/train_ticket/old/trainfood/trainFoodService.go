@@ -5,9 +5,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/food"
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/food"
 )
 
 // TrainFoodService manages food items in Trains
