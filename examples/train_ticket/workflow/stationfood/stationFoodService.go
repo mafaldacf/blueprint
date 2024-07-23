@@ -94,9 +94,12 @@ func (s *StationFoodServiceImpl) GetFoodStoresByStationNames(ctx context.Context
 		return []StationFoodStore{}, err
 	}
 	doc := bson.A{}
-	for _, station := range stations {
+
+	// FIXME: ADD SUPPORT FOR ORIGINAL CODE
+	/* for _, station := range stations {
 		doc = append(doc, station)
-	}
+	} */
+	 
 	query := bson.D{{"stationname", bson.D{{"$in", doc}}}}
 	res, err := coll.FindMany(ctx, query)
 	if err != nil {

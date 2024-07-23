@@ -106,14 +106,14 @@ func (ts *TrainServiceImpl) RetrieveByName(ctx context.Context, name string) (Tr
 
 func (ts *TrainServiceImpl) RetrieveByNames(ctx context.Context, names []string) ([]TrainType, error) {
 	var trainTypes []TrainType
-	for _, name := range names {
+	/* for _, name := range names {
 		tt, err := ts.RetrieveByName(ctx, name)
 		if err == nil {
 			trainTypes = append(trainTypes, tt)
 		} else {
 			trainTypes = append(trainTypes, TrainType{})
 		}
-	}
+	} */
 	return trainTypes, nil
 }
 
