@@ -14,7 +14,7 @@ import (
 	"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/station"
 	//"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/stationfood"
 	//"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/train"
-	//"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/trainfood"
+	"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/trainfood"
 	"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/user"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
 	"github.com/blueprint-uservices/blueprint/plugins/goproc"
@@ -77,6 +77,14 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	consignprice_service := workflow.Service[*consignprice.ConsignPriceServiceImpl](spec, "consignprice_service", consignprice_db)
 	applyDockerDefaults(consignprice_service, "consignprice_proc", "consignprice_container")
 
+	trainfood_db := mongodb.Container(spec, "trainfood_db")
+	trainfood_service := workflow.Service[*trainfood.TrainFoodServiceImpl](spec, "trainfood_service", trainfood_db)
+	applyDockerDefaults(trainfood_service, "trainfood_proc", "trainfood_container")
+
+	/* train_db := mongodb.Container(spec, "train_db")
+	train_service := workflow.Service[*train.TrainServiceImpl](spec, "train_service", train_db)
+	applyDockerDefaults(train_service, "train_proc", "train_container") */
+
 	/* payments_db := mongodb.Container(spec, "payments_db")
 	money_db := mongodb.Container(spec, "money_db")
 	payments_service := workflow.Service[*payment.PaymentServiceImpl](spec, "payments_service", payments_db, money_db)
@@ -89,14 +97,6 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	/* stationfood_db := mongodb.Container(spec, "stationfood_db")
 	stationfood_service := workflow.Service[*stationfood.StationFoodServiceImpl](spec, "stationfood_service", stationfood_db)
 	applyDockerDefaults(stationfood_service, "stationfood_proc", "stationfood_container") */
-
-	/* trainfood_db := mongodb.Container(spec, "trainfood_db")
-	trainfood_service := workflow.Service[*trainfood.TrainFoodServiceImpl](spec, "trainfood_service", trainfood_db)
-	applyDockerDefaults(trainfood_service, "trainfood_proc", "trainfood_container") */
-
-	/* train_db := mongodb.Container(spec, "train_db")
-	train_service := workflow.Service[*train.TrainServiceImpl](spec, "train_service", train_db)
-	applyDockerDefaults(train_service, "train_proc", "train_container") */
 
 	/* delivery_queue := rabbitmq.Container(spec, "delivery_q", "delivery_q")
 	delivery_db := mongodb.Container(spec, "delivery_db")
