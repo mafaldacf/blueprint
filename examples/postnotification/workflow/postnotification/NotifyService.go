@@ -62,17 +62,17 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) error {
 	var forever chan struct{}
 	go func() {
-		var message map[string]interface{}
-		n.queue.Pop(ctx, &message)
-		notification := Message{
-			ReqID:     message["ReqID"].(string),
-			PostID:    message["PostID"].(string),
-			Timestamp: message["Timestamp"].(string),
+		var event map[string]interface{}
+		n.queue.Pop(ctx, &event)
+		workerMessage := Message{
+			ReqID:     event["ReqID"].(string),
+			PostID:    event["PostID"].(string),
+			Timestamp: event["Timestamp"].(string),
 		}
 		//reqID, _ := common.StringToInt64(notification.ReqID)
 		//postID, _ := common.StringToInt64(notification.PostID)
 		//n.storageService.ReadPost(ctx, reqID, postID)
-		n.handleMessage(ctx, notification)
+		n.handleMessage(ctx, workerMessage)
 	}()
 	<-forever
 	return nil
