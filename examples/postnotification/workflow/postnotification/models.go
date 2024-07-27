@@ -18,3 +18,11 @@ type Message struct {
 	PostID    string //`json:"postid"`
 	Timestamp string //`json:"timestamp"`
 }
+
+type Analytics struct {
+	PostID int64
+}
+
+type TriggerAnalyticsMessage struct {
+	PostID string
+}

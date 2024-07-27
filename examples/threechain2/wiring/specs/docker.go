@@ -37,13 +37,13 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, stock_service_ctr)
 	allServices = append(allServices, "stock_service")
 
-	order_service := workflow.Service[threechain2.OrderService](spec, "order_service", stock_service, stock_db, shipment_queue)
+	order_service := workflow.Service[threechain2.OrderService](spec, "order_service", stock_service, order_db, shipment_queue)
 	order_service_ctr := applyHTTPDefaults(spec, order_service, "order_service_proc", "order_service_container")
 	containers = append(containers, order_service_ctr)
 	allServices = append(allServices, "order_service")
 
 	shipment_service := workflow.Service[threechain2.ShipmentService](spec, "shipment_service", order_service, shipment_db, shipment_queue)
-	shipment_service_ctr := applyDockerQueueHandlerDefaults(spec, shipment_service, "shipment_service_proc", "shipment_service_container")
+	shipment_service_ctr := applyDockerDefaults(spec, shipment_service, "shipment_service_proc", "shipment_service_container")
 	containers = append(containers, shipment_service_ctr)
 
 	tests := gotests.Test(spec, allServices...)

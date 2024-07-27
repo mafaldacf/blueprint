@@ -14,13 +14,13 @@ type UploadService interface {
 }
 
 type UploadServiceImpl struct {
-	storageService StorageService
-	/* notifyService  	NotifyService */
-	queue bp_backend.Queue
+	storage_service     StorageService
+	notifications_queue bp_backend.Queue
+	/* notify_service  	NotifyService  */
 }
 
-func NewUploadServiceImpl(ctx context.Context, storageService StorageService, queue bp_backend.Queue) (UploadService, error) {
-	return &UploadServiceImpl{storageService: storageService /*  notifyService: notifyService */, queue: queue}, nil
+func NewUploadServiceImpl(ctx context.Context, storage_service StorageService, notifications_queue bp_backend.Queue) (UploadService, error) {
+	return &UploadServiceImpl{storage_service: storage_service /*  notify_service: notify_service */, notifications_queue: notifications_queue}, nil
 }
 
 func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
@@ -38,15 +38,15 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 			Username: "some username",
 		},
 	}
-	u.storageService.StorePostNoSQL(ctx, post.ReqID, post)
-	//u.storageService.StorePost(ctx, post.ReqID, post)
+	u.storage_service.StorePostNoSQL(ctx, post.ReqID, post)
+	//u.storage_service.StorePost(ctx, post.ReqID, post)
 
 	message := Message{
 		ReqID:  common.Int64ToString(post.ReqID),
 		PostID: common.Int64ToString(post.PostID),
 	}
-	/* err := u.notifyService.Notify(ctx, message) */
-	_, err := u.queue.Push(ctx, message)
+	/* err := u.notify_service.Notify(ctx, message) */
+	_, err := u.notifications_queue.Push(ctx, message)
 	if err != nil {
 		return 0, err
 	}

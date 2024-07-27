@@ -42,6 +42,8 @@ func (c *OrderServiceImpl) CreateOrder(ctx context.Context, orderID string, user
 	}
 	collection.InsertOne(ctx, order)
 
+	c.stock_service.ReserveStock(ctx, product, quantity)
+
 	message := ShipmentMessage{
 		OrderID:  order.OrderID,
 		Username: username,
