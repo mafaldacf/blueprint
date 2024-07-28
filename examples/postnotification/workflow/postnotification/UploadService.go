@@ -3,8 +3,9 @@ package postnotification
 import (
 	"context"
 	"math/rand"
+	"strconv"
 
-	bp_backend "github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 
 	"github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common"
 )
@@ -15,12 +16,12 @@ type UploadService interface {
 
 type UploadServiceImpl struct {
 	storage_service     StorageService
-	notifications_queue bp_backend.Queue
-	/* notify_service  	NotifyService  */
+	notifications_queue backend.Queue
+	timeline_cache      backend.Cache
 }
 
-func NewUploadServiceImpl(ctx context.Context, storage_service StorageService, notifications_queue bp_backend.Queue) (UploadService, error) {
-	return &UploadServiceImpl{storage_service: storage_service /*  notify_service: notify_service */, notifications_queue: notifications_queue}, nil
+func NewUploadServiceImpl(ctx context.Context, storage_service StorageService, notifications_queue backend.Queue, timeline_cache backend.Cache) (UploadService, error) {
+	return &UploadServiceImpl{storage_service: storage_service, notifications_queue: notifications_queue, timeline_cache: timeline_cache}, nil
 }
 
 func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
@@ -39,17 +40,20 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 		},
 	}
 	u.storage_service.StorePostNoSQL(ctx, post.ReqID, post)
-	//u.storage_service.StorePost(ctx, post.ReqID, post)
 
 	message := Message{
 		ReqID:  common.Int64ToString(post.ReqID),
 		PostID: common.Int64ToString(post.PostID),
 	}
-	/* err := u.notify_service.Notify(ctx, message) */
 	_, err := u.notifications_queue.Push(ctx, message)
 	if err != nil {
 		return 0, err
 	}
 
-	return post.PostID, nil
+	reqIDStr := strconv.FormatInt(reqID, 10)
+	timeline := Timeline{
+		ReqID:  reqID,
+		PostID: postID,
+	}
+	return post.PostID, u.timeline_cache.Put(ctx, reqIDStr, timeline)
 }

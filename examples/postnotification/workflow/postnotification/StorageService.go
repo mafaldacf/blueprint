@@ -11,9 +11,9 @@ import (
 )
 
 type StorageService interface {
-	StorePost(ctx context.Context, reqID int64, post Post) error
+	StorePostCache(ctx context.Context, reqID int64, post Post) error
 	StorePostNoSQL(ctx context.Context, reqID int64, post Post) error
-	ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error)
+	ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error)
 	ReadPostNoSQL(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error)
 }
 
@@ -29,7 +29,7 @@ func NewStorageServiceImpl(ctx context.Context, analytics_service AnalyticsServi
 	return s, nil
 }
 
-func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, post Post) error {
+func (s *StorageServiceImpl) StorePostCache(ctx context.Context, reqID int64, post Post) error {
 	postIDStr := strconv.FormatInt(post.PostID, 10)
 	return s.posts_cache.Put(ctx, postIDStr, post)
 }
@@ -46,12 +46,11 @@ func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, po
 	message := TriggerAnalyticsMessage{
 		PostID: common.Int64ToString(post.PostID),
 	}
-	/* err := u.notifyService.Notify(ctx, message) */
 	_, err = s.analytics_queue.Push(ctx, message)
 	return err
 }
 
-func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error) {
+func (s *StorageServiceImpl) ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error) {
 	var post Post
 	postIDStr := strconv.FormatInt(postID, 10)
 	_, err := s.posts_cache.Get(ctx, postIDStr, &post)

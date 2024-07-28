@@ -5,18 +5,23 @@ type Creator struct {
 }
 
 type Post struct {
-	ReqID     int64  //`json:"reqid"`
-	PostID    int64  //`json:"postid"`
-	Text      string //`json:"text"`
+	ReqID     int64
+	PostID    int64
+	Text      string
 	Mentions  []string
-	Timestamp int64   //`json:"timestamp"`
-	Creator   Creator //`json:"creator"`
+	Timestamp int64
+	Creator   Creator
 }
 
 type Message struct {
-	ReqID     string //`json:"reqid"`
-	PostID    string //`json:"postid"`
-	Timestamp string //`json:"timestamp"`
+	ReqID     string
+	PostID    string
+	Timestamp string
+}
+
+type Timeline struct {
+	ReqID  int64
+	PostID int64
 }
 
 type Analytics struct {

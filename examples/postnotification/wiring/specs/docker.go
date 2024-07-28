@@ -27,6 +27,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	posts_cache := redis.Container(spec, "posts_cache")
 	analytics_db := mongodb.Container(spec, "analytics_db")
 	notifications_queue := rabbitmq.Container(spec, "notifications_queue", "notifications_queue")
+	timeline_cache := redis.Container(spec, "timeline_cache")
 	analytics_queue := rabbitmq.Container(spec, "analytics_queue", "analytics_queue")
 
 	allServices = append(allServices, posts_db)
@@ -47,7 +48,12 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	notify_service_ctr := applyDockerQueueHandlerDefaults(spec, notify_service, "notify_service_proc", "notify_service_container")
 	containers = append(containers, notify_service_ctr)
 
-	upload_service := workflow.Service[postnotification.UploadService](spec, "upload_service", storage_service, notifications_queue)
+	timeline_service := workflow.Service[postnotification.TimelineService](spec, "timeline_service", storage_service, timeline_cache)
+	timeline_service_ctr := applyHTTPDefaults(spec, timeline_service, "timeline_service_proc", "timeline_service_container")
+	containers = append(containers, timeline_service_ctr)
+	allServices = append(allServices, "timeline_service")
+
+	upload_service := workflow.Service[postnotification.UploadService](spec, "upload_service", storage_service, notifications_queue, timeline_cache)
 	upload_service_ctr := applyHTTPDefaults(spec, upload_service, "upload_service_proc", "upload_service_container")
 	containers = append(containers, upload_service_ctr)
 	allServices = append(allServices, "upload_service")
