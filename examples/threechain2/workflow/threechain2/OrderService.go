@@ -8,18 +8,19 @@ import (
 )
 
 type OrderService interface {
-	CreateOrder(ctx context.Context, cartID string, username string, product string, quantity int) error
+	CreateOrder(ctx context.Context, cartID string, username string, productID string, quantity int, price int) error
 	ReadOrder(ctx context.Context, orderID string) (Order, error)
 }
 
 type OrderServiceImpl struct {
-	stock_service  StockService
-	order_db       backend.NoSQLDatabase
-	shipment_queue backend.Queue
+	stock_service   StockService
+	billing_service BillingService
+	order_db        backend.NoSQLDatabase
+	shipment_queue  backend.Queue
 }
 
-func NewOrderServiceImpl(ctx context.Context, stock_service StockService, order_db backend.NoSQLDatabase, shipment_queue backend.Queue) (OrderService, error) {
-	return &OrderServiceImpl{stock_service: stock_service, order_db: order_db, shipment_queue: shipment_queue}, nil
+func NewOrderServiceImpl(ctx context.Context, stock_service StockService, billing_service BillingService, order_db backend.NoSQLDatabase, shipment_queue backend.Queue) (OrderService, error) {
+	return &OrderServiceImpl{stock_service: stock_service, billing_service: billing_service, order_db: order_db, shipment_queue: shipment_queue}, nil
 }
 
 func (c *OrderServiceImpl) ReadOrder(ctx context.Context, orderID string) (Order, error) {
@@ -31,18 +32,19 @@ func (c *OrderServiceImpl) ReadOrder(ctx context.Context, orderID string) (Order
 	return order, nil
 }
 
-func (c *OrderServiceImpl) CreateOrder(ctx context.Context, orderID string, username string, product string, quantity int) error {
+func (c *OrderServiceImpl) CreateOrder(ctx context.Context, cartID string, username string, productID string, quantity int, price int) error {
 	collection, _ := c.order_db.GetCollection(ctx, "order_database", "order_collection")
 	order := Order{
-		OrderID:   orderID,
+		OrderID:   cartID,
 		Username:  username,
-		Product:   product,
+		ProductID: productID,
 		Quantity:  quantity,
 		Timestamp: 1,
 	}
 	collection.InsertOne(ctx, order)
 
-	c.stock_service.ReserveStock(ctx, product, quantity)
+	c.stock_service.ReserveStock(ctx, productID, quantity)
+	c.billing_service.CreateBill(ctx, username, productID, quantity, price)
 
 	message := ShipmentMessage{
 		OrderID:  order.OrderID,
