@@ -1,13 +1,10 @@
-module github.com/blueprint-uservices/blueprint/examples/threechain/wiring
+module github.com/blueprint-uservices/blueprint/examples/shopping_app/wiring
 
 go 1.21
 
 toolchain go1.21.5
 
 require (
-	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
-	github.com/go-redis/redis/v8 v8.11.5 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.16.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
@@ -22,7 +19,7 @@ require (
 
 require (
 	github.com/blueprint-uservices/blueprint/blueprint v0.0.0-20240405152959-f078915d2306
-	github.com/blueprint-uservices/blueprint/examples/threechain/workflow v0.0.0
+	github.com/blueprint-uservices/blueprint/examples/shopping_app/workflow v0.0.0
 )
 
 require (
@@ -46,4 +43,4 @@ require (
 	golang.org/x/tools v0.20.0 // indirect
 )
 
-replace github.com/blueprint-uservices/blueprint/examples/threechain/workflow => ../workflow
+replace github.com/blueprint-uservices/blueprint/examples/shopping_app/workflow => ../workflow

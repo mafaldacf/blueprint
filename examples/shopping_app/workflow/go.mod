@@ -1,4 +1,4 @@
-module github.com/blueprint-uservices/blueprint/examples/threechain/workflow
+module github.com/blueprint-uservices/blueprint/examples/shopping_app/workflow
 
 go 1.20
 
