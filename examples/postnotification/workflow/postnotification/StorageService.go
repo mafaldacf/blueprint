@@ -15,18 +15,32 @@ type StorageService interface {
 	StorePostNoSQL(ctx context.Context, reqID int64, post Post) error
 	ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error)
 	ReadPostNoSQL(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error)
+	ReadMedia(ctx context.Context, reqID int64, postID int64) (Media, error)
 }
 
 type StorageServiceImpl struct {
 	analytics_service AnalyticsService
+	media_service     MediaService
 	posts_cache       backend.Cache
 	posts_db          backend.NoSQLDatabase
 	analytics_queue   backend.Queue
 }
 
-func NewStorageServiceImpl(ctx context.Context, analytics_service AnalyticsService, posts_cache backend.Cache, posts_db backend.NoSQLDatabase, analytics_queue backend.Queue) (StorageService, error) {
-	s := &StorageServiceImpl{analytics_service: analytics_service, posts_cache: posts_cache, posts_db: posts_db, analytics_queue: analytics_queue}
+func NewStorageServiceImpl(ctx context.Context, analytics_service AnalyticsService, media_service MediaService, posts_cache backend.Cache, posts_db backend.NoSQLDatabase, analytics_queue backend.Queue) (StorageService, error) {
+	s := &StorageServiceImpl{analytics_service: analytics_service, media_service: media_service, posts_cache: posts_cache, posts_db: posts_db, analytics_queue: analytics_queue}
 	return s, nil
+}
+
+func (s *StorageServiceImpl) ReadMedia(ctx context.Context, reqID int64, postID int64) (Media, error) {
+	var post Post
+
+	postIDStr := strconv.FormatInt(postID, 10)
+	s.posts_cache.Get(ctx, postIDStr, &post)
+
+	var media Media
+	mediaID := post.PostID
+	media, _ = s.media_service.ReadMedia(ctx, mediaID)
+	return media, nil
 }
 
 func (s *StorageServiceImpl) StorePostCache(ctx context.Context, reqID int64, post Post) error {

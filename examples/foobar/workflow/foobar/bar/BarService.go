@@ -4,6 +4,9 @@ import (
 	"context"
 )
 
+var HelloBarVariable = "Hello Bar!"
+const HELLO_BAR_CONST = "Hello Bar (CONST)!"
+
 type BarService interface {
 	Bar(ctx context.Context, text string) (string, error)
 }

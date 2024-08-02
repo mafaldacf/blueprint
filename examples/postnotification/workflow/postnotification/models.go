@@ -7,10 +7,17 @@ type Creator struct {
 type Post struct {
 	ReqID     int64
 	PostID    int64
+	MediaID   int64
 	Text      string
 	Mentions  []string
 	Timestamp int64
 	Creator   Creator
+}
+
+type Media struct {
+	MediaID int64
+	PostID  int64
+	Content string
 }
 
 type Message struct {

@@ -2,9 +2,13 @@ package foobar
 
 import (
 	"context"
+
 	"github.com/blueprint-uservices/blueprint/examples/foobar/workflow/foobar/bar"
 	"github.com/blueprint-uservices/blueprint/examples/foobar/workflow/foobar/foo"
 )
+
+var HelloWorldVariable = "Hello World!"
+const HELLO_WORLD_CONST = "Hello World (CONST)!"
 
 type FrontendService interface {
 	Frontend(ctx context.Context) (string, error)

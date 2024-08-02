@@ -2,13 +2,12 @@ package postnotification
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 )
 
 type TimelineService interface {
-	ReadTimeline(ctx context.Context, reqID int64) (Post, Analytics, error)
+	/* ReadTimeline(ctx context.Context, reqID int64) (Post, Analytics, error) */
 }
 
 type TimelineServiceImpl struct {
@@ -21,10 +20,10 @@ func NewTimelineServiceImpl(ctx context.Context, storage_service StorageService,
 	return n, nil
 }
 
-func (s *TimelineServiceImpl) ReadTimeline(ctx context.Context, reqID int64) (Post, Analytics, error) {
+/* func (s *TimelineServiceImpl) ReadTimeline(ctx context.Context, reqID int64) (Post, Analytics, error) {
 	var timeline Timeline
 	reqIDStr := strconv.FormatInt(reqID, 10)
 	s.timeline_cache.Get(ctx, reqIDStr, &timeline)
 	post, analytics, err := s.storage_service.ReadPostNoSQL(ctx, reqID, timeline.PostID)
 	return post, analytics, err
-}
+} */
