@@ -13,16 +13,16 @@ type MediaService interface {
 }
 
 type MediaServiceImpl struct {
-	media_db backend.NoSQLDatabase
+	mediaDb backend.NoSQLDatabase
 }
 
-func NewMediaServiceImpl(ctx context.Context, media_db backend.NoSQLDatabase) (MediaService, error) {
-	s := &MediaServiceImpl{media_db: media_db}
+func NewMediaServiceImpl(ctx context.Context, mediaDb backend.NoSQLDatabase) (MediaService, error) {
+	s := &MediaServiceImpl{mediaDb: mediaDb}
 	return s, nil
 }
 
 func (s *MediaServiceImpl) StoreMedia(ctx context.Context, media Media) error {
-	collection, err := s.media_db.GetCollection(ctx, "media", "media")
+	collection, err := s.mediaDb.GetCollection(ctx, "media", "media")
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (s *MediaServiceImpl) StoreMedia(ctx context.Context, media Media) error {
 
 func (s *MediaServiceImpl) ReadMedia(ctx context.Context, mediaID int64) (Media, error) {
 	var media Media
-	collection, err := s.media_db.GetCollection(ctx, "media", "media")
+	collection, err := s.mediaDb.GetCollection(ctx, "media", "media")
 	if err != nil {
 		return media, err
 	}

@@ -24,17 +24,20 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	var allServices []string
 
 	posts_db := mongodb.Container(spec, "posts_db")
-	posts_cache := redis.Container(spec, "posts_cache")
 	analytics_db := mongodb.Container(spec, "analytics_db")
 	media_db := mongodb.Container(spec, "media_db")
-	notifications_queue := rabbitmq.Container(spec, "notifications_queue", "notifications_queue")
+	posts_cache := redis.Container(spec, "posts_cache")
 	timeline_cache := redis.Container(spec, "timeline_cache")
+	notifications_queue := rabbitmq.Container(spec, "notifications_queue", "notifications_queue")
 	analytics_queue := rabbitmq.Container(spec, "analytics_queue", "analytics_queue")
 
 	allServices = append(allServices, posts_db)
-	allServices = append(allServices, posts_cache)
 	allServices = append(allServices, analytics_db)
+	allServices = append(allServices, media_db)
+	allServices = append(allServices, posts_cache)
+	allServices = append(allServices, timeline_cache)
 	allServices = append(allServices, notifications_queue)
+	allServices = append(allServices, analytics_queue)
 
 	analytics_service := workflow.Service[postnotification.AnalyticsService](spec, "analytics_service", analytics_db, analytics_queue)
 	analytics_service_ctr := applyDockerDefaults(spec, analytics_service, "analytics_service_proc", "analytics_service_container")

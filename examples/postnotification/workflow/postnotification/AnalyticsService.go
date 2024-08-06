@@ -16,19 +16,19 @@ type AnalyticsService interface {
 }
 
 type AnalyticsServiceImpl struct {
-	analytics_queue backend.Queue
-	analytics_db    backend.NoSQLDatabase
-	num_workers     int
+	analyticsQueue backend.Queue
+	analyticsDb    backend.NoSQLDatabase
+	numWorkers     int
 }
 
-func NewAnalyticsServiceImpl(ctx context.Context, analytics_db backend.NoSQLDatabase, analytics_queue backend.Queue) (AnalyticsService, error) {
-	n := &AnalyticsServiceImpl{analytics_db: analytics_db, analytics_queue: analytics_queue, num_workers: 4}
+func NewAnalyticsServiceImpl(ctx context.Context, analyticsDb backend.NoSQLDatabase, analyticsQueue backend.Queue) (AnalyticsService, error) {
+	n := &AnalyticsServiceImpl{analyticsDb: analyticsDb, analyticsQueue: analyticsQueue, numWorkers: 4}
 	return n, nil
 }
 
 func (a *AnalyticsServiceImpl) ReadAnalytics(ctx context.Context, postID int64) (Analytics, error) {
 	var analytics Analytics
-	collection, err := a.analytics_db.GetCollection(ctx, "analytics_db", "analytics_collection")
+	collection, err := a.analyticsDb.GetCollection(ctx, "analyticsDb", "analytics_collection")
 	if err != nil {
 		return analytics, err
 	}
@@ -50,7 +50,7 @@ func (a *AnalyticsServiceImpl) handleMessage(ctx context.Context, message Trigge
 		return err
 	}
 
-	collection, err := a.analytics_db.GetCollection(ctx, "analytics_db", "analytics_collection")
+	collection, err := a.analyticsDb.GetCollection(ctx, "analyticsDb", "analytics_collection")
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (n *AnalyticsServiceImpl) workerThread(ctx context.Context) error {
 	var forever chan struct{}
 	go func() {
 		var event TriggerAnalyticsMessage
-		n.analytics_queue.Pop(ctx, &event)
+		n.analyticsQueue.Pop(ctx, &event)
 		n.handleMessage(ctx, event)
 	}()
 	<-forever
@@ -73,10 +73,10 @@ func (n *AnalyticsServiceImpl) workerThread(ctx context.Context) error {
 }
 
 func (n *AnalyticsServiceImpl) Run(ctx context.Context) error {
-	backend.GetLogger().Info(ctx, "initializing %d workers", n.num_workers)
+	backend.GetLogger().Info(ctx, "initializing %d workers", n.numWorkers)
 	var wg sync.WaitGroup
-	wg.Add(n.num_workers)
-	for i := 1; i <= n.num_workers; i++ {
+	wg.Add(n.numWorkers)
+	for i := 1; i <= n.numWorkers; i++ {
 		go func(i int) {
 			defer wg.Done()
 			err := n.workerThread(ctx)
@@ -87,6 +87,6 @@ func (n *AnalyticsServiceImpl) Run(ctx context.Context) error {
 		}(i)
 	}
 	wg.Wait()
-	backend.GetLogger().Info(ctx, "joining %d workers", n.num_workers)
+	backend.GetLogger().Info(ctx, "joining %d workers", n.numWorkers)
 	return nil
 }

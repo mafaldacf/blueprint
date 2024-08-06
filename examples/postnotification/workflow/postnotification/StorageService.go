@@ -19,15 +19,15 @@ type StorageService interface {
 }
 
 type StorageServiceImpl struct {
-	analytics_service AnalyticsService
-	media_service     MediaService
+	analyticsService AnalyticsService
+	mediaService     MediaService
 	posts_cache       backend.Cache
-	posts_db          backend.NoSQLDatabase
-	analytics_queue   backend.Queue
+	postsDb          backend.NoSQLDatabase
+	analyticsQueue   backend.Queue
 }
 
-func NewStorageServiceImpl(ctx context.Context, analytics_service AnalyticsService, media_service MediaService, posts_cache backend.Cache, posts_db backend.NoSQLDatabase, analytics_queue backend.Queue) (StorageService, error) {
-	s := &StorageServiceImpl{analytics_service: analytics_service, media_service: media_service, posts_cache: posts_cache, posts_db: posts_db, analytics_queue: analytics_queue}
+func NewStorageServiceImpl(ctx context.Context, analyticsService AnalyticsService, mediaService MediaService, posts_cache backend.Cache, postsDb backend.NoSQLDatabase, analyticsQueue backend.Queue) (StorageService, error) {
+	s := &StorageServiceImpl{analyticsService: analyticsService, mediaService: mediaService, posts_cache: posts_cache, postsDb: postsDb, analyticsQueue: analyticsQueue}
 	return s, nil
 }
 
@@ -39,7 +39,7 @@ func (s *StorageServiceImpl) ReadMedia(ctx context.Context, reqID int64, postID 
 
 	var media Media
 	mediaID := post.PostID
-	media, _ = s.media_service.ReadMedia(ctx, mediaID)
+	media, _ = s.mediaService.ReadMedia(ctx, mediaID)
 	return media, nil
 }
 
@@ -49,7 +49,7 @@ func (s *StorageServiceImpl) StorePostCache(ctx context.Context, reqID int64, po
 }
 
 func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, post Post) error {
-	collection, err := s.posts_db.GetCollection(ctx, "post", "post")
+	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, po
 	message := TriggerAnalyticsMessage{
 		PostID: common.Int64ToString(post.PostID),
 	}
-	_, err = s.analytics_queue.Push(ctx, message)
+	_, err = s.analyticsQueue.Push(ctx, message)
 	return err
 }
 
@@ -77,7 +77,7 @@ func (s *StorageServiceImpl) ReadPostCache(ctx context.Context, reqID int64, pos
 func (s *StorageServiceImpl) ReadPostNoSQL(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error) {
 	var post Post
 	var analytics Analytics
-	collection, err := s.posts_db.GetCollection(ctx, "post", "post")
+	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
 	if err != nil {
 		return post, analytics, err
 	}
@@ -90,6 +90,6 @@ func (s *StorageServiceImpl) ReadPostNoSQL(ctx context.Context, reqID int64, pos
 	if !res || err != nil {
 		return post, analytics, err
 	}
-	analytics, err = s.analytics_service.ReadAnalytics(ctx, postID)
+	analytics, err = s.analyticsService.ReadAnalytics(ctx, postID)
 	return post, analytics, err
 }

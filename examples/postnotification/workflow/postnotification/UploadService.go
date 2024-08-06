@@ -16,19 +16,19 @@ type UploadService interface {
 }
 
 type UploadServiceImpl struct {
-	storage_service     StorageService
-	media_service       MediaService
-	notifications_queue backend.Queue
-	timeline_cache      backend.Cache
+	storageService     StorageService
+	mediaService       MediaService
+	notificationsQueue backend.Queue
+	timelineCache      backend.Cache
 }
 
-func NewUploadServiceImpl(ctx context.Context, storage_service StorageService, media_service MediaService, notifications_queue backend.Queue, timeline_cache backend.Cache) (UploadService, error) {
-	return &UploadServiceImpl{storage_service: storage_service, media_service: media_service, notifications_queue: notifications_queue, timeline_cache: timeline_cache}, nil
+func NewUploadServiceImpl(ctx context.Context, storageService StorageService, mediaService MediaService, notificationsQueue backend.Queue, timelineCache backend.Cache) (UploadService, error) {
+	return &UploadServiceImpl{storageService: storageService, mediaService: mediaService, notificationsQueue: notificationsQueue, timelineCache: timelineCache}, nil
 }
 
 func (u *UploadServiceImpl) ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error) {
 	var media Media
-	media, _ = u.storage_service.ReadMedia(ctx, reqID, postID)
+	media, _ = u.storageService.ReadMedia(ctx, reqID, postID)
 	return media, nil
 }
 
@@ -42,7 +42,7 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 		MediaID: mediaID,
 		Content: common.HELLO_WORLD_CONST,
 	}
-	u.media_service.StoreMedia(ctx, media)
+	u.mediaService.StoreMedia(ctx, media)
 
 	timestamp := rand.Int63()
 	mentions := []string{"alice", "bob"}
@@ -56,14 +56,14 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 			Username: "some username",
 		},
 	}
-	u.storage_service.StorePostCache(ctx, post.ReqID, post)
-	u.storage_service.StorePostNoSQL(ctx, post.ReqID, post)
+	u.storageService.StorePostCache(ctx, post.ReqID, post)
+	u.storageService.StorePostNoSQL(ctx, post.ReqID, post)
 
 	message := Message{
 		ReqID:  common.Int64ToString(post.ReqID),
 		PostID: common.Int64ToString(post.PostID),
 	}
-	_, err := u.notifications_queue.Push(ctx, message)
+	_, err := u.notificationsQueue.Push(ctx, message)
 	if err != nil {
 		return 0, err
 	}
@@ -73,5 +73,5 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 		ReqID:  reqID,
 		PostID: postID,
 	}
-	return post.PostID, u.timeline_cache.Put(ctx, reqIDStr, timeline)
+	return post.PostID, u.timelineCache.Put(ctx, reqIDStr, timeline)
 }

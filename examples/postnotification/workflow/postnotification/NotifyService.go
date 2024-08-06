@@ -10,20 +10,20 @@ import (
 )
 
 // does not expose any methods to other services
-// it defines Run that runs workers that pull messages from the notifications_queue
+// it defines Run that runs workers that pull messages from the notificationsQueue
 type NotifyService interface {
 	Run(ctx context.Context) error
 	/* Notify(ctx context.Context, message Message) error */
 }
 
 type NotifyServiceImpl struct {
-	storage_service     StorageService
-	notifications_queue backend.Queue
+	storageService     StorageService
+	notificationsQueue backend.Queue
 	num_workers         int
 }
 
-func NewNotifyServiceImpl(ctx context.Context, storage_service StorageService, notifications_queue backend.Queue) (NotifyService, error) {
-	n := &NotifyServiceImpl{storage_service: storage_service, notifications_queue: notifications_queue, num_workers: 4}
+func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, notificationsQueue backend.Queue) (NotifyService, error) {
+	n := &NotifyServiceImpl{storageService: storageService, notificationsQueue: notificationsQueue, num_workers: 4}
 	return n, nil
 }
 
@@ -37,7 +37,7 @@ func NewNotifyServiceImpl(ctx context.Context, storage_service StorageService, n
 	if err != nil {
 		return nil
 	}
-	_, err = n.storage_service.ReadPost(ctx, reqID, postID)
+	_, err = n.storageService.ReadPost(ctx, reqID, postID)
 	return err
 } */
 
@@ -51,8 +51,8 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 		return err
 	}
 
-	_, _, err = n.storage_service.ReadPostNoSQL(ctx, reqID, postID)
-	//_, err = n.storage_service.ReadPost(ctx, reqID, postID)
+	_, _, err = n.storageService.ReadPostNoSQL(ctx, reqID, postID)
+	//_, err = n.storageService.ReadPost(ctx, reqID, postID)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 	var forever chan struct{}
 	go func() {
 		var event map[string]interface{}
-		n.notifications_queue.Pop(ctx, &event)
+		n.notificationsQueue.Pop(ctx, &event)
 		workerMessage := Message{
 			ReqID:     event["ReqID"].(string),
 			PostID:    event["PostID"].(string),
@@ -71,7 +71,7 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 		}
 		//reqID, _ := common.StringToInt64(notification.ReqID)
 		//postID, _ := common.StringToInt64(notification.PostID)
-		//n.storage_service.ReadPost(ctx, reqID, postID)
+		//n.storageService.ReadPost(ctx, reqID, postID)
 		n.handleMessage(ctx, workerMessage)
 	}()
 	<-forever
@@ -86,18 +86,18 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 
 		// blueprint uses backend.CopyResult in backend.Pop that requires as source argument
 		// an interface that is converted to map[string]interface after retrieving the element
-		// from the notifications_queue, and dst (message) argument needs to match the source, otherwise we get:
+		// from the notificationsQueue, and dst (message) argument needs to match the source, otherwise we get:
 		// an ERROR: "unable to copy incompatible types map[string]interface {} and postnotification.Message"
 		// we also must use values as strings in the message otherwise convertion outputs incorrect values (due to float?)
-		result, err := n.notifications_queue.Pop(ctx, &message)
+		result, err := n.notificationsQueue.Pop(ctx, &message)
 		backend.GetLogger().Info(ctx, "[worker %d] received message %w", workerID, message)
 		if err != nil {
-			backend.GetLogger().Error(ctx, "error retrieving message from notifications_queue: %s", err.Error())
+			backend.GetLogger().Error(ctx, "error retrieving message from notificationsQueue: %s", err.Error())
 			time.Sleep(1 * time.Second)
 			return
 		}
 		if !result {
-			backend.GetLogger().Error(ctx, "could not retrieve message from notifications_queue")
+			backend.GetLogger().Error(ctx, "could not retrieve message from notificationsQueue")
 			return
 		}
 		notification := Message {
@@ -113,7 +113,7 @@ func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) erro
 		if err != nil {
 			return
 		}
-		_, err = n.storage_service.ReadPost(ctx, reqID, postID)
+		_, err = n.storageService.ReadPost(ctx, reqID, postID)
 		if err != nil {
 			return
 		}

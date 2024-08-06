@@ -148,7 +148,7 @@ func (r *RouteServiceImpl) CreateAndModify(ctx context.Context, info RouteInfo) 
 		return Route{}, errors.New("Length of stations and distances do not match")
 	}
 	route := Route{}
-	const MAXIDLEN = 32
+	var MAXIDLEN = 32
 	old_exists := false
 	if info.ID == "" || len(info.ID) < MAXIDLEN {
 		route.ID = uuid.New().String()

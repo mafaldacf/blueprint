@@ -1,4 +1,4 @@
-// Package cart implements the SockShop cart microservice.
+  // Package cart implements the SockShop cart microservice.
 package cart
 
 import (
