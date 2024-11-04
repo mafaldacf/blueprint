@@ -1,6 +1,6 @@
-go 1.22
+go 1.22.1
 
-toolchain go1.22.1
+toolchain go1.22.5
 
 use (
 	./blueprint
@@ -11,19 +11,27 @@ use (
 	./examples/dsb_sn/tests
 	./examples/dsb_sn/wiring
 	./examples/dsb_sn/workflow
+	./examples/foobar/wiring
+	./examples/foobar/workflow
 	./examples/leaf/wiring
 	./examples/leaf/workflow
+	./examples/postnotification/wiring
+	./examples/postnotification/workflow
+	./examples/shopping_app/wiring
+	./examples/shopping_app/workflow
+	./examples/shopping_simple/wiring
+	./examples/shopping_simple/workflow
 	./examples/sockshop/tests
 	./examples/sockshop/wiring
 	./examples/sockshop/workflow
 	./examples/sockshop/workload
+	./examples/sockshop2/wiring
+	./examples/sockshop2/workflow
+	./examples/threechain2/wiring
+	./examples/threechain2/workflow
 	./examples/train_ticket/tests
 	./examples/train_ticket/wiring
 	./examples/train_ticket/workflow
-	./examples/postnotification/workflow
-	./examples/postnotification/wiring
-	./examples/foobar/workflow
-	./examples/foobar/wiring
 	./plugins
 	./runtime
 	./test/wiring

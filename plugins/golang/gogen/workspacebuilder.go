@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
-
 	"path/filepath"
+	"strings"
 
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/blueprint"
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/blueprint/ioutil"
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/ir"
-	"github.com/blueprint-uservices/blueprint/plugins/golang"
 	cp "github.com/otiai10/copy"
 	"golang.org/x/exp/slog"
 	"golang.org/x/mod/modfile"
+
+	"github.com/blueprint-uservices/blueprint/plugins/golang"
 )
 
 // Implements [golang.WorkspaceBuilder].
@@ -167,7 +167,7 @@ func (workspace *WorkspaceBuilderImpl) readModfile(moduleSubDir string) (*modfil
 	return f, nil
 }
 
-var goWorkTemplate = `go 1.22
+var goWorkTemplate = `go 1.22.0
 
 use (
 	{{ range $dirName, $moduleName := .Modules }}./{{ $dirName }}
