@@ -15,66 +15,66 @@ import (
 type FrontendService interface {
 	// List items in cart for current logged in user, or for the current session if not logged in.
 	// SessionID can be the empty string for a non-logged in user / new session
-	GetCart(ctx context.Context, sessionID string) ([]cart.Item, error)
+	//GetCart(ctx context.Context, sessionID string) ([]cart.Item, error)
 
 	// Deletes the entire cart for a user/session
-	DeleteCart(ctx context.Context, sessionID string) error
+	//DeleteCart(ctx context.Context, sessionID string) error
 
 	// Removes an item from the user/session's cart
-	RemoveItem(ctx context.Context, sessionID string, itemID string) error
-
-	// Adds an item to the user/session's cart.
-	// If there is no user or session, then a session is created and the sessionID is returned.
-	AddItem(ctx context.Context, sessionID string, itemID string) (newSessionID string, err error)
+	//RemoveItem(ctx context.Context, sessionID string, itemID string) error
 
 	// Update item quantity in the user/session's cart
 	// If there is no user or session, then a session is created and the sessionID is returned.
-	UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (newSessionID string, err error)
+	//UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (newSessionID string, err error)
 
 	// List socks that match any of the tags specified.  Sort the results by the specified database column.
 	// order can be "" in which case the default order is used.
 	// pageNum is 1-indexed
 	// then return a subset of the results.
-	ListItems(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]catalogue.Sock, error)
+	//ListItems(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]catalogue.Sock, error)
 
 	// Gets details about a [Sock]
-	GetSock(ctx context.Context, itemID string) (catalogue.Sock, error)
+	//GetSock(ctx context.Context, itemID string) (catalogue.Sock, error)
 
 	// Lists all tags
-	ListTags(ctx context.Context) ([]string, error)
+	//ListTags(ctx context.Context) ([]string, error)
 
 	// Place an order for the specified items
-	NewOrder(ctx context.Context, userID, addressID, cardID, cartID string) (order.Order, error)
+	//NewOrder(ctx context.Context, userID, addressID, cardID, cartID string) (order.Order, error)
 
 	// Get all orders for a customer, sorted by date
-	GetOrders(ctx context.Context, userID string) ([]order.Order, error)
+	//GetOrders(ctx context.Context, userID string) ([]order.Order, error)
 
 	// Get an order by ID
-	GetOrder(ctx context.Context, orderID string) (order.Order, error)
+	//GetOrder(ctx context.Context, orderID string) (order.Order, error)
 
 	// Log in to an existing user account.  Returns an error if the password
 	// doesn't match the registered password
 	// Returns the new session ID, which will be the user ID of the logged in user.
-	Login(ctx context.Context, sessionID, username, password string) (newSessionID string, u user.User, err error)
+	//Login(ctx context.Context, sessionID, username, password string) (newSessionID string, u user.User, err error)
 
 	// Register a new user account
 	// Returns the new session ID, which will be the user ID of the registered user.
-	Register(ctx context.Context, sessionID, username, password, email, first, last string) (newSessionID string, err error)
+	//Register(ctx context.Context, sessionID, username, password, email, first, last string) (newSessionID string, err error)
 
 	// Look up a user by customer ID
-	GetUser(ctx context.Context, userID string) (user.User, error)
+	//GetUser(ctx context.Context, userID string) (user.User, error)
 
 	// Look up an address by address ID
-	GetAddress(ctx context.Context, addressID string) (user.Address, error)
+	//GetAddress(ctx context.Context, addressID string) (user.Address, error)
 
 	// Adds a new address for a customer
-	PostAddress(ctx context.Context, userID string, address user.Address) (string, error)
+	//PostAddress(ctx context.Context, userID string, address user.Address) (string, error)
 
 	// Look up a card by card id.
-	GetCard(ctx context.Context, cardID string) (user.Card, error)
+	//GetCard(ctx context.Context, cardID string) (user.Card, error)
 
 	// Adds a new card for a customer
-	PostCard(ctx context.Context, userID string, card user.Card) (string, error)
+	//PostCard(ctx context.Context, userID string, card user.Card) (string, error)
+
+	// Adds an item to the user/session's cart.
+	// If there is no user or session, then a session is created and the sessionID is returned.
+	AddItem(ctx context.Context, sessionID string, itemID string) (newSessionID string, err error)
 
 	// Loads the catalogue in the catalogue service
 	LoadCatalogue(ctx context.Context) (string, error)

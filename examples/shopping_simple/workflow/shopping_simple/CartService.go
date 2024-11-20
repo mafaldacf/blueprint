@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
+const DECLARED_CONSTANT = "THIS IS A CONSTANT!"
+
 type CartService interface {
 	AddProductToCart(ctx context.Context, cartID string, productID string) (CartProduct, error)
 	GetCart(ctx context.Context, cartID string) (Cart, error)

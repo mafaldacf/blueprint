@@ -6,7 +6,7 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 
-	"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
+	//"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
 )
 
 // does not expose any methods to other services
@@ -27,34 +27,12 @@ func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, no
 	return n, nil
 }
 
-func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) error {
-	reqID, err := common.StringToInt64(message.ReqID)
-	if err != nil {
-		return err
-	}
-	postID, err := common.StringToInt64(message.PostID)
-	if err != nil {
-		return err
-	}
-
-	_, err = n.storageService.ReadPost(ctx, reqID, postID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) error {
 	var forever chan struct{}
 	go func() {
-		var event map[string]interface{}
-		n.notificationsQueue.Pop(ctx, &event)
-		workerMessage := Message{
-			ReqID:     event["ReqID"].(string),
-			PostID:    event["PostID"].(string),
-			Timestamp: event["Timestamp"].(string),
-		}
-		n.handleMessage(ctx, workerMessage)
+		var workerMessage Message
+		n.notificationsQueue.Pop(ctx, &workerMessage)
+		n.storageService.ReadPost(ctx, workerMessage.ReqID, workerMessage.PostID_MESSAGE)
 	}()
 	<-forever
 	return nil

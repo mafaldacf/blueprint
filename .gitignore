@@ -8,3 +8,5 @@ examples/trainticket/build
 # new custom apps
 examples/postnotification/build
 examples/foobar/build
+
+**/.DS_Store
