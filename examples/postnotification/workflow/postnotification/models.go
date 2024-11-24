@@ -16,7 +16,6 @@ type Post struct {
 
 type Media struct {
 	MediaID int64
-	PostID  int64
 	Content string
 }
 

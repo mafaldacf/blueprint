@@ -2,6 +2,7 @@ package postnotification
 
 import (
 	"context"
+	"math/rand"
 	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
@@ -11,17 +12,17 @@ import (
 )
 
 type StorageService interface {
-	StorePostCache(ctx context.Context, reqID int64, post Post) error
-	StorePostNoSQL(ctx context.Context, reqID int64, post Post) error
-	ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error)
+	//StorePostCache(ctx context.Context, reqID int64, post Post) (int64, error)
+	StorePostNoSQL(ctx context.Context, reqID int64, post Post) (int64, error)
+	/* ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error) */
 	ReadPostNoSQL(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error)
-	ReadMedia(ctx context.Context, reqID int64, postID int64) (Media, error)
+	ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error)
 }
 
 type StorageServiceImpl struct {
 	analyticsService AnalyticsService
 	mediaService     MediaService
-	posts_cache       backend.Cache
+	posts_cache      backend.Cache
 	postsDb          backend.NoSQLDatabase
 	analyticsQueue   backend.Queue
 }
@@ -31,7 +32,7 @@ func NewStorageServiceImpl(ctx context.Context, analyticsService AnalyticsServic
 	return s, nil
 }
 
-func (s *StorageServiceImpl) ReadMedia(ctx context.Context, reqID int64, postID int64) (Media, error) {
+func (s *StorageServiceImpl) ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error) {
 	var post Post
 
 	postIDStr := strconv.FormatInt(postID, 10)
@@ -43,28 +44,34 @@ func (s *StorageServiceImpl) ReadMedia(ctx context.Context, reqID int64, postID 
 	return media, nil
 }
 
-func (s *StorageServiceImpl) StorePostCache(ctx context.Context, reqID int64, post Post) error {
+/* func (s *StorageServiceImpl) StorePostCache(ctx context.Context, reqID int64, post Post) (int64, error) {
+	postID := rand.Int63()
+	post.PostID = postID
 	postIDStr := strconv.FormatInt(post.PostID, 10)
-	return s.posts_cache.Put(ctx, postIDStr, post)
-}
+	return postID, s.posts_cache.Put(ctx, postIDStr, post)
+} */
 
-func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, post Post) error {
+func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, post Post) (int64, error) {
+	postID := rand.Int63()
 	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
 	if err != nil {
-		return err
+		return postID, err
 	}
+
+	post.PostID = postID
 	err = collection.InsertOne(ctx, post)
 	if err != nil {
-		return err
+		return postID, err
 	}
+
 	message := TriggerAnalyticsMessage{
 		PostID: common.Int64ToString(post.PostID),
 	}
 	_, err = s.analyticsQueue.Push(ctx, message)
-	return err
+	return postID, err
 }
 
-func (s *StorageServiceImpl) ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error) {
+/* func (s *StorageServiceImpl) ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error) {
 	var post Post
 	postIDStr := strconv.FormatInt(postID, 10)
 	_, err := s.posts_cache.Get(ctx, postIDStr, &post)
@@ -72,7 +79,7 @@ func (s *StorageServiceImpl) ReadPostCache(ctx context.Context, reqID int64, pos
 		return post, err
 	}
 	return post, nil
-}
+} */
 
 func (s *StorageServiceImpl) ReadPostNoSQL(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error) {
 	var post Post

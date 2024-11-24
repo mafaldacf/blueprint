@@ -59,7 +59,7 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 	return nil
 }
 
-func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) error {
+func (n *NotifyServiceImpl) workerThread(ctx context.Context) error {
 	var forever chan struct{}
 	go func() {
 		var event map[string]interface{}
@@ -133,7 +133,7 @@ func (n *NotifyServiceImpl) Run(ctx context.Context) error {
 	for i := 1; i <= n.num_workers; i++ {
 		go func(i int) {
 			defer wg.Done()
-			err := n.workerThread(ctx, i)
+			err := n.workerThread(ctx)
 			if err != nil {
 				backend.GetLogger().Error(ctx, "error in worker thread: %s", err.Error())
 				panic(err)

@@ -3,7 +3,6 @@ package postnotification
 import (
 	"context"
 	"math/rand"
-	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 
@@ -12,7 +11,7 @@ import (
 
 type UploadService interface {
 	UploadPost(ctx context.Context, username string, text string) (int64, error)
-	ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error)
+	ReadMedia(ctx context.Context, postID int64) (Media, error)
 }
 
 type UploadServiceImpl struct {
@@ -26,29 +25,27 @@ func NewUploadServiceImpl(ctx context.Context, storageService StorageService, me
 	return &UploadServiceImpl{storageService: storageService, mediaService: mediaService, notificationsQueue: notificationsQueue, timelineCache: timelineCache}, nil
 }
 
-func (u *UploadServiceImpl) ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error) {
+func (u *UploadServiceImpl) ReadMedia(ctx context.Context, postID int64) (Media, error) {
+	reqID := rand.Int63()
+
 	var media Media
-	media, _ = u.storageService.ReadMedia(ctx, reqID, postID)
+	media, _ = u.storageService.ReadPostMedia(ctx, reqID, postID)
 	return media, nil
 }
 
 func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
 	reqID := rand.Int63()
-	postID := rand.Int63()
-	mediaID := rand.Int63()
 
 	media := Media{
-		PostID:  postID,
-		MediaID: mediaID,
 		Content: common.HELLO_WORLD_CONST,
 	}
-	u.mediaService.StoreMedia(ctx, media)
+	mediaID, _ := u.mediaService.StoreMedia(ctx, media)
 
 	timestamp := rand.Int63()
 	mentions := []string{"alice", "bob"}
 	post := Post{
 		ReqID:     reqID,
-		PostID:    postID,
+		MediaID:   mediaID,
 		Text:      text,
 		Mentions:  mentions,
 		Timestamp: timestamp,
@@ -56,22 +53,25 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 			Username: "some username",
 		},
 	}
-	u.storageService.StorePostCache(ctx, post.ReqID, post)
-	u.storageService.StorePostNoSQL(ctx, post.ReqID, post)
 
+	//postID, _ := u.storageService.StorePostCache(ctx, reqID, post)
+	postID, _ := u.storageService.StorePostNoSQL(ctx, reqID, post)
+
+	reqIDStr := common.Int64ToString(reqID)
 	message := Message{
-		ReqID:  common.Int64ToString(post.ReqID),
-		PostID: common.Int64ToString(post.PostID),
+		ReqID:     reqIDStr,
+		PostID:    common.Int64ToString(postID),
+		Timestamp: common.Int64ToString(timestamp),
 	}
+
 	_, err := u.notificationsQueue.Push(ctx, message)
 	if err != nil {
 		return 0, err
 	}
 
-	reqIDStr := strconv.FormatInt(reqID, 10)
 	timeline := Timeline{
 		ReqID:  reqID,
 		PostID: postID,
 	}
-	return post.PostID, u.timelineCache.Put(ctx, reqIDStr, timeline)
+	return postID, u.timelineCache.Put(ctx, reqIDStr, timeline)
 }
