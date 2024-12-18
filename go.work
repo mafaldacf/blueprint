@@ -17,6 +17,8 @@ use (
 	./examples/leaf/workflow
 	./examples/postnotification/wiring
 	./examples/postnotification/workflow
+	./examples/app_constraints_referential_integrity/wiring
+	./examples/app_constraints_referential_integrity/workflow
 	./examples/shopping_app/wiring
 	./examples/shopping_app/workflow
 	./examples/shopping_simple/wiring

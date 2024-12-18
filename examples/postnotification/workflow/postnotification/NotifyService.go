@@ -19,7 +19,7 @@ type NotifyService interface {
 type NotifyServiceImpl struct {
 	storageService     StorageService
 	notificationsQueue backend.Queue
-	num_workers         int
+	num_workers        int
 }
 
 func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, notificationsQueue backend.Queue) (NotifyService, error) {
@@ -46,12 +46,12 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 	if err != nil {
 		return err
 	}
-	postID, err := common.StringToInt64(message.PostID)
+	postID_NOTIFY_SVC, err := common.StringToInt64(message.PostID)
 	if err != nil {
 		return err
 	}
 
-	_, _, err = n.storageService.ReadPostNoSQL(ctx, reqID, postID)
+	_, _, err = n.storageService.ReadPostNoSQL(ctx, reqID, postID_NOTIFY_SVC)
 	//_, err = n.storageService.ReadPost(ctx, reqID, postID)
 	if err != nil {
 		return err
@@ -59,20 +59,31 @@ func (n *NotifyServiceImpl) handleMessage(ctx context.Context, message Message) 
 	return nil
 }
 
-func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) error {
+/* func (n *NotifyServiceImpl) workerThread(ctx context.Context) error {
 	var forever chan struct{}
 	go func() {
-		var event map[string]interface{}
-		n.notificationsQueue.Pop(ctx, &event)
+		var notifyEvent map[string]interface{}
+		n.notificationsQueue.Pop(ctx, &notifyEvent)
 		workerMessage := Message{
-			ReqID:     event["ReqID"].(string),
-			PostID:    event["PostID"].(string),
-			Timestamp: event["Timestamp"].(string),
+			ReqID:     notifyEvent["ReqID"].(string),
+			PostID:    notifyEvent["PostID"].(string),
+			Timestamp: notifyEvent["Timestamp"].(string),
 		}
 		//reqID, _ := common.StringToInt64(notification.ReqID)
 		//postID, _ := common.StringToInt64(notification.PostID)
 		//n.storageService.ReadPost(ctx, reqID, postID)
 		n.handleMessage(ctx, workerMessage)
+	}()
+	<-forever
+	return nil
+} */
+
+func (n *NotifyServiceImpl) workerThread(ctx context.Context) error {
+	var forever chan struct{}
+	go func() {
+		var notifyEvent Message
+		n.notificationsQueue.Pop(ctx, &notifyEvent)
+		n.handleMessage(ctx, notifyEvent)
 	}()
 	<-forever
 	return nil
@@ -133,9 +144,9 @@ func (n *NotifyServiceImpl) Run(ctx context.Context) error {
 	for i := 1; i <= n.num_workers; i++ {
 		go func(i int) {
 			defer wg.Done()
-			err := n.workerThread(ctx, i)
+			err := n.workerThread(ctx)
 			if err != nil {
-				backend.GetLogger().Error(ctx, "error in worker thread: %s", err.Error())
+				backend.GetLogger().Error(ctx, "error in worker thread (%d): %s", i, err.Error())
 				panic(err)
 			}
 		}(i)

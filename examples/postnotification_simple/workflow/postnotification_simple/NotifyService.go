@@ -27,7 +27,7 @@ func NewNotifyServiceImpl(ctx context.Context, storageService StorageService, no
 	return n, nil
 }
 
-func (n *NotifyServiceImpl) workerThread(ctx context.Context, workerID int) error {
+func (n *NotifyServiceImpl) workerThread(ctx context.Context) error {
 	var forever chan struct{}
 	go func() {
 		var workerMessage Message
@@ -81,9 +81,9 @@ func (n *NotifyServiceImpl) Run(ctx context.Context) error {
 	
 	fn := func(i int) {
 		defer wg.Done()
-		err := n.workerThread(ctx, i)
+		err := n.workerThread(ctx)
 		if err != nil {
-			backend.GetLogger().Error(ctx, "error in worker thread: %s", err.Error())
+			backend.GetLogger().Error(ctx, "error in worker thread (%d): %s", i, err.Error())
 			panic(err)
 		}
 	}

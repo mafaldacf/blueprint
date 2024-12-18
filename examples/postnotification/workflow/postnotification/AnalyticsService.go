@@ -32,8 +32,8 @@ func (a *AnalyticsServiceImpl) ReadAnalytics(ctx context.Context, postID int64) 
 	if err != nil {
 		return analytics, err
 	}
-	query := bson.D{{Key: "postid", Value: postID}}
-	result, err := collection.FindOne(ctx, query)
+	analyticsQuery := bson.D{{Key: "postid", Value: postID}}
+	result, err := collection.FindOne(ctx, analyticsQuery)
 	if err != nil {
 		return analytics, err
 	}
@@ -64,9 +64,9 @@ func (a *AnalyticsServiceImpl) handleMessage(ctx context.Context, message Trigge
 func (n *AnalyticsServiceImpl) workerThread(ctx context.Context) error {
 	var forever chan struct{}
 	go func() {
-		var event TriggerAnalyticsMessage
-		n.analyticsQueue.Pop(ctx, &event)
-		n.handleMessage(ctx, event)
+		var analyticsEvent TriggerAnalyticsMessage
+		n.analyticsQueue.Pop(ctx, &analyticsEvent)
+		n.handleMessage(ctx, analyticsEvent)
 	}()
 	<-forever
 	return nil

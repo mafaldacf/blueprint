@@ -2,13 +2,14 @@ package postnotification
 
 import (
 	"context"
+	"math/rand"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 type MediaService interface {
-	StoreMedia(ctx context.Context, media Media) error
+	StoreMedia(ctx context.Context, media Media) (int64, error)
 	ReadMedia(ctx context.Context, mediaID int64) (Media, error)
 }
 
@@ -21,14 +22,15 @@ func NewMediaServiceImpl(ctx context.Context, mediaDb backend.NoSQLDatabase) (Me
 	return s, nil
 }
 
-func (s *MediaServiceImpl) StoreMedia(ctx context.Context, media Media) error {
+func (s *MediaServiceImpl) StoreMedia(ctx context.Context, media Media) (int64, error) {
+	mediaID := rand.Int63()
+	media.MediaID = mediaID
 	collection, err := s.mediaDb.GetCollection(ctx, "media", "media")
 	if err != nil {
-		return err
+		return mediaID, err
 	}
-	return collection.InsertOne(ctx, media)
+	return mediaID, collection.InsertOne(ctx, media)
 }
-
 
 func (s *MediaServiceImpl) ReadMedia(ctx context.Context, mediaID int64) (Media, error) {
 	var media Media
@@ -36,8 +38,8 @@ func (s *MediaServiceImpl) ReadMedia(ctx context.Context, mediaID int64) (Media,
 	if err != nil {
 		return media, err
 	}
-	query := bson.D{{Key: "mediaid", Value: mediaID}}
-	result, err := collection.FindOne(ctx, query)
+	mediaQuery := bson.D{{Key: "mediaid", Value: mediaID}}
+	result, err := collection.FindOne(ctx, mediaQuery)
 	if err != nil {
 		return media, err
 	}
