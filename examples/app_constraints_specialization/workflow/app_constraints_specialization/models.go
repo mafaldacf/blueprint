@@ -1,10 +1,10 @@
 package app_constraints_specialization
 
 type Employee struct {
-	EmployeeID     string
-	Name           string
-	IBAN           string
-	Specialization string
+	EmployeeID string
+	Name       string
+	IBAN       string
+	SpecFlag   string
 }
 
 type Freelancer struct {
@@ -22,9 +22,9 @@ type Fulltime struct {
 }
 
 type Intern struct {
-    EmployeeID string
-    InternID   string
-    Stipend    string
-    Duration   string
-    Mentor     string
+	EmployeeID string
+	InternID   string
+	Stipend    string
+	Duration   string
+	Mentor     string
 }

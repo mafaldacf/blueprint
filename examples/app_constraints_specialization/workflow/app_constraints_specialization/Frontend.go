@@ -9,6 +9,7 @@ type Frontend interface {
 	CreateEmployeeFreelancer(ctx context.Context, employeeID string, name string, IBAN string, freelancerID string, rate string, terms string) (Employee, Freelancer, error)
 	CreateEmployeeFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Employee, Fulltime, error)
 	CreateEmployeeIntern(ctx context.Context, employeeID string, name string, IBAN string, internID string, mentorID string, stipend string, duration string) (Employee, Intern, error)
+	PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error)
 	/* GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error)
 	GetEmployeeFulltime(ctx context.Context, fulltimeID string) (Employee, Fulltime, error) */
 }
@@ -42,6 +43,11 @@ func (u *FrontendImpl) CreateEmployeeFulltime(ctx context.Context, employeeID st
 func (u *FrontendImpl) CreateEmployeeIntern(ctx context.Context, employeeID string, name string, IBAN string, internID string, mentorID string, stipend string, duration string) (Employee, Intern, error) {
 	employee, intern, err := u.employeeService.CreateEmployeeIntern(ctx, employeeID, name, IBAN, internID, mentorID, stipend, duration)
 	return employee, intern, err
+}
+
+func (u *FrontendImpl) PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error) {
+	fulltime, err := u.employeeService.PromoteFreelancerToFulltime(ctx, employeeID, name, IBAN, fulltimeID, salary, position)
+	return fulltime, err
 }
 
 /* func (u *FrontendImpl) GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error) { */

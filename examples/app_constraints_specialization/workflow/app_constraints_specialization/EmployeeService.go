@@ -2,8 +2,10 @@ package app_constraints_specialization
 
 import (
 	"context"
+	"sync"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type EmployeeService interface {
@@ -11,6 +13,7 @@ type EmployeeService interface {
 	CreateEmployeeFreelancer(ctx context.Context, employeeID string, name string, IBAN string, freelancerID string, rate string, terms string) (Employee, Freelancer, error)
 	CreateEmployeeFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Employee, Fulltime, error)
 	CreateEmployeeIntern(ctx context.Context, employeeID string, name string, IBAN string, internID string, mentorID string, stipend string, duration string) (Employee, Intern, error)
+	PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error)
 	/* GetEmployee(ctx context.Context, employeeID string) (Employee, error)
 	GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error)
 	GetEmployeeFulltime(ctx context.Context, fulltimeID string) (Employee, Fulltime, error) */
@@ -44,10 +47,10 @@ func NewEmployeeServiceImpl(ctx context.Context, freelancerService FreelancerSer
 
 func (s *EmployeeServiceImpl) CreateEmployeeFreelancer(ctx context.Context, employeeID string, name string, IBAN string, freelancerID string, rate string, terms string) (Employee, Freelancer, error) {
 	employee := Employee{
-		EmployeeID:     employeeID,
-		Name:           name,
-		IBAN:           IBAN,
-		Specialization: "freelancer",
+		EmployeeID: employeeID,
+		Name:       name,
+		IBAN:       IBAN,
+		SpecFlag:   "freelancer",
 	}
 	collection, err := s.employeesDB.GetCollection(ctx, "employees", "employees")
 	if err != nil {
@@ -66,10 +69,10 @@ func (s *EmployeeServiceImpl) CreateEmployeeFreelancer(ctx context.Context, empl
 
 func (s *EmployeeServiceImpl) CreateEmployeeFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Employee, Fulltime, error) {
 	employee := Employee{
-		EmployeeID:     employeeID,
-		Name:           name,
-		IBAN:           IBAN,
-		Specialization: "fulltime",
+		EmployeeID: employeeID,
+		Name:       name,
+		IBAN:       IBAN,
+		SpecFlag:   "fulltime",
 	}
 	collection, err := s.employeesDB.GetCollection(ctx, "employees", "employees")
 	if err != nil {
@@ -88,10 +91,10 @@ func (s *EmployeeServiceImpl) CreateEmployeeFulltime(ctx context.Context, employ
 
 func (s *EmployeeServiceImpl) CreateEmployeeIntern(ctx context.Context, employeeID string, name string, IBAN string, internID string, mentorID string, stipend string, duration string) (Employee, Intern, error) {
 	employee := Employee{
-		EmployeeID:     employeeID,
-		Name:           name,
-		IBAN:           IBAN,
-		Specialization: "intern",
+		EmployeeID: employeeID,
+		Name:       name,
+		IBAN:       IBAN,
+		SpecFlag:   "intern",
 	}
 	collection, err := s.employeesDB.GetCollection(ctx, "employees", "employees")
 	if err != nil {
@@ -106,6 +109,42 @@ func (s *EmployeeServiceImpl) CreateEmployeeIntern(ctx context.Context, employee
 		return Employee{}, Intern{}, err
 	}
 	return employee, intern, nil
+}
+
+func (s *EmployeeServiceImpl) PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error) {
+	collection, err := s.employeesDB.GetCollection(ctx, "employees", "employees")
+	if err != nil {
+		return Fulltime{}, err
+	}
+
+	var fulltime Fulltime
+	var err1, err2, err3 error
+	var wg sync.WaitGroup
+	wg.Add(3)
+
+	go func() { // update employee specialization flag
+		update := bson.D{{Key: "$set", Value: bson.D{{Key: "SpecFlag", Value: "fulltime"}}}}
+		filter := bson.D{{Key: "EmployeeID", Value: employeeID}}
+		_, err1 = collection.UpdateOne(ctx, filter, update)
+		wg.Done()
+	}()
+
+	go func() { // delete freelancer
+		err2 = s.freelancerService.DeleteFreelancer(ctx, employeeID)
+		wg.Done()
+	}()
+
+	go func() { // create fulltime
+		fulltime, err3 = s.fulltimeService.CreateFulltime(ctx, employeeID, fulltimeID, salary, position)
+		wg.Done()
+	}()
+
+	wg.Wait()
+	if err1 != nil || err2 != nil || err3 != nil {
+		return Fulltime{}, err
+	}
+
+	return fulltime, nil
 }
 
 /* func (s *EmployeeServiceImpl) GetEmployee(ctx context.Context, employeeID string) (Employee, error) {

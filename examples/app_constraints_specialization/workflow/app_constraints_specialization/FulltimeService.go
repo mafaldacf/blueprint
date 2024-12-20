@@ -8,7 +8,7 @@ import (
 )
 
 type FulltimeService interface {
-	CreateFulltime(ctx context.Context, employeeID string, freelancerID string, rate string, terms string) (Fulltime, error)
+	CreateFulltime(ctx context.Context, employeeID string, fulltimeID string, rate string, terms string) (Fulltime, error)
 	//GetFulltimeByEmployeeID(ctx context.Context, employeeID string) (Fulltime, error)
 	GetFulltime(ctx context.Context, fulltimeID string) (Fulltime, error)
 }
@@ -22,10 +22,10 @@ func NewFulltimeServiceImpl(ctx context.Context, fulltimesDB backend.NoSQLDataba
 	return s, nil
 }
 
-func (s *FulltimeServiceImpl) CreateFulltime(ctx context.Context, employeeID string, freelancerID string, salary string, position string) (Fulltime, error) {
+func (s *FulltimeServiceImpl) CreateFulltime(ctx context.Context, employeeID string, fulltimeID string, salary string, position string) (Fulltime, error) {
 	employee := Fulltime{
 		EmployeeID: employeeID,
-		FulltimeID: freelancerID,
+		FulltimeID: fulltimeID,
 		Salary:     salary,
 		Position:   position,
 	}

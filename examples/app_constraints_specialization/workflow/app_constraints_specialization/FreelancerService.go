@@ -9,6 +9,7 @@ import (
 
 type FreelancerService interface {
 	CreateFreelancer(ctx context.Context, employeeID string, freelancerID string, rate string, terms string) (Freelancer, error)
+	DeleteFreelancer(ctx context.Context, employeeID string) error
 	//GetFreelancerByEmployeeID(ctx context.Context, employeeID string) (Freelancer, error)
 	GetFreelancer(ctx context.Context, freelancerID string) (Freelancer, error)
 }
@@ -71,4 +72,17 @@ func (s *FreelancerServiceImpl) GetFreelancer(ctx context.Context, freelancerID 
 		return Freelancer{}, err
 	}
 	return freelancer, err
+}
+
+func (s *FreelancerServiceImpl) DeleteFreelancer(ctx context.Context, employeeID string) error {
+	collection, err := s.freelancersDB.GetCollection(ctx, "freelancers", "freelancers")
+	if err != nil {
+		return err
+	}
+	filter := bson.D{{Key: "employeeID", Value: employeeID}}
+	err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	return nil
 }
