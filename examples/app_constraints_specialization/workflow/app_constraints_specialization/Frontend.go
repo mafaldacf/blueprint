@@ -10,6 +10,7 @@ type Frontend interface {
 	CreateEmployeeFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Employee, Fulltime, error)
 	CreateEmployeeIntern(ctx context.Context, employeeID string, name string, IBAN string, internID string, mentorID string, stipend string, duration string) (Employee, Intern, error)
 	PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error)
+	DeleteEmployee(ctx context.Context, employeeID string) error
 	/* GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error)
 	GetEmployeeFulltime(ctx context.Context, fulltimeID string) (Employee, Fulltime, error) */
 }
@@ -48,6 +49,11 @@ func (u *FrontendImpl) CreateEmployeeIntern(ctx context.Context, employeeID stri
 func (u *FrontendImpl) PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error) {
 	fulltime, err := u.employeeService.PromoteFreelancerToFulltime(ctx, employeeID, name, IBAN, fulltimeID, salary, position)
 	return fulltime, err
+}
+
+func (u *FrontendImpl) DeleteEmployee(ctx context.Context, employeeID string) error {
+	err := u.employeeService.DeleteEmployee(ctx, employeeID)
+	return err
 }
 
 /* func (u *FrontendImpl) GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error) { */

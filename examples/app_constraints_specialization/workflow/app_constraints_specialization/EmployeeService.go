@@ -14,6 +14,7 @@ type EmployeeService interface {
 	CreateEmployeeFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Employee, Fulltime, error)
 	CreateEmployeeIntern(ctx context.Context, employeeID string, name string, IBAN string, internID string, mentorID string, stipend string, duration string) (Employee, Intern, error)
 	PromoteFreelancerToFulltime(ctx context.Context, employeeID string, name string, IBAN string, fulltimeID string, salary string, position string) (Fulltime, error)
+	DeleteEmployee(ctx context.Context, employeeID string) error
 	/* GetEmployee(ctx context.Context, employeeID string) (Employee, error)
 	GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error)
 	GetEmployeeFulltime(ctx context.Context, fulltimeID string) (Employee, Fulltime, error) */
@@ -145,6 +146,21 @@ func (s *EmployeeServiceImpl) PromoteFreelancerToFulltime(ctx context.Context, e
 	}
 
 	return fulltime, nil
+}
+
+func (s *EmployeeServiceImpl) DeleteEmployee(ctx context.Context, employeeID string) error {
+	collection, err := s.employeesDB.GetCollection(ctx, "employees", "employees")
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "freelancerID", Value: employeeID}}
+	err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 /* func (s *EmployeeServiceImpl) GetEmployee(ctx context.Context, employeeID string) (Employee, error) {
