@@ -122,8 +122,8 @@ func (s *userServiceImpl) PostUser(ctx context.Context, u User) (string, error) 
 func (s *userServiceImpl) GetAddresses(ctx context.Context, addressid string) ([]Address, error) {
 	collection, _ := s.db.GetCollection(ctx, "users", "users")
 	var addresses []Address
-	filter := bson.D{{Key: "addressid", Value: addressid}}
-	projection := bson.D{{Key: "addressid", Value: true}}
+	filter := bson.D{{Key: "addresses", Value: addressid}}
+	projection := bson.D{{Key: "addresses", Value: true}}
 	result, _ := collection.FindMany(ctx, filter, projection)
 	result.All(ctx, &addresses)
 	return addresses, nil
@@ -140,8 +140,8 @@ func (s *userServiceImpl) PostAddress(ctx context.Context, userid string, addres
 func (s *userServiceImpl) GetCards(ctx context.Context, cardid string) ([]Card, error) {
 	collection, _ := s.db.GetCollection(ctx, "users", "users")
 	var cards []Card
-	filter := bson.D{{Key: "addressid", Value: cardid}}
-	projection := bson.D{{Key: "addressid", Value: true}}
+	filter := bson.D{{Key: "cards", Value: cardid}}
+	projection := bson.D{{Key: "cards", Value: true}}
 	result, _ := collection.FindMany(ctx, filter, projection)
 	result.All(ctx, &cards)
 	return cards, nil

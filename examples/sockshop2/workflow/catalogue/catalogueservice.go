@@ -3,6 +3,7 @@ package catalogue
 
 import (
 	"context"
+	"slices"
 	"strings"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
@@ -36,14 +37,14 @@ func (s *catalogueImpl) List(ctx context.Context, tags []string, order string, p
 	filter := bson.D{}
 	result, _ := collection.FindMany(ctx, filter)
 	result.All(ctx, &allSocks)
-	/* for _, sock := range allSocks {
+	for _, sock := range allSocks {
 		for _, tag := range tags {
 			if slices.Contains(sock.Tags, tag) {
 				socks = append(socks, sock)
 				break
 			}
 		}
-	} */
+	}
 	return socks, nil
 }
 
