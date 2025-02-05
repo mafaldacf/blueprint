@@ -1,4 +1,4 @@
-module github.com/blueprint-uservices/blueprint/examples/app_constraints_specialization/workflow
+module github.com/blueprint-uservices/blueprint/examples/employee_app/workflow
 
 go 1.20
 

@@ -70,24 +70,24 @@ func (h *HomeTimelineServiceImpl) ReadHomeTimeline(ctx context.Context, reqID in
 	}
 	userIDStr := strconv.FormatInt(userID, 10)
 	var postIDs []int64
-	var postInfos []PostInfo
-	_, err := h.homeTimelineCache.Get(ctx, userIDStr, &postInfos)
+	//var postInfos []PostInfo
+	_, err := h.homeTimelineCache.Get(ctx, userIDStr, &postIDs)
 	if err != nil {
 		return []int64{}, err
 	}
-	for _, pinfo := range postInfos {
+	/* for _, pinfo := range postInfos {
 		postIDs = append(postIDs, pinfo.PostID)
-	}
-	if start < int64(len(postIDs)) {
+	} */
+	/* if start < int64(len(postIDs)) {
 		minstop := stop
 		if stop > int64(len(postIDs)) {
 			minstop = int64(len(postIDs))
 		}
 		postIDs = postIDs[start:minstop]
-	}
-	_, err = h.postStorageService.ReadPosts(ctx, reqID, postIDs)
+	} */
+	/* _, err = h.postStorageService.ReadPosts(ctx, reqID, postIDs)
 	if err != nil {
 		return postIDs, err
-	}
+	} */
 	return postIDs, nil
 }

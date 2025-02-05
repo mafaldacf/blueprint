@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net"
 	"strconv"
-	"strings"
+	//"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
 )
@@ -50,7 +50,7 @@ func parseNoSQLDBQuery(query string) (bson.D, error) {
 	return handleFormats(query)
 }
 
-func lower(f interface{}) interface{} {
+/* func lower(f interface{}) interface{} {
 	switch f := f.(type) {
 	case []interface{}:
 		for i := range f {
@@ -70,7 +70,7 @@ func lower(f interface{}) interface{} {
 	default:
 		return f
 	}
-}
+} */
 
 func handleFormats(jsonQuery string) (bdoc bson.D, err error) {
 
@@ -85,7 +85,7 @@ func handleFormats(jsonQuery string) (bdoc bson.D, err error) {
 		return
 	}
 
-	f = lower(f)
+	/* f = lower(f) */
 
 	lowerQuery, err := json.Marshal(f)
 	if err != nil {

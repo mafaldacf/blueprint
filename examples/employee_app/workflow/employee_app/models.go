@@ -1,4 +1,4 @@
-package app_constraints_specialization
+package employee_app
 
 type Employee struct {
 	EmployeeID string

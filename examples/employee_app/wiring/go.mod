@@ -1,4 +1,4 @@
-module github.com/blueprint-uservices/blueprint/examples/app_constraints_specialization/wiring
+module github.com/blueprint-uservices/blueprint/examples/employee_app/wiring
 
 go 1.21
 
@@ -18,7 +18,7 @@ require (
 
 require (
 	github.com/blueprint-uservices/blueprint/blueprint v0.0.0-20240405152959-f078915d2306
-	github.com/blueprint-uservices/blueprint/examples/app_constraints_specialization/workflow v0.0.0
+	github.com/blueprint-uservices/blueprint/examples/employee_app/workflow v0.0.0
 )
 
 require (
@@ -42,4 +42,4 @@ require (
 	golang.org/x/tools v0.20.0 // indirect
 )
 
-replace github.com/blueprint-uservices/blueprint/examples/app_constraints_specialization/workflow => ../workflow
+replace github.com/blueprint-uservices/blueprint/examples/employee_app/workflow => ../workflow

@@ -9,12 +9,12 @@ package main
 import (
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
 
-	"github.com/blueprint-uservices/blueprint/examples/app_constraints_specialization/wiring/specs"
+	"github.com/blueprint-uservices/blueprint/examples/employee_app/wiring/specs"
 )
 
 func main() {
 	// Build a supported wiring spec
-	name := "App_Constraints_Specialization"
+	name := "employee_app"
 	cmdbuilder.MakeAndExecute(
 		name,
 		specs.Docker,

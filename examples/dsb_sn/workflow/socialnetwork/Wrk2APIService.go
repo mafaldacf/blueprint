@@ -14,20 +14,20 @@ type Wrk2APIService interface {
 	ReadHomeTimeline(ctx context.Context, userId int64, start int64, stop int64) ([]int64, error)
 	// Reads the user timeline of the user with `userId`.
 	// Returns the list of posts[start, stop] from the timeline.
-	ReadUserTimeline(ctx context.Context, userId int64, start int64, stop int64) ([]int64, error)
+	/* ReadUserTimeline(ctx context.Context, userId int64, start int64, stop int64) ([]int64, error) */
 	// Creates a Follow-Link between users `userId`-`followeeID`.
 	// If the user ids are not provided, then it creates a follow-link between users `username`-`followeeName`.
 	// Returns an error if no pairs are provided.
-	Follow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error
+	/* Follow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error */
 	// Removes a Follow-Link between users `userId`-`followeeID`.
 	// If the user ids are not provided, then it creates a follow-link between users `username`-`followeeName`.
 	// Returns an error if no pairs are provided.
-	Unfollow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error
+	/* Unfollow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error */
 	// Registers a new user with the given `userId`.
-	Register(ctx context.Context, firstName string, lastName string, username string, password string, userId int64) error
+	/* Register(ctx context.Context, firstName string, lastName string, username string, password string, userId int64) error */
 	// Composes a new post give the provided arguments.
 	// Returns the created post's ID and the ids of the mentioned users.
-	ComposePost(ctx context.Context, userId int64, username string, post_type int64, text string, media_types []string, media_ids []int64) (int64, []int64, error)
+	/* ComposePost(ctx context.Context, userId int64, username string, post_type int64, text string, media_types []string, media_ids []int64) (int64, []int64, error) */
 }
 
 // Implementation of [Wrk2APIService]

@@ -1,4 +1,4 @@
-package app_constraints_specialization
+package employee_app
 
 import (
 	"context"
@@ -57,27 +57,27 @@ func (u *FrontendImpl) DeleteEmployee(ctx context.Context, employeeID string) er
 }
 
 /* func (u *FrontendImpl) GetEmployeeFreelancer(ctx context.Context, freelancerID string) (Employee, Freelancer, error) { */
-	/* freelancer, err := u.freelancerService.GetFreelancer(ctx, freelancerID)
-	if err != nil {
-		return Employee{}, Freelancer{}, err
-	}
-	employee, err := u.employeeService.GetEmployee(ctx, freelancer.EmployeeID)
-	if err != nil {
-		return Employee{}, Freelancer{}, err
-	}
-	return employee, freelancer, nil */
-	/* return u.employeeService.GetEmployeeFreelancer(ctx, freelancerID)
+/* freelancer, err := u.freelancerService.GetFreelancer(ctx, freelancerID)
+if err != nil {
+	return Employee{}, Freelancer{}, err
+}
+employee, err := u.employeeService.GetEmployee(ctx, freelancer.EmployeeID)
+if err != nil {
+	return Employee{}, Freelancer{}, err
+}
+return employee, freelancer, nil */
+/* return u.employeeService.GetEmployeeFreelancer(ctx, freelancerID)
 } */
 
 /* func (u *FrontendImpl) GetEmployeeFulltime(ctx context.Context, fulltimeID string) (Employee, Fulltime, error) { */
-	/* fulltime, err := u.fulltimeService.GetFulltime(ctx, fulltimeID)
-	if err != nil {
-		return Employee{}, Fulltime{}, err
-	}
-	employee, err := u.employeeService.GetEmployee(ctx, fulltime.EmployeeID)
-	if err != nil {
-		return Employee{}, Fulltime{}, err
-	}
-	return employee, fulltime, nil */
-	/* return u.employeeService.GetEmployeeFulltime(ctx, fulltimeID)
+/* fulltime, err := u.fulltimeService.GetFulltime(ctx, fulltimeID)
+if err != nil {
+	return Employee{}, Fulltime{}, err
+}
+employee, err := u.employeeService.GetEmployee(ctx, fulltime.EmployeeID)
+if err != nil {
+	return Employee{}, Fulltime{}, err
+}
+return employee, fulltime, nil */
+/* return u.employeeService.GetEmployeeFulltime(ctx, fulltimeID)
 } */
