@@ -7,7 +7,7 @@ import (
 type Frontend interface {
 	CreateStudent(ctx context.Context, studentID int, name string) (Student, error)
 	CreateCoupon(ctx context.Context, couponID int, category string) (Coupon, error)
-	ClaimCoupon(ctx context.Context, couponID int, category string, studentID int, value int) (Student, error)
+	ClaimCoupon(ctx context.Context, couponID int, category string, studentID int, value int) error
 }
 
 type FrontendImpl struct {
@@ -29,11 +29,11 @@ func (u *FrontendImpl) CreateCoupon(ctx context.Context, couponID int, category 
 	return coupon, err
 }
 
-func (u *FrontendImpl) ClaimCoupon(ctx context.Context, couponID int, category string, studentID int, value int) (Student, error) {
+func (u *FrontendImpl) ClaimCoupon(ctx context.Context, couponID int, category string, studentID int, value int) error {
 	err := u.CouponService.ClaimCoupon(ctx, couponID, category, studentID)
 	if err != nil {
-		return Student{}, err
+		return err
 	}
-	student, err := u.StudentService.AddToBalance(ctx, studentID, value)
-	return student, err
+	err = u.StudentService.AddToBalance(ctx, studentID, value)
+	return err
 }

@@ -9,7 +9,7 @@ import (
 
 type StudentService interface {
 	CreateStudent(ctx context.Context, studentID int, name string) (Student, error)
-	AddToBalance(ctx context.Context, studentID int, value int) (Student, error)
+	AddToBalance(ctx context.Context, studentID int, value int) error
 }
 
 type StudentServiceImpl struct {
@@ -34,25 +34,18 @@ func (s *StudentServiceImpl) CreateStudent(ctx context.Context, studentID int, n
 	return coupon, err
 }
 
-func (s *StudentServiceImpl) AddToBalance(ctx context.Context, studentID int, value int) (Student, error) {
-	var student Student
-
+func (s *StudentServiceImpl) AddToBalance(ctx context.Context, studentID int, value int) error {
 	collection, err := s.studentsDB.GetCollection(ctx, "students", "students")
 	if err != nil {
-		return student, err
+		return err
 	}
 
-	query := bson.D{{Key: "studentID", Value: student}}
-	result, err := collection.FindOne(ctx, query)
-	if err != nil {
-		return student, nil
-	}
-	found, err := result.One(ctx, student)
-	if err != nil || !found {
-		return student, err
-	}
+	filter := bson.D{{Key: "studentID", Value: studentID}}
+	update := bson.D{{Key: "$inc", Value: bson.D{{Key: "balance", Value: 1}}}}
 
-	student.Balance += value
-	err = collection.InsertOne(ctx, student)
-	return student, err
+	res, err := collection.UpdateOne(ctx, filter, update)
+	if res != 1 || err != nil {
+		return err
+	}
+	return nil
 }

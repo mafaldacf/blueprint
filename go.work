@@ -23,6 +23,8 @@ use (
 	./examples/employee_app/workflow
 	./examples/coupons_app/wiring
 	./examples/coupons_app/workflow
+	./examples/coupons_app_sql/wiring
+	./examples/coupons_app_sql/workflow
 	./examples/shopping_app/wiring
 	./examples/shopping_app/workflow
 	./examples/shopping_simple/wiring
