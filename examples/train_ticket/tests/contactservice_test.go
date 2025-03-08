@@ -67,7 +67,7 @@ func TestContactsService(t *testing.T) {
 
 	// Test Creation
 	for _, c := range testData {
-		err = service.CreateContacts(ctx, c)
+		err = service.CreateContacts(ctx, c, c.AccountID)
 		require.NoError(t, err)
 	}
 
@@ -87,7 +87,7 @@ func TestContactsService(t *testing.T) {
 	aid := "account_all"
 	accData := genTestContactsAccountData(aid)
 	for _, c := range accData {
-		err = service.CreateContacts(ctx, c)
+		err = service.CreateContacts(ctx, c, c.AccountID)
 		require.NoError(t, err)
 	}
 
@@ -122,7 +122,7 @@ func TestContactsService(t *testing.T) {
 	}
 
 	// Test adding duplicate contacts
-	err = service.CreateContacts(ctx, testData[0])
+	err = service.CreateContacts(ctx, testData[0], testData[0].AccountID)
 	require.Error(t, err)
 
 	// Test Deletion

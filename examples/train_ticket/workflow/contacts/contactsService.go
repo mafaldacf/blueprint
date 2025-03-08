@@ -15,7 +15,7 @@ type ContactsService interface {
 	// Find all contacts associated with an account with ID `id`
 	FindContactsByAccountId(ctx context.Context, id string) ([]Contact, error)
 	// Create a new contact
-	CreateContacts(ctx context.Context, c Contact) error
+	CreateContacts(ctx context.Context, c Contact, userID string) error
 	// Delete an existing contact
 	Delete(ctx context.Context, c Contact) error
 	// Get all existing contacts
@@ -71,7 +71,7 @@ func (c *ContactsServiceImpl) FindContactsByAccountId(ctx context.Context, id st
 	return account_contacts, nil
 }
 
-func (c *ContactsServiceImpl) CreateContacts(ctx context.Context, contact Contact) error {
+func (c *ContactsServiceImpl) CreateContacts(ctx context.Context, contact Contact, userID string) error {
 	coll, err := c.contactsDB.GetCollection(ctx, "contacts", "contacts")
 	if err != nil {
 		return err
@@ -89,6 +89,7 @@ func (c *ContactsServiceImpl) CreateContacts(ctx context.Context, contact Contac
 	if err != nil {
 		return err
 	}
+	contact.AccountID = userID
 	return coll.InsertOne(ctx, contact)
 }
 

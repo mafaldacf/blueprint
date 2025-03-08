@@ -49,11 +49,15 @@ func NewCartService(ctx context.Context, db backend.NoSQLDatabase) (CartService,
 // AddItem implements CartService.
 func (s *cartImpl) AddItem(ctx context.Context, customerID string, item Item) (Item, error) {
 	collection, _ := s.db.GetCollection(ctx, "cart", "carts")
-	cart := &cart{
+
+	//dummy logic for testing purposes
+	cart := cart{
 		ID: customerID,
+		Items: []Item{item},
 	}
 
-	collection.Upsert(ctx, bson.D{{"id", customerID}}, cart)
+	collection.InsertOne(ctx, cart)
+	//collection.Upsert(ctx, bson.D{{"id", customerID}}, cart)
 	return item, nil
 }
 

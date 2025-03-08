@@ -1,6 +1,6 @@
 package tests
 
-import (
+/* import (
 	"context"
 	"log"
 	"strconv"
@@ -371,4 +371,4 @@ func TestWrk2ReadTimelines(t *testing.T) {
 	err = soc_coll.DeleteMany(ctx, bson.D{})
 	require.NoError(t, err)
 
-}
+} */

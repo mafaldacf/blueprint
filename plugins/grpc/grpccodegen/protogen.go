@@ -9,11 +9,12 @@ import (
 	"text/template"
 
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/blueprint"
+	"golang.org/x/exp/slog"
+
 	"github.com/blueprint-uservices/blueprint/plugins/golang"
 	"github.com/blueprint-uservices/blueprint/plugins/golang/gocode"
 	"github.com/blueprint-uservices/blueprint/plugins/golang/goparser"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow/workflowspec"
-	"golang.org/x/exp/slog"
 )
 
 /*
@@ -140,7 +141,8 @@ type (
 		PackageName string // Fully qualified package
 		Services    map[string]*gRPCServiceDecl
 		Messages    map[string]*gRPCMessageDecl
-		Structs     map[gocode.UserType]*gRPCMessageDecl // Mapping from golang struct to the corresponding message
+		Structs     map[gocode.UserType]*gRPCMessageDecl  // Mapping from golang struct to the corresponding message
+		Basics      map[gocode.BasicType]*gRPCMessageDecl // Mapping from golang struct to the corresponding message
 	}
 )
 
@@ -151,6 +153,7 @@ func newProtoBuilder(code *goparser.ParsedModuleSet, name string) *gRPCProtoBuil
 	b.Services = make(map[string]*gRPCServiceDecl)
 	b.Messages = make(map[string]*gRPCMessageDecl)
 	b.Structs = make(map[gocode.UserType]*gRPCMessageDecl)
+	b.Basics = make(map[gocode.BasicType]*gRPCMessageDecl)
 	return b
 }
 

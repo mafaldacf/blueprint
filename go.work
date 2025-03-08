@@ -1,9 +1,17 @@
-go 1.22.1
+go 1.23.0
 
-toolchain go1.22.5
+toolchain go1.24.0
 
 use (
 	./blueprint
+	./examples/app_constraints_referential_integrity/wiring
+	./examples/app_constraints_referential_integrity/workflow
+	./examples/coupons_app/wiring
+	./examples/coupons_app/workflow
+	./examples/coupons_app_sql/wiring
+	./examples/coupons_app_sql/workflow
+	./examples/digota/wiring
+	./examples/digota/workflow
 	./examples/dsb_hotel/tests
 	./examples/dsb_hotel/wiring
 	./examples/dsb_hotel/workflow
@@ -11,20 +19,14 @@ use (
 	./examples/dsb_sn/tests
 	./examples/dsb_sn/wiring
 	./examples/dsb_sn/workflow
+	./examples/employee_app/wiring
+	./examples/employee_app/workflow
 	./examples/foobar/wiring
 	./examples/foobar/workflow
 	./examples/leaf/wiring
 	./examples/leaf/workflow
 	./examples/postnotification/wiring
 	./examples/postnotification/workflow
-	./examples/app_constraints_referential_integrity/wiring
-	./examples/app_constraints_referential_integrity/workflow
-	./examples/employee_app/wiring
-	./examples/employee_app/workflow
-	./examples/coupons_app/wiring
-	./examples/coupons_app/workflow
-	./examples/coupons_app_sql/wiring
-	./examples/coupons_app_sql/workflow
 	./examples/shopping_app/wiring
 	./examples/shopping_app/workflow
 	./examples/shopping_simple/wiring
