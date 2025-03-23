@@ -53,6 +53,16 @@ func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, po
 	postID_STORAGE_SVC := rand.Int63()
 	post.PostID = postID_STORAGE_SVC
 
+	if reqID == 0 {
+		post.PostID = 1
+	} else {
+		post.PostID = 2
+	}
+
+	post.PostID += 1
+
+	post.PostID = 2 + 3
+
 	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
 	if err != nil {
 		return postID_STORAGE_SVC, err

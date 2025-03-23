@@ -1,4 +1,4 @@
-package coupons_app_sql
+package coupons_app_cache
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 )
 
 type CouponService interface {
-	CreateCoupon(ctx context.Context, category string, value int) error
-	ClaimCoupon(ctx context.Context, couponID int, userID int) (int, error)
+	CreateCoupon(ctx context.Context, couponID string, category string, value int) error
+	ClaimCoupon(ctx context.Context, couponID string, userID string) (int, error)
 }
 
 type CouponServiceImpl struct {
@@ -23,12 +23,12 @@ func NewCouponServiceImpl(ctx context.Context, couponsDB backend.RelationalDB) (
 	return s, nil
 }
 
-func (s *CouponServiceImpl) CreateCoupon(ctx context.Context, category string, value int) error {
+func (s *CouponServiceImpl) CreateCoupon(ctx context.Context, couponID string, category string, value int) error {
 	_, err := s.couponsDB.Exec(ctx, "INSERT INTO coupons(category, value) VALUES (?, ?);", category, value)
 	return err
 }
 
-func (s *CouponServiceImpl) ClaimCoupon(ctx context.Context, couponID int, userID int) (int, error) {
+func (s *CouponServiceImpl) ClaimCoupon(ctx context.Context, couponID string, userID string) (int, error) {
 	var coupon Coupon
 	err := s.couponsDB.Select(ctx, &coupon, "SELECT * FROM claimed_coupons WHERE coupon_id = ?", couponID)
 	if err != nil {

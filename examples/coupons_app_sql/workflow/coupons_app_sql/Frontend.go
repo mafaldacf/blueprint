@@ -5,8 +5,8 @@ import (
 )
 
 type Frontend interface {
-	CreateStudent(ctx context.Context, studentID int, name string) error
-	CreateCoupon(ctx context.Context, couponID int, category string, value int) error
+	CreateStudent(ctx context.Context, name string) error
+	CreateCoupon(ctx context.Context, category string, value int) error
 	ClaimCoupon(ctx context.Context, couponID int, studentID int) error
 }
 
@@ -19,13 +19,13 @@ func NewFrontendImpl(ctx context.Context, StudentService StudentService, CouponS
 	return &FrontendImpl{StudentService: StudentService, CouponService: CouponService}, nil
 }
 
-func (u *FrontendImpl) CreateStudent(ctx context.Context, studentID int, name string) error {
-	err := u.StudentService.CreateStudent(ctx, studentID, name)
+func (u *FrontendImpl) CreateStudent(ctx context.Context, name string) error {
+	err := u.StudentService.CreateStudent(ctx, name)
 	return err
 }
 
-func (u *FrontendImpl) CreateCoupon(ctx context.Context, couponID int, category string, value int) error {
-	err := u.CouponService.CreateCoupon(ctx, couponID, category, value)
+func (u *FrontendImpl) CreateCoupon(ctx context.Context, category string, value int) error {
+	err := u.CouponService.CreateCoupon(ctx, category, value)
 	return err
 }
 

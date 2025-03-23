@@ -1,0 +1,33 @@
+{
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "StudentID",
+      "Name",
+      "Balance",
+      "ClaimedCoupons"
+    ],
+    "properties": {
+      "StudentID": {
+        "bsonType": "int",
+        "description": "Unique identifier for the student"
+      },
+      "Name": {
+        "bsonType": "string",
+        "maxLength": 120,
+        "description": "Student's name"
+      },
+      "Balance": {
+        "bsonType": "int",
+        "minimum": 0,
+        "description": "Student's balance (must be greater than 0)"
+      },
+      "NumClaimedCoupons": {
+        "bsonType": "int",
+        "minimum": 0,
+        "maximum": 10,
+        "description": "Number of coupons claimed (max 10)"
+      }
+    }
+  }
+}

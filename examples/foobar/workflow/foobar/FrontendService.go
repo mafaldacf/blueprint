@@ -2,12 +2,14 @@ package foobar
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/examples/foobar/workflow/foobar/bar"
 	"github.com/blueprint-uservices/blueprint/examples/foobar/workflow/foobar/foo"
 )
 
 var HelloWorldVariable = "Hello World!"
+
 const HELLO_WORLD_CONST = "Hello World (CONST)!"
 
 type FrontendService interface {
@@ -20,18 +22,19 @@ type FrontendServiceImpl struct {
 }
 
 func NewFrontendServiceImpl(ctx context.Context, fooService foo.FooService, barService bar.BarService) (FrontendService, error) {
-	d := &FrontendServiceImpl{ fooService: fooService, barService: barService }
+	d := &FrontendServiceImpl{fooService: fooService, barService: barService}
 	return d, nil
 }
 
 func (d *FrontendServiceImpl) Frontend(ctx context.Context) (string, error) {
-	f, err1 := d.fooService.Foo(ctx, "Frontend")
-	b, err2 := d.barService.Bar(ctx, "Frontend")
+	foo, err1 := d.fooService.Foo(ctx, "Frontend")
+	bar, err2 := d.barService.Bar(ctx, foo.Text)
 	if err1 != nil {
 		return "", err1
 	}
 	if err2 != nil {
 		return "", err2
 	}
-	return f + ", " + b, nil
+	out := fmt.Sprintf("%s, %s", foo.Text, bar.Text)
+	return out, nil
 }

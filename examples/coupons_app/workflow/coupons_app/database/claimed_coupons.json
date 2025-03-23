@@ -1,0 +1,16 @@
+{
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": ["CouponID", "UserID"],
+    "properties": {
+      "CouponID": {
+        "bsonType": "int",
+        "description": "ID of the claimed coupon"
+      },
+      "UserID": {
+        "bsonType": "int",
+        "description": "ID of the user who claimed the coupon"
+      }
+    }
+  }
+}

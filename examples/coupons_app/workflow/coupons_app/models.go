@@ -1,8 +1,9 @@
 package coupons_app
 
 type Coupon struct {
-	CouponID int
-	Category string
+	CouponID  int
+	Category  string
+	NumClaims int
 }
 
 type ClaimedCoupon struct {
@@ -11,7 +12,8 @@ type ClaimedCoupon struct {
 }
 
 type Student struct {
-	StudentID int
-	Name      string
-	Balance   int
+	StudentID         int
+	Name              string
+	Balance           int
+	NumClaimedCoupons int
 }

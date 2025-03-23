@@ -10,6 +10,8 @@ use (
 	./examples/coupons_app/workflow
 	./examples/coupons_app_sql/wiring
 	./examples/coupons_app_sql/workflow
+	./examples/coupons_app_cache/wiring
+	./examples/coupons_app_cache/workflow
 	./examples/digota/wiring
 	./examples/digota/workflow
 	./examples/dsb_hotel/tests

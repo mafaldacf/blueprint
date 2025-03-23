@@ -1,0 +1,23 @@
+{
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": ["CouponID", "Category"],
+    "properties": {
+      "CouponID": {
+        "bsonType": "int",
+        "description": "ID of the claimed coupon"
+      },
+      "Category": {
+        "bsonType": "string",
+        "maxLength": 120,
+        "description": "Coupons's category"
+      },
+      "NumClaims": {
+        "bsonType": "int",
+        "minimum": 0,
+        "maximum": 100,
+        "description": "Number of times claims (max 100)"
+      }
+    }
+  }
+}

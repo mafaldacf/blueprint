@@ -47,6 +47,12 @@ func (s *CartServiceImpl) GetCart(ctx context.Context, cartID string) (Cart, err
 		return cart, fmt.Errorf("no cart found for id '%s': %s", cartID, err.Error())
 	}
 	exists, err := result.One(ctx, &cart)
+
+	for _, p := range cart.Products {
+		s.product_service.GetProduct(ctx, p)
+	}
+	
+
 	if !exists {
 		return cart, fmt.Errorf("no cart found for id '%s'", cartID)
 	}
@@ -55,8 +61,6 @@ func (s *CartServiceImpl) GetCart(ctx context.Context, cartID string) (Cart, err
 
 func (s *CartServiceImpl) AddProductToCart(ctx context.Context, cartID string, productID string) (CartProduct, error) {
 	var product Product
-
-	// FIXME: PRODUCT IS NOT BEING TAINTED!! AND IF WE PASS THE Product.ProductID BELOW IT DOES NOT WORK
 	product, _ = s.product_service.GetProduct(ctx, productID)
 
 	var cart Cart

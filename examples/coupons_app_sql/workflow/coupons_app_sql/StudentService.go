@@ -9,7 +9,7 @@ import (
 )
 
 type StudentService interface {
-	CreateStudent(ctx context.Context, studentID int, name string) error
+	CreateStudent(ctx context.Context, name string) error
 	AddToBalance(ctx context.Context, studentID int, couponValue int) error
 }
 
@@ -23,8 +23,8 @@ func NewStudentServiceImpl(ctx context.Context, studentsDB backend.RelationalDB)
 	return s, nil
 }
 
-func (s *StudentServiceImpl) CreateStudent(ctx context.Context, studentID int, name string) error {
-	_, err := s.studentsDB.Exec(ctx, "INSERT INTO students(student_id, name) VALUES (?, ?);", studentID, name)
+func (s *StudentServiceImpl) CreateStudent(ctx context.Context, name string) error {
+	_, err := s.studentsDB.Exec(ctx, "INSERT INTO students(name) VALUES (?);", name)
 	return err
 }
 
