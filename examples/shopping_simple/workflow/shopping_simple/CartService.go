@@ -121,13 +121,17 @@ func (s *CartServiceImpl) removeProduct(ctx context.Context, message ProductQueu
 			{Key: "totalquantity", Value: 1},
 		}},
 		{Key: "$pull", Value: bson.D{
-			{Key: "products", Value: message.ProductID},
+			{Key: "Products", Value: message.ProductID},
+		}},
+		{Key: "$pull", Value: bson.D{
+			{Key: "LastProductID", Value: message.ProductID},
 		}},
 	}
 	updated, err := collection.UpdateMany(ctx, filter, update)
 	if updated == 0 {
 		return fmt.Errorf("no cart to update for product id '%s'", message.ProductID)
 	}
+
 	return err
 }
 

@@ -12,6 +12,7 @@ type StorageService interface {
 	//StorePost(ctx context.Context, reqID int64, post Post) error
 	StorePost(ctx context.Context, reqID int64, text string) (int64, error)
 	ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error)
+	DeletePost(ctx context.Context, postID int64) error
 }
 
 type StorageServiceImpl struct {
@@ -31,6 +32,16 @@ func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase) (
 	err = collection.InsertOne(ctx, post)
 	return err
 } */
+
+func (s *StorageServiceImpl) DeletePost(ctx context.Context, postID int64) error {
+	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
+	if err != nil {
+		return err
+	}
+	filter := bson.D{{Key: "postid", Value: postID}}
+	err = collection.DeleteOne(ctx, filter)
+	return err
+}
 
 func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (int64, error) {
 	postID_STORAGE_SVC := rand.Int63()

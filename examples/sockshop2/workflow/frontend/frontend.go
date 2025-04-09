@@ -78,6 +78,8 @@ type FrontendService interface {
 
 	// Loads the catalogue in the catalogue service
 	LoadCatalogue(ctx context.Context) (string, error)
+
+	DeleteSock(ctx context.Context, id string) error
 }
 
 type FrontendImpl struct {
@@ -109,7 +111,8 @@ func (f *FrontendImpl) AddItem(ctx context.Context, sessionID string, itemID str
 		return sessionID, err
 	}
 
-	_, err = f.cart.AddItem(ctx, sessionID, cart.Item{ID: sock.ID, Quantity: 1, UnitPrice: sock.Price})
+	//FIXME: should pass sock.ID instead of itemID but analyzer is not detecting FOREIGN KEY!!
+	_, err = f.cart.AddItem(ctx, sessionID, cart.Item{ID: itemID, Quantity: 1, UnitPrice: sock.Price})
 	return sessionID, err
 }
 
@@ -242,4 +245,8 @@ func (f *FrontendImpl) LoadCatalogue(ctx context.Context) (string, error) {
 	sock := catalogue.Sock{}
 	f.catalogue.AddSock(ctx, sock)
 	return "Load catalogue successful", nil
+}
+
+func (f *FrontendImpl) DeleteSock(ctx context.Context, id string) error {
+	return f.catalogue.DeleteSock(ctx, id)
 }
