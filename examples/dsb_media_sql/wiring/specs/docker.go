@@ -21,8 +21,8 @@ var Docker = cmdbuilder.SpecOption{
 func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	var containers []string
 
-	movieid_db := mysql.Container(spec, "students_db")
-	movieinfo_db := mysql.Container(spec, "coupons_db")
+	movieid_db := mysql.Container(spec, "movieid_db")
+	movieinfo_db := mysql.Container(spec, "movieinfo_db")
 
 	movieid_service := workflow.Service[mediamicroservices_sql.MovieIdService](spec, "movieid_service", movieid_db)
 	movieid_ctr := applyDockerDefaults(spec, movieid_service, "movieid_proc", "movieid_container")

@@ -1,0 +1,65 @@
+
+version: '3'
+services:
+
+  api_container:
+    build:
+      context: api_container
+      dockerfile: ./Dockerfile
+    hostname: api_container
+    expose:
+     - "2000"
+    ports:
+     - "${API_SERVICE_HTTP_BIND_ADDR?api_service.http.bind_addr must be set by the calling environment}:2000"
+    environment:
+     - API_SERVICE_HTTP_BIND_ADDR=0.0.0.0:2000
+     - MOVIEID_SERVICE_THRIFT_DIAL_ADDR=movieid_container:2000
+     - MOVIEINFO_SERVICE_THRIFT_DIAL_ADDR=movieinfo_container:2000
+    restart: always
+
+  movieid_container:
+    build:
+      context: movieid_container
+      dockerfile: ./Dockerfile
+    hostname: movieid_container
+    expose:
+     - "2000"
+    ports:
+     - "${MOVIEID_SERVICE_THRIFT_BIND_ADDR?movieid_service.thrift.bind_addr must be set by the calling environment}:2000"
+    environment:
+     - MOVIEID_DB_DIAL_ADDR=movieid_db_ctr:27017
+     - MOVIEID_SERVICE_THRIFT_BIND_ADDR=0.0.0.0:2000
+    restart: always
+
+  movieid_db_ctr:
+    image: mongo
+    hostname: movieid_db_ctr
+    expose:
+     - "27017"
+    ports:
+     - "${MOVIEID_DB_BIND_ADDR?movieid_db.bind_addr must be set by the calling environment}:27017"
+    restart: always
+
+  movieinfo_container:
+    build:
+      context: movieinfo_container
+      dockerfile: ./Dockerfile
+    hostname: movieinfo_container
+    expose:
+     - "2000"
+    ports:
+     - "${MOVIEINFO_SERVICE_THRIFT_BIND_ADDR?movieinfo_service.thrift.bind_addr must be set by the calling environment}:2000"
+    environment:
+     - MOVIEINFO_DB_DIAL_ADDR=movieinfo_db_ctr:27017
+     - MOVIEINFO_SERVICE_THRIFT_BIND_ADDR=0.0.0.0:2000
+    restart: always
+
+  movieinfo_db_ctr:
+    image: mongo
+    hostname: movieinfo_db_ctr
+    expose:
+     - "27017"
+    ports:
+     - "${MOVIEINFO_DB_BIND_ADDR?movieinfo_db.bind_addr must be set by the calling environment}:27017"
+    restart: always
+
