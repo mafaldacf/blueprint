@@ -17,15 +17,15 @@ type MovieInfoService interface {
 }
 
 type MovieInfoServiceImpl struct {
-	movieIdDB backend.NoSQLDatabase
+	movieInfoDB backend.NoSQLDatabase
 }
 
 func NewMovieInfoServiceImpl(ctx context.Context, movieIdDB backend.NoSQLDatabase) (MovieInfoService, error) {
-	return &MovieInfoServiceImpl{movieIdDB: movieIdDB}, nil
+	return &MovieInfoServiceImpl{movieInfoDB: movieIdDB}, nil
 }
 
 func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieInfo, error) {
-	collection, err := m.movieIdDB.GetCollection(ctx, "movie-info", "movie-info")
+	collection, err := m.movieInfoDB.GetCollection(ctx, "movie-info", "movie-info")
 	if err != nil {
 		return MovieInfo{}, err
 	}

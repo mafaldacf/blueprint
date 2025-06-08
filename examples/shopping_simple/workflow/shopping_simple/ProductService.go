@@ -74,10 +74,10 @@ func (s *ProductServiceImpl) DeleteProduct(ctx context.Context, productID string
 		return false, err
 	}
 	var val bool
-	/* message := ProductQueueMessage{
+	message := ProductQueueMessage{
 		ProductID: productID,
 		Remove:    true,
 	}
-	val, err = s.product_queue.Push(ctx, message) */
+	val, err = s.product_queue.Push(ctx, message)
 	return val, err
 }

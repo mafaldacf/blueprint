@@ -16,14 +16,15 @@ type MovieInfo struct {
 
 type MovieInfoService interface {
 	WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieInfo, error)
+	ReadMovieInfo(ctx context.Context, reqID int64, movieID string) (MovieInfo, error)
 }
 
 type MovieInfoServiceImpl struct {
-	movieIdDB backend.RelationalDB
+	movieInfoDB backend.RelationalDB
 }
 
 func NewMovieInfoServiceImpl(ctx context.Context, movieIdDB backend.RelationalDB) (MovieInfoService, error) {
-	m := &MovieInfoServiceImpl{movieIdDB: movieIdDB}
+	m := &MovieInfoServiceImpl{movieInfoDB: movieIdDB}
 	return m, m.createTables(ctx)
 }
 
@@ -33,7 +34,13 @@ func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, 
 		Title:   title,
 		Casts:   casts,
 	}
-	_ , err := m.movieIdDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, casts) VALUES (?, ?);", movieID, title, casts)
+	_ , err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, casts) VALUES (?, ?);", movieID, title, casts)
+	return movieInfo, err
+}
+
+func (m *MovieInfoServiceImpl) ReadMovieInfo(ctx context.Context, reqID int64, movieID string) (MovieInfo, error) {
+	var movieInfo MovieInfo
+	err := m.movieInfoDB.Select(ctx, &movieInfo, "SELECT * FROM movieinfo WHERE movieid = ?", movieID)
 	return movieInfo, err
 }
 
@@ -44,7 +51,7 @@ func (m *MovieInfoServiceImpl) createTables(ctx context.Context) error {
 	}
 	sqlStatements := strings.Split(string(sqlBytes), ";")
 	for _, stmt := range sqlStatements {
-		_, err := m.movieIdDB.Exec(ctx, stmt)
+		_, err := m.movieInfoDB.Exec(ctx, stmt)
 		if err != nil {
 			return err
 		}

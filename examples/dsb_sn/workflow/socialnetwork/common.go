@@ -1,10 +1,10 @@
 package socialnetwork
 
 import (
-	"bytes"
-	"encoding/json"
-	"net"
-	"strconv"
+	//"bytes"
+	//"encoding/json"
+	//"net"
+	//"strconv"
 	//"strings"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -12,7 +12,7 @@ import (
 
 // From: https://gist.github.com/tsilvers/085c5f39430ced605d970094edf167ba
 func GetMachineID() string {
-	interfaces, err := net.Interfaces()
+	/* interfaces, err := net.Interfaces()
 	if err != nil {
 		return "0"
 	}
@@ -38,7 +38,7 @@ func GetMachineID() string {
 			mac_ui16 := uint16(mac)
 			return strconv.FormatUint(uint64(mac_ui16), 16)
 		}
-	}
+	} */
 
 	return "0"
 }
@@ -47,7 +47,8 @@ var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // Converts a json-encoded string to a bson.D document to be used as arguments for one of the other NoSQLDatabase functions
 func parseNoSQLDBQuery(query string) (bson.D, error) {
-	return handleFormats(query)
+	/* return handleFormats(query) */
+	return nil, nil
 }
 
 /* func lower(f interface{}) interface{} {
@@ -74,7 +75,7 @@ func parseNoSQLDBQuery(query string) (bson.D, error) {
 
 func handleFormats(jsonQuery string) (bdoc bson.D, err error) {
 
-	if jsonQuery == "" {
+	/* if jsonQuery == "" {
 		bdoc = bson.D{}
 		return
 	}
@@ -83,14 +84,15 @@ func handleFormats(jsonQuery string) (bdoc bson.D, err error) {
 	err = json.Unmarshal([]byte(jsonQuery), &f)
 	if err != nil {
 		return
-	}
+	} */
 
 	/* f = lower(f) */
 
-	lowerQuery, err := json.Marshal(f)
+	/* lowerQuery, err := json.Marshal(f)
 	if err != nil {
 		return
 	}
-	err = bson.UnmarshalExtJSON(lowerQuery, true, &bdoc)
-	return
+	err = bson.UnmarshalExtJSON(lowerQuery, true, &bdoc) */
+	/* return */
+	return nil, nil
 }

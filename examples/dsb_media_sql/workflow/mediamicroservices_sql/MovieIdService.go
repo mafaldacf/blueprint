@@ -15,6 +15,7 @@ type MovieId struct {
 
 type MovieIdService interface {
 	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
+	ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error)
 }
 
 type MovieIdServiceImpl struct {
@@ -32,6 +33,12 @@ func (m *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, m
 		Title:   title,
 	}
 	_ , err := m.movieIdDB.Exec(ctx, "INSERT INTO movieid(movieid, title) VALUES (?, ?);", movieID, title)
+	return movieId, err
+}
+
+func (m *MovieIdServiceImpl) ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error) {
+	var movieId MovieId
+	err := m.movieIdDB.Select(ctx, &movieId, "SELECT * FROM movieid WHERE movieid = ?", movieID)
 	return movieId, err
 }
 
