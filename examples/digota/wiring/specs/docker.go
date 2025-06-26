@@ -45,7 +45,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, payment_service_ctr)
 	allServices = append(allServices, "payment_service")
 
-	product_service := workflow.Service[digota.ProductService](spec, "product_service", products_db)
+	product_service := workflow.Service[digota.ProductService](spec, "product_service", sku_service, products_db)
 	product_service_ctr := applyHTTPDefaults(spec, product_service, "product_service_proc", "product_service_container")
 	containers = append(containers, product_service_ctr)
 	allServices = append(allServices, "product_service")

@@ -19,3 +19,11 @@ type Message struct {
 	PostID_MESSAGE int64
 	Timestamp      int64
 }
+
+type Analytics struct {
+	PostID int64
+}
+
+type TriggerAnalyticsMessage struct {
+	PostID string
+}

@@ -17,3 +17,7 @@ func StringToInt64(s string) (int64, error) {
     }
     return num, nil
 }
+
+func TestFunc() string {
+    return HelloWorld_Variable
+}

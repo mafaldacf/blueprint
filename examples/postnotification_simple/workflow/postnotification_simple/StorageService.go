@@ -6,6 +6,8 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
 )
 
 type StorageService interface {
@@ -16,11 +18,12 @@ type StorageService interface {
 }
 
 type StorageServiceImpl struct {
-	postsDb          backend.NoSQLDatabase
+	postsDb        backend.NoSQLDatabase
+	analyticsQueue backend.Queue
 }
 
-func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase) (StorageService, error) {
-	s := &StorageServiceImpl{postsDb: postsDb}
+func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase, analyticsQueue backend.Queue) (StorageService, error) {
+	s := &StorageServiceImpl{postsDb: postsDb, analyticsQueue: analyticsQueue}
 	return s, nil
 }
 
@@ -47,6 +50,7 @@ func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text st
 	postID_STORAGE_SVC := rand.Int63()
 	timestamp := rand.Int63()
 	mentions := []string{"alice", "bob"}
+
 	post := Post{
 		ReqID:     reqID,
 		PostID:    postID_STORAGE_SVC,
@@ -58,11 +62,27 @@ func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text st
 		},
 	}
 
+	myval := 0
+	var mymentions []string
+	for idx, mention := range mentions {
+		myval += idx
+		mymentions = append(mymentions, mention)
+	}
+
 	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
 	if err != nil {
 		return postID_STORAGE_SVC, err
 	}
 	err = collection.InsertOne(ctx, post)
+	if err != nil {
+		return -1, err
+	}
+
+	message := TriggerAnalyticsMessage{
+		PostID: common.Int64ToString(post.PostID),
+	}
+	_, err = s.analyticsQueue.Push(ctx, message)
+
 	return postID_STORAGE_SVC, err
 }
 
@@ -81,5 +101,6 @@ func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID i
 	if !res || err != nil {
 		return post, err
 	}
+	
 	return post, err
 }

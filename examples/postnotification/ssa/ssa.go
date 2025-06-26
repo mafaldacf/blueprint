@@ -37,7 +37,7 @@ func main() {
 	ssaPkgs := make([]*ssa.Package, len(pkgs))
 	for i, pkg := range pkgs {
 		if _, ok := createdPkgs[pkg]; ok {
-			return
+			continue
 		}
 		ssaPkgs[i] = prog.CreatePackage(pkg.Types, pkg.Syntax, pkg.TypesInfo, false)
 		createdPkgs[pkg] = true
@@ -45,7 +45,7 @@ func main() {
 			recurse(prog, impt)
 		}
 	}
-	
+
 	prog.Build()
 
 	outFile, err := os.Create("ssa.out")
@@ -55,72 +55,64 @@ func main() {
 	defer outFile.Close()
 
 	for _, ssaPkg := range ssaPkgs {
-		fmt.Fprintf(outFile, "Package: %s\n", ssaPkg.Pkg.Path())
+		if ssaPkg == nil || ssaPkg.Pkg == nil {
+			continue
+		}
+		if ssaPkg.Pkg.Name() != "postnotification" {
+			continue
+		}
 
-		for name, member := range ssaPkg.Members {
-			fmt.Fprintf(outFile, "  Member: %s (%T)\n", name, member)
+		fmt.Fprintf(outFile, "Package: %s\n", ssaPkg.Pkg.Name())
 
+		for _, member := range ssaPkg.Members {
 			switch m := member.(type) {
 			case *ssa.Function:
-				fmt.Fprintf(outFile, "    Function: %s: %v\n", m.Name(), m.Blocks)
-
-				for i, b := range m.Blocks {
-					fmt.Fprintf(outFile, "block [%d]: %v\n", i, b)
-					for j, inst := range b.Instrs {
-						fmt.Fprintf(outFile, "\t inst #%d: %v\n", j, inst)
+				fmt.Fprintf(outFile, "\tFunction: %s\n", m.Name())
+				for i, block := range m.Blocks {
+					fmt.Fprintf(outFile, "\t\tBlock #%d: %s\n", i, block.Comment)
+					for j, instr := range block.Instrs {
+						fmt.Fprintf(outFile, "\t\t\tInst #%d: %s\n", j, instr.String())
 					}
 				}
-		
+
 			case *ssa.Global:
-				fmt.Fprintf(outFile, "    Global: %s, Type: %s\n", m.Name(), m.Type().String())
-		
+				fmt.Fprintf(outFile, "\tGlobal: %s, Type: %s\n", m.Name(), m.Type().String())
+
 			case *ssa.Type:
-				fmt.Fprintf(outFile, "    Type: %s\n", m.Type().String())
-		
+				fmt.Fprintf(outFile, "\tType: %s\n", m.Type().String())
+				
+				// print methods on the type
+				methods := prog.MethodSets.MethodSet(m.Type())
+				for i := 0; i < methods.Len(); i++ {
+					sel := methods.At(i)
+					fmt.Fprintf(outFile, "\t\tMethod: %t // %v\n", sel.Obj(), sel.Obj().Type())
+
+					
+					method := prog.MethodValue(sel)
+					if method != nil {
+						fmt.Fprintf(outFile, "\t\tMethod: %s\n", method.String())
+						for i, block := range method.Blocks {
+							fmt.Fprintf(outFile, "\t\t\tBlock #%d: %s\n", i, block.Comment)
+							for j, instr := range block.Instrs {
+								fmt.Fprintf(outFile, "\t\t\t\tInst #%d: %s\n", j, instr.String())
+							}
+						}
+					}
+				}
+
 			default:
-				fmt.Fprintf(outFile, "    Unknown member type: %T\n", m)
+				fmt.Fprintf(outFile, "\tUnknown member type: %T\n", m)
 			}
-			fmt.Fprintf(outFile, "\n")
 		}
-		fmt.Fprintf(outFile, "\n----------------\n\n")
 	}
-
-	/* for _, ssaPkg := range ssaPkgs {
-		fmt.Printf("Package: %s\n", ssaPkg.Pkg.Path())
-
-		for name, member := range ssaPkg.Members {
-			fmt.Printf("  Member: %s (%T)\n", name, member)
-		
-			switch m := member.(type) {
-			case *ssa.Function:
-				fmt.Printf("    Function: %s\n", m.Name())
-				printFunction(m)
-		
-			case *ssa.Global:
-				fmt.Printf("    Global: %s, Type: %s\n", m.Name(), m.Type().String())
-		
-			case *ssa.Type:
-				fmt.Printf("    Type: %s\n", m.Type().String())
-		
-			default:
-				fmt.Printf("    Unknown member type: %T\n", m)
-			}
-			fmt.Println()
-		}
-
-		fmt.Println()
-		fmt.Println("----------------")
-	} */
 }
 
-func printFunction(fn *ssa.Function) {
-	fmt.Printf("  Function: %s\n", fn.Name())
-
-	for _, block := range fn.Blocks {
-		fmt.Printf("    Block: %s\n", block.Comment)
-
-		for _, instr := range block.Instrs {
-			fmt.Printf("      Instr: %s\n", instr.String())
+func printFunction(fn *ssa.Function, out *os.File) {
+	fmt.Fprintf(out, "\tFunction: %s\n", fn.Name())
+	for i, block := range fn.Blocks {
+		fmt.Fprintf(out, "\t  Block #%d: %s\n", i, block.Comment)
+		for j, instr := range block.Instrs {
+			fmt.Fprintf(out, "\t    Inst #%d: %s\n", j, instr.String())
 		}
 	}
 }

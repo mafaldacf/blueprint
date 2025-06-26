@@ -1,188 +1,102 @@
-Package: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common
-  Member: StringToInt64 (*ssa.Function)
-    Function: StringToInt64: [0 1 2]
-block [0]: 0
-	 inst #0: strconv.ParseInt(s, 10:int, 64:int)
-	 inst #1: extract t0 #0
-	 inst #2: extract t0 #1
-	 inst #3: t2 != nil:error
-	 inst #4: if t3 goto 1 else 2
-block [1]: 1
-	 inst #0: return 0:int64, t2
-block [2]: 2
-	 inst #0: return t1, nil:error
-
-  Member: init$guard (*ssa.Global)
-    Global: init$guard, Type: *bool
-
-  Member: init (*ssa.Function)
-    Function: init: [0 1 2]
-block [0]: 0
-	 inst #0: *init$guard
-	 inst #1: if t0 goto 2 else 1
-block [1]: 1
-	 inst #0: *init$guard = true:bool
-	 inst #1: strconv.init()
-	 inst #2: *HelloWorld_Variable = "Hello World!":string
-	 inst #3: jump 2
-block [2]: 2
-	 inst #0: return
-
-  Member: HelloWorld_Variable (*ssa.Global)
-    Global: HelloWorld_Variable, Type: *string
-
-  Member: HELLO_WORLD_CONST (*ssa.NamedConst)
-    Unknown member type: *ssa.NamedConst
-
-  Member: Int64ToString (*ssa.Function)
-    Function: Int64ToString: [0]
-block [0]: 0
-	 inst #0: strconv.FormatInt(i, 10:int)
-	 inst #1: return t0
-
-
-----------------
-
-Package: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification
-  Member: TriggerAnalyticsMessage (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.TriggerAnalyticsMessage
-
-  Member: MediaService (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.MediaService
-
-  Member: MediaServiceImpl (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.MediaServiceImpl
-
-  Member: Post (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Post
-
-  Member: Timeline (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Timeline
-
-  Member: Analytics (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Analytics
-
-  Member: init$guard (*ssa.Global)
-    Global: init$guard, Type: *bool
-
-  Member: NewAnalyticsServiceImpl (*ssa.Function)
-    Function: NewAnalyticsServiceImpl: [0]
-block [0]: 0
-	 inst #0: new AnalyticsServiceImpl (complit)
-	 inst #1: &t0.analyticsDb [#1]
-	 inst #2: &t0.analyticsQueue [#0]
-	 inst #3: &t0.numWorkers [#2]
-	 inst #4: *t1 = analyticsDb
-	 inst #5: *t2 = analyticsQueue
-	 inst #6: *t3 = 4:int
-	 inst #7: make AnalyticsService <- *AnalyticsServiceImpl (t0)
-	 inst #8: return t4, nil:error
-
-  Member: NewMediaServiceImpl (*ssa.Function)
-    Function: NewMediaServiceImpl: [0]
-block [0]: 0
-	 inst #0: new MediaServiceImpl (complit)
-	 inst #1: &t0.mediaDb [#0]
-	 inst #2: *t1 = mediaDb
-	 inst #3: make MediaService <- *MediaServiceImpl (t0)
-	 inst #4: return t2, nil:error
-
-  Member: NotifyServiceImpl (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.NotifyServiceImpl
-
-  Member: StorageService (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.StorageService
-
-  Member: UploadService (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.UploadService
-
-  Member: UploadServiceImpl (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.UploadServiceImpl
-
-  Member: NewUploadServiceImpl (*ssa.Function)
-    Function: NewUploadServiceImpl: [0]
-block [0]: 0
-	 inst #0: new UploadServiceImpl (complit)
-	 inst #1: &t0.storageService [#0]
-	 inst #2: &t0.mediaService [#1]
-	 inst #3: &t0.notificationsQueue [#2]
-	 inst #4: &t0.timelineCache [#3]
-	 inst #5: *t1 = storageService
-	 inst #6: *t2 = mediaService
-	 inst #7: *t3 = notificationsQueue
-	 inst #8: *t4 = timelineCache
-	 inst #9: make UploadService <- *UploadServiceImpl (t0)
-	 inst #10: return t5, nil:error
-
-  Member: Creator (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Creator
-
-  Member: init (*ssa.Function)
-    Function: init: [0 1 2]
-block [0]: 0
-	 inst #0: *init$guard
-	 inst #1: if t0 goto 2 else 1
-block [1]: 1
-	 inst #0: *init$guard = true:bool
-	 inst #1: context.init()
-	 inst #2: sync.init()
-	 inst #3: github.com/blueprint-uservices/blueprint/runtime/core/backend.init()
-	 inst #4: go.mongodb.org/mongo-driver/bson.init()
-	 inst #5: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common.init()
-	 inst #6: math/rand.init()
-	 inst #7: strconv.init()
-	 inst #8: jump 2
-block [2]: 2
-	 inst #0: return
-
-  Member: AnalyticsService (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.AnalyticsService
-
-  Member: AnalyticsServiceImpl (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.AnalyticsServiceImpl
-
-  Member: NotifyService (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.NotifyService
-
-  Member: NewNotifyServiceImpl (*ssa.Function)
-    Function: NewNotifyServiceImpl: [0]
-block [0]: 0
-	 inst #0: new NotifyServiceImpl (complit)
-	 inst #1: &t0.storageService [#0]
-	 inst #2: &t0.notificationsQueue [#1]
-	 inst #3: &t0.num_workers [#2]
-	 inst #4: *t1 = storageService
-	 inst #5: *t2 = notificationsQueue
-	 inst #6: *t3 = 4:int
-	 inst #7: make NotifyService <- *NotifyServiceImpl (t0)
-	 inst #8: return t4, nil:error
-
-  Member: NewStorageServiceImpl (*ssa.Function)
-    Function: NewStorageServiceImpl: [0]
-block [0]: 0
-	 inst #0: new StorageServiceImpl (complit)
-	 inst #1: &t0.analyticsService [#0]
-	 inst #2: &t0.mediaService [#1]
-	 inst #3: &t0.posts_cache [#2]
-	 inst #4: &t0.postsDb [#3]
-	 inst #5: &t0.analyticsQueue [#4]
-	 inst #6: *t1 = analyticsService
-	 inst #7: *t2 = mediaService
-	 inst #8: *t3 = posts_cache
-	 inst #9: *t4 = postsDb
-	 inst #10: *t5 = analyticsQueue
-	 inst #11: make StorageService <- *StorageServiceImpl (t0)
-	 inst #12: return t6, nil:error
-
-  Member: Media (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Media
-
-  Member: Message (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Message
-
-  Member: StorageServiceImpl (*ssa.Type)
-    Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.StorageServiceImpl
-
-
-----------------
-
+Package: postnotification
+	Function: NewAnalyticsServiceImpl
+		Block #0: entry
+			Inst #0: new AnalyticsServiceImpl (complit)
+			Inst #1: &t0.analyticsDb [#1]
+			Inst #2: &t0.analyticsQueue [#0]
+			Inst #3: &t0.numWorkers [#2]
+			Inst #4: *t1 = analyticsDb
+			Inst #5: *t2 = analyticsQueue
+			Inst #6: *t3 = 4:int
+			Inst #7: make AnalyticsService <- *AnalyticsServiceImpl (t0)
+			Inst #8: return t4, nil:error
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.MediaServiceImpl
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.NotifyService
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6503381) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=Run) %!t(*types.Signature=&{<nil> <nil> 0x140077765a0 0x140077766c0 0x14007669050 0x14007669068 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context) error
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.NotifyServiceImpl
+	Function: NewStorageServiceImpl
+		Block #0: entry
+			Inst #0: new StorageServiceImpl (complit)
+			Inst #1: &t0.analyticsService [#0]
+			Inst #2: &t0.mediaService [#1]
+			Inst #3: &t0.posts_cache [#2]
+			Inst #4: &t0.postsDb [#3]
+			Inst #5: &t0.analyticsQueue [#4]
+			Inst #6: *t1 = analyticsService
+			Inst #7: *t2 = mediaService
+			Inst #8: *t3 = posts_cache
+			Inst #9: *t4 = postsDb
+			Inst #10: *t5 = analyticsQueue
+			Inst #11: make StorageService <- *StorageServiceImpl (t0)
+			Inst #12: return t6, nil:error
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Creator
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Post
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Timeline
+	Function: NewMediaServiceImpl
+		Block #0: entry
+			Inst #0: new MediaServiceImpl (complit)
+			Inst #1: &t0.mediaDb [#0]
+			Inst #2: *t1 = mediaDb
+			Inst #3: make MediaService <- *MediaServiceImpl (t0)
+			Inst #4: return t2, nil:error
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.StorageServiceImpl
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.UploadService
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6508992) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=ReadMedia) %!t(*types.Signature=&{<nil> <nil> 0x140077779e0 0x14007777c20 0x14007669170 0x14007669188 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, reqID int64, postID int64) (github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Media, error)
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6508914) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=UploadPost) %!t(*types.Signature=&{<nil> <nil> 0x140077776e0 0x14007777920 0x14007669140 0x14007669158 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, username string, text string) (int64, error)
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Analytics
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.TriggerAnalyticsMessage
+	Global: init$guard, Type: *bool
+	Function: init
+		Block #0: entry
+			Inst #0: *init$guard
+			Inst #1: if t0 goto 2 else 1
+		Block #1: init.start
+			Inst #0: *init$guard = true:bool
+			Inst #1: context.init()
+			Inst #2: sync.init()
+			Inst #3: github.com/blueprint-uservices/blueprint/runtime/core/backend.init()
+			Inst #4: go.mongodb.org/mongo-driver/bson.init()
+			Inst #5: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common.init()
+			Inst #6: math/rand.init()
+			Inst #7: strconv.init()
+			Inst #8: jump 2
+		Block #2: init.done
+			Inst #0: return
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.AnalyticsService
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6499533) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=ReadAnalytics) %!t(*types.Signature=&{<nil> <nil> 0x14007719aa0 0x14007719ce0 0x14007668f90 0x14007668fa8 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, postID int64) (github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Analytics, error)
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6499501) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=Run) %!t(*types.Signature=&{<nil> <nil> 0x140077198c0 0x140077199e0 0x14007668f60 0x14007668f78 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context) error
+	Function: NewUploadServiceImpl
+		Block #0: entry
+			Inst #0: new UploadServiceImpl (complit)
+			Inst #1: &t0.storageService [#0]
+			Inst #2: &t0.mediaService [#1]
+			Inst #3: &t0.notificationsQueue [#2]
+			Inst #4: &t0.timelineCache [#3]
+			Inst #5: *t1 = storageService
+			Inst #6: *t2 = mediaService
+			Inst #7: *t3 = notificationsQueue
+			Inst #8: *t4 = timelineCache
+			Inst #9: make UploadService <- *UploadServiceImpl (t0)
+			Inst #10: return t5, nil:error
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Message
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.AnalyticsServiceImpl
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.MediaService
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6501981) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=ReadMedia) %!t(*types.Signature=&{<nil> <nil> 0x140077762a0 0x14007776480 0x14007669008 0x14007669020 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, mediaID int64) (github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Media, error)
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6501920) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=StoreMedia) %!t(*types.Signature=&{<nil> <nil> 0x14007719ec0 0x140077761e0 0x14007668fd8 0x14007668ff0 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, media github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Media) (int64, error)
+	Function: NewNotifyServiceImpl
+		Block #0: entry
+			Inst #0: new NotifyServiceImpl (complit)
+			Inst #1: &t0.storageService [#0]
+			Inst #2: &t0.notificationsQueue [#1]
+			Inst #3: &t0.num_workers [#2]
+			Inst #4: *t1 = storageService
+			Inst #5: *t2 = notificationsQueue
+			Inst #6: *t3 = 4:int
+			Inst #7: make NotifyService <- *NotifyServiceImpl (t0)
+			Inst #8: return t4, nil:error
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.StorageService
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6496366) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=ReadPostMedia) %!t(*types.Signature=&{<nil> <nil> 0x140077770e0 0x14007777320 0x140076690e0 0x140076690f8 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, reqID int64, postID int64) (github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Media, error)
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6496278) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=ReadPostNoSQL) %!t(*types.Signature=&{<nil> <nil> 0x14007776d80 0x14007777020 0x140076690b0 0x140076690c8 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, reqID int64, postID int64) (github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Post, github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Analytics, error)
+		Method: &{{%!t(*types.Scope=<nil>) %!t(token.Pos=6496123) %!t(*types.Package=&{github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification postnotification 0x140077fc2a0 [0x14005b12d20 0x140040d8a20 0x140077180c0 0x14007038a80 0x14007326f00 0x140059d5680 0x1400411fec0] true false false go1.20}) %!t(string=StorePostNoSQL) %!t(*types.Signature=&{<nil> <nil> 0x14007776780 0x14007776cc0 0x14007669080 0x14007669098 false}) %!t(uint32=0) %!t(types.color=1) %!t(token.Pos=0)} false %!t(*types.Func=<nil>)} // func(ctx context.Context, reqID int64, post github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Post) (int64, error)
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.UploadServiceImpl
+	Type: github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification.Media

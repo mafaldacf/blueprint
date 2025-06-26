@@ -5,24 +5,42 @@ import (
 	"math/rand"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+
+	"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
 )
 
 type UploadService interface {
 	UploadPost(ctx context.Context, username string, text string) (int64, error)
 	DeletePost(ctx context.Context, postID int64) error
+	ReadPostWithAnalytics(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error)
 }
 
 type UploadServiceImpl struct {
 	storageService     StorageService
+	analyticsService   AnalyticsService
 	notificationsQueue backend.Queue
 }
 
-func NewUploadServiceImpl(ctx context.Context, storageService StorageService, notificationsQueue backend.Queue) (UploadService, error) {
-	return &UploadServiceImpl{storageService: storageService, notificationsQueue: notificationsQueue}, nil
+func NewUploadServiceImpl(ctx context.Context, storageService StorageService, analyticsService AnalyticsService, notificationsQueue backend.Queue) (UploadService, error) {
+	return &UploadServiceImpl{storageService: storageService, analyticsService: analyticsService, notificationsQueue: notificationsQueue}, nil
 }
 
 func (u *UploadServiceImpl) DeletePost(ctx context.Context, postID int64) error {
 	return u.storageService.DeletePost(ctx, postID)
+}
+
+func (u *UploadServiceImpl) ReadPostWithAnalytics(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error) {
+	post, err := u.storageService.ReadPost(ctx, reqID, postID)
+	if err != nil {
+		return Post{}, Analytics{}, err
+	}
+
+	analytics, err := u.analyticsService.ReadAnalytics(ctx, postID)
+	if err != nil {
+		return Post{}, Analytics{}, err
+	}
+
+	return post, analytics, err
 }
 
 /* func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
@@ -56,6 +74,8 @@ func (u *UploadServiceImpl) DeletePost(ctx context.Context, postID int64) error 
 
 func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
 	reqID := rand.Int63()
+
+	common.TestFunc()
 
 	postID_UploadSVC, _ := u.storageService.StorePost(ctx, reqID, text)
 

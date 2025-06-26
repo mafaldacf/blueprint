@@ -19,11 +19,12 @@ type ProductService interface {
 }
 
 type ProductServiceImpl struct {
+	skuService SkuService
 	db backend.NoSQLDatabase
 }
 
-func NewProductServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (ProductService, error) {
-	s := &ProductServiceImpl{db: db}
+func NewProductServiceImpl(ctx context.Context, skuService SkuService, db backend.NoSQLDatabase) (ProductService, error) {
+	s := &ProductServiceImpl{skuService: skuService, db: db}
 	return s, nil
 }
 
@@ -49,6 +50,8 @@ func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, 
 		return nil, err
 	}
 	err = collection.InsertOne(ctx, *product)
+
+	s.skuService.New(ctx, name, 0, true, 0, "parent", nil, "image", nil, nil, nil)
 	return product, err
 }
 
