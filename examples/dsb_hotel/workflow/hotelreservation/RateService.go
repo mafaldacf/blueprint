@@ -2,7 +2,7 @@ package hotelreservation
 
 import (
 	"context"
-	"strconv"
+	//"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,7 +20,7 @@ type RateServiceImpl struct {
 	rateDB    backend.NoSQLDatabase
 }
 
-func initRateDB(ctx context.Context, db backend.NoSQLDatabase) error {
+/* func initRateDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	c, err := db.GetCollection(ctx, "rate-db", "inventory")
 	if err != nil {
 		return err
@@ -115,14 +115,14 @@ func initRateDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	}
 
 	return nil
-}
+} */
 
 // Creates and Returns a new RateService object
 func NewRateServiceImpl(ctx context.Context, rateCache backend.Cache, rateDB backend.NoSQLDatabase) (RateService, error) {
-	err := initRateDB(ctx, rateDB)
+	/* err := initRateDB(ctx, rateDB)
 	if err != nil {
 		return nil, err
-	}
+	} */
 	return &RateServiceImpl{rateCache: rateCache, rateDB: rateDB}, nil
 }
 

@@ -2,9 +2,9 @@ package hotelreservation
 
 import (
 	"context"
-	"crypto/sha256"
-	"fmt"
-	"strconv"
+	//"crypto/sha256"
+	//"fmt"
+	//"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
@@ -23,7 +23,7 @@ type UserServiceImpl struct {
 	userDB backend.NoSQLDatabase
 }
 
-func initUserDB(ctx context.Context, userDB backend.NoSQLDatabase) error {
+/* func initUserDB(ctx context.Context, userDB backend.NoSQLDatabase) error {
 	c, err := userDB.GetCollection(ctx, "user-db", "user")
 	if err != nil {
 		return err
@@ -44,16 +44,16 @@ func initUserDB(ctx context.Context, userDB backend.NoSQLDatabase) error {
 		}
 	}
 	return nil
-}
+} */
 
 // Creates and returns a new UserService object
 func NewUserServiceImpl(ctx context.Context, userDB backend.NoSQLDatabase) (UserService, error) {
 	u := &UserServiceImpl{userDB: userDB, users: make(map[string]string)}
-	err := initUserDB(ctx, userDB)
+	/* err := initUserDB(ctx, userDB)
 	if err != nil {
 		return nil, err
-	}
-	err = u.LoadUsers(context.Background())
+	} */
+	err := u.LoadUsers(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -74,19 +74,19 @@ func (u *UserServiceImpl) LoadUsers(ctx context.Context) error {
 	}
 	result.All(ctx, &users)
 
-	for _, user := range users {
+	/* for _, user := range users {
 		u.users[user.Username] = user.Password
-	}
+	} */
 	return nil
 }
 
 func (u *UserServiceImpl) CheckUser(ctx context.Context, username string, password string) (bool, error) {
-	sum := sha256.Sum256([]byte(password))
+	/* sum := sha256.Sum256([]byte(password))
 	pass := fmt.Sprintf("%x", sum)
-
+ */
 	result := false
-	if true_pass, found := u.users[username]; found {
+	/* if true_pass, found := u.users[username]; found {
 		result = pass == true_pass
-	}
+	} */
 	return result, nil
 }

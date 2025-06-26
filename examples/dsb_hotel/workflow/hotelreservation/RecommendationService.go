@@ -2,11 +2,11 @@ package hotelreservation
 
 import (
 	"context"
-	"math"
-	"strconv"
+	//"math"
+	//"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
-	"github.com/hailocab/go-geoindex"
+	//"github.com/hailocab/go-geoindex"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -22,7 +22,7 @@ type RecommendationServiceImpl struct {
 	hotels      map[string]Hotel
 }
 
-func initRecommendationDB(ctx context.Context, db backend.NoSQLDatabase) error {
+/* func initRecommendationDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	c, err := db.GetCollection(ctx, "recommendation-db", "recommendation")
 	if err != nil {
 		return err
@@ -89,16 +89,16 @@ func initRecommendationDB(ctx context.Context, db backend.NoSQLDatabase) error {
 		}
 	}
 	return nil
-}
+} */
 
 // Creates and Returns a new RecommendationService object
 func NewRecommendationServiceImpl(ctx context.Context, recommendDB backend.NoSQLDatabase) (RecommendationService, error) {
 	service := &RecommendationServiceImpl{recommendDB: recommendDB, hotels: make(map[string]Hotel)}
-	err := initRecommendationDB(ctx, recommendDB)
+	/* err := initRecommendationDB(ctx, recommendDB)
 	if err != nil {
 		return nil, err
-	}
-	err = service.LoadRecommendations(context.Background())
+	} */
+	err := service.LoadRecommendations(context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -118,9 +118,9 @@ func (r *RecommendationServiceImpl) LoadRecommendations(ctx context.Context) err
 	}
 	var hotels []Hotel
 	res.All(ctx, &hotels)
-	for _, hotel := range hotels {
+	/* for _, hotel := range hotels {
 		r.hotels[hotel.HId] = hotel
-	}
+	} */
 
 	return nil
 }
@@ -128,7 +128,7 @@ func (r *RecommendationServiceImpl) LoadRecommendations(ctx context.Context) err
 func (r *RecommendationServiceImpl) GetRecommendations(ctx context.Context, require string, lat float64, lon float64) ([]string, error) {
 
 	var hotelIds []string
-	if require == "dis" {
+	/* if require == "dis" {
 		p1 := &geoindex.GeoPoint{Pid: "", Plat: lat, Plon: lon}
 		min := math.MaxFloat64
 		dist := make(map[string]float64)
@@ -175,7 +175,7 @@ func (r *RecommendationServiceImpl) GetRecommendations(ctx context.Context, requ
 				hotelIds = append(hotelIds, hid)
 			}
 		}
-	}
+	} */
 
 	return hotelIds, nil
 }

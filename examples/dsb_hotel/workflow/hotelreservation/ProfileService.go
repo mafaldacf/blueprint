@@ -2,7 +2,7 @@ package hotelreservation
 
 import (
 	"context"
-	"strconv"
+	//"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,7 +20,7 @@ type ProfileServiceImpl struct {
 	profileDB    backend.NoSQLDatabase
 }
 
-func initProfileDB(ctx context.Context, db backend.NoSQLDatabase) error {
+/* func initProfileDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	c, err := db.GetCollection(ctx, "profile-db", "hotels")
 	if err != nil {
 		return err
@@ -159,14 +159,14 @@ func initProfileDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	}
 
 	return nil
-}
+} */
 
 // Creates and Returns a new Profile Service object
 func NewProfileServiceImpl(ctx context.Context, profileCache backend.Cache, profileDB backend.NoSQLDatabase) (ProfileService, error) {
-	err := initProfileDB(ctx, profileDB)
+	/* err := initProfileDB(ctx, profileDB)
 	if err != nil {
 		return nil, err
-	}
+	} */
 	return &ProfileServiceImpl{profileCache: profileCache, profileDB: profileDB}, nil
 }
 

@@ -2,10 +2,10 @@ package hotelreservation
 
 import (
 	"context"
-	"strconv"
+	//"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
-	geoindex "github.com/hailocab/go-geoindex"
+	//geoindex "github.com/hailocab/go-geoindex"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -18,10 +18,10 @@ type GeoService interface {
 // Implementation of GeoService
 type GeoServiceImpl struct {
 	geoDB backend.NoSQLDatabase
-	index *geoindex.ClusteringIndex
+	//index *geoindex.ClusteringIndex
 }
 
-func initGeoDB(ctx context.Context, db backend.NoSQLDatabase) error {
+/* func initGeoDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	c, err := db.GetCollection(ctx, "geo-db", "geo")
 	if err != nil {
 		return err
@@ -68,14 +68,14 @@ func initGeoDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	}
 
 	return nil
-}
+} */
 
 // Creates and returns a new GeoService object
 func NewGeoServiceImpl(ctx context.Context, geoDB backend.NoSQLDatabase) (GeoService, error) {
-	err := initGeoDB(ctx, geoDB)
+	/* err := initGeoDB(ctx, geoDB)
 	if err != nil {
 		return nil, err
-	}
+	} */
 	service := &GeoServiceImpl{geoDB: geoDB}
 	service.newGeoIndex(ctx)
 	return service, nil
@@ -98,25 +98,25 @@ func (g *GeoServiceImpl) newGeoIndex(ctx context.Context) error {
 		return err
 	}
 	res.All(ctx, &points)
-	g.index = geoindex.NewClusteringIndex()
+	/* g.index = geoindex.NewClusteringIndex()
 	for _, point := range points {
 		g.index.Add(point)
-	}
+	} */
 	return nil
 }
 
-func (g *GeoServiceImpl) getNearbyPoints(lat float64, lon float64) []geoindex.Point {
+/* func (g *GeoServiceImpl) getNearbyPoints(lat float64, lon float64) []geoindex.Point {
 	center := &Point{Pid: "", Plat: lat, Plon: lon}
 
 	return g.index.KNearest(center, MAXSEARCHRESULTS, geoindex.Km(MAXSEARCHRADIUS), func(p geoindex.Point) bool { return true })
-}
+} */
 
 func (g *GeoServiceImpl) Nearby(ctx context.Context, lat float64, lon float64) ([]string, error) {
-	points := g.getNearbyPoints(lat, lon)
+	/* points := g.getNearbyPoints(lat, lon) */
 	var hotelIds []string
-	for _, p := range points {
+	/* for _, p := range points {
 		hotelIds = append(hotelIds, p.Id())
-	}
+	} */
 
 	return hotelIds, nil
 }

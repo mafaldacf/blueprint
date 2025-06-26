@@ -2,7 +2,7 @@ package hotelreservation
 
 import (
 	"context"
-	"strconv"
+	//"strconv"
 	"time"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
@@ -24,7 +24,7 @@ type ReservationServiceImpl struct {
 	NumRequests  int64
 }
 
-func initReservationDB(ctx context.Context, db backend.NoSQLDatabase) error {
+/* func initReservationDB(ctx context.Context, db backend.NoSQLDatabase) error {
 
 	c, err := db.GetCollection(ctx, "reservation-db", "reservation")
 	if err != nil {
@@ -82,13 +82,13 @@ func initReservationDB(ctx context.Context, db backend.NoSQLDatabase) error {
 	}
 
 	return nil
-}
+} */
 
 func NewReservationServiceImpl(ctx context.Context, reserveCache backend.Cache, reserveDB backend.NoSQLDatabase) (ReservationService, error) {
-	err := initReservationDB(ctx, reserveDB)
+	/* err := initReservationDB(ctx, reserveDB)
 	if err != nil {
 		return nil, err
-	}
+	} */
 	r := &ReservationServiceImpl{reserveCache: reserveCache, reserveDB: reserveDB}
 	return r, nil
 }
