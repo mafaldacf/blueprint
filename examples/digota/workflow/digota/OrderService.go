@@ -49,71 +49,70 @@ func NewOrderServiceImpl(ctx context.Context, skuService SkuService, db backend.
 } */
 
 func (s *OrderServiceImpl) getUpdatedOrderItems(ctx context.Context, items []*OrderItem) ([]*OrderItem, error) {
-	var skuMap = make(map[string]*OrderItem)
+	//var skuMap = make(map[string]*OrderItem)
 	var orderItems []*OrderItem
 	//var mtx = sync.Mutex{}
 	var errs []error
 	var wg = sync.WaitGroup{}
 
 	// get relevant order items
-	for _, v := range items {
-		if v.IsTypeSku() {
-			if skuItem, ok := skuMap[v.Parent]; ok {
-				skuItem.Quantity += v.Quantity
+	for _, myitem1 := range items {
+		/* if myitem1.IsTypeSku() {
+			if skuItem, ok := skuMap[myitem1.Parent]; ok {
+				skuItem.Quantity += myitem1.Quantity
 				continue
 			} else {
-				skuMap[v.Parent] = v
+				skuMap[myitem1.Parent] = myitem1
 			}
-			orderItems = append(orderItems, v)
+			orderItems = append(orderItems, myitem1)
 
-		} else if v.IsTypeDiscount() {
-			if v.Quantity <= 0 {
-				v.Quantity = 1
+		} else if myitem1.IsTypeDiscount() {
+			if myitem1.Quantity <= 0 {
+				myitem1.Quantity = 1
 			}
-			orderItems = append(orderItems, v)
+			orderItems = append(orderItems, myitem1)
 
-		} else if v.IsTypeShipping() {
-			if v.Quantity <= 0 {
-				v.Quantity = 1
+		} else if myitem1.IsTypeShipping() {
+			if myitem1.Quantity <= 0 {
+				myitem1.Quantity = 1
 			}
-			orderItems = append(orderItems, v)
+			orderItems = append(orderItems, myitem1)
 
-		} else if v.IsTypeTax() {
-			if v.Quantity <= 0 {
-				v.Quantity = 1
+		} else */if myitem1.IsTypeTax() {
+			if myitem1.Quantity <= 0 {
+				myitem1.Quantity = 1
 			}
-			orderItems = append(orderItems, v)
-
+			orderItems = append(orderItems, myitem1)
 		}
 	}
 
 	// update order item data
-	for _, v := range orderItems {
-		if v.IsTypeSku() {
-			item, err := s.skuService.Get(ctx, v.Parent)
+	for _, myitem2 := range orderItems {
+		if myitem2.IsTypeSku() {
+			item, err := s.skuService.Get(ctx, myitem2.Parent)
 			if err != nil {
 				return nil, err
 			} else {
-				v.Amount = int64(item.Price)
-				v.Currency = item.Currency
-				v.Description = item.Name
+				myitem2.Amount = int64(item.Price)
+				myitem2.Currency = item.Currency
+				myitem2.Description = item.Name
 			}
-		} else if v.IsTypeDiscount() {
+		} /* else if myitem2.IsTypeDiscount() {
 			// nothing to fetch yet
-			if v.Description == "" {
-				v.Description = defaultDiscountDescription
+			if myitem2.Description == "" {
+				myitem2.Description = defaultDiscountDescription
 			}
-		} else if v.IsTypeShipping() {
+		} else if myitem2.IsTypeShipping() {
 			// nothing to fetch yet
-			if v.Description == "" {
-				v.Description = defaultShippingDescription
+			if myitem2.Description == "" {
+				myitem2.Description = defaultShippingDescription
 			}
-		} else if v.IsTypeTax() {
+		} else if myitem2.IsTypeTax() {
 			// nothing to fetch yet
-			if v.Description == "" {
-				v.Description = defaultTaxDescription
+			if myitem2.Description == "" {
+				myitem2.Description = defaultTaxDescription
 			}
-		}
+		} */
 	}
 	wg.Wait()
 	if errs != nil {
@@ -123,22 +122,110 @@ func (s *OrderServiceImpl) getUpdatedOrderItems(ctx context.Context, items []*Or
 	return orderItems, nil
 }
 
+/* func (s *OrderServiceImpl) New2(ctx context.Context, currency int32, items []*OrderItem, amount int64, shipping *Shipping) (*Order, error) {
+	order := &Order{
+		Currency: currency,
+		Items:    items,
+		Shipping: shipping,
+	}
+
+	if amount > 10 {
+		order.Currency = 2
+		order.Shipping2 = Shipping{Name: "myname1"}
+		order.Amount = amount
+	} else {
+		order.Currency = 3
+		order.Shipping2 = Shipping{Name: "myname2"}
+	}
+
+	collection, _ := s.db.GetCollection(ctx, "orders", "orders")
+	collection.InsertOne(ctx, order.Shipping2)
+
+
+	return order, nil
+} */
+
+func (s *OrderServiceImpl) New2(ctx context.Context, items []*OrderItem, shipping1 *Shipping, shipping2 Shipping) (*Order, error) {
+	order := &Order{
+		Items:     items,
+	}
+
+
+	for _, myitem1 := range items {
+		if myitem1.Quantity <= 0 {
+			shipping1.Name = "myname1"
+		} else {
+			shipping2.Name = "myname2"
+		}
+	}
+
+	shipping2.Carrier = "mycarrier"
+	order.Shipping = shipping1
+	order.Shipping2 = shipping2
+
+	collection, err := s.db.GetCollection(ctx, "orders", "orders")
+	if err != nil {
+		return nil, err
+	}
+	collection.InsertOne(ctx, order)
+
+	return order, nil
+}
+
 func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*OrderItem, metadata map[string]string, email string, shipping *Shipping) (*Order, error) {
 	order := &Order{
 		Currency: currency,
 		Items:    items,
 		Metadata: metadata,
-		Email:    email,
-		Shipping: shipping,
+		/* Email:    email,
+		Shipping: shipping, */
 	}
 
-	orderItems, err := s.getUpdatedOrderItems(ctx, items)
+	/* orderItems, err := s.getUpdatedOrderItems(ctx, items)
 	if err != nil {
 		return nil, err
 	}
+	order.Items = orderItems */
+
+	var orderItems []*OrderItem
+	for _, myitem1 := range items {
+		if myitem1.IsTypeTax() {
+			if myitem1.Quantity <= 0 {
+				myitem1.Quantity = 1
+			}
+			orderItems = append(orderItems, myitem1)
+		}
+	}
+	for _, myitem2 := range orderItems {
+		if myitem2.IsTypeSku() {
+			item, err := s.skuService.Get(ctx, myitem2.Parent)
+			if err != nil {
+				return nil, err
+			} else {
+				myitem2.Amount = int64(item.Price)
+				myitem2.Currency = item.Currency
+				myitem2.Description = item.Name
+			}
+		}
+	}
 	order.Items = orderItems
 
-	amount, err := calculateTotal(order.Currency, orderItems)
+	// ------------------------------------------
+	// simplified version of getUpdatedOrderItems
+	// ------------------------------------------
+	//var orderItems []*OrderItem
+
+	/* for _, myitem1 := range order.Items {
+		itemFromSku, err := s.skuService.Get(ctx, myitem1.Parent)
+		if err != nil {
+			return nil, err
+		}
+		myitem1.Amount = int64(itemFromSku.Price)
+		myitem1.Currency = itemFromSku.Currency
+		myitem1.Description = itemFromSku.Name
+	} */
+
+	amount, err := calculateTotal(order.Currency, order.Items)
 	if err != nil {
 		return nil, err
 	}
@@ -149,6 +236,8 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 		return nil, err
 	}
 	err = collection.InsertOne(ctx, *order)
+	order.Items[0].Amount = 100
+	order.Shipping.Address.City = "myaddress"
 	return order, err
 }
 

@@ -1,6 +1,4 @@
-go 1.23.0
-
-toolchain go1.24.0
+go 1.24.0
 
 use (
 	./blueprint
@@ -8,23 +6,23 @@ use (
 	./examples/app_constraints_referential_integrity/workflow
 	./examples/coupons_app/wiring
 	./examples/coupons_app/workflow
-	./examples/coupons_app_sql/wiring
-	./examples/coupons_app_sql/workflow
 	./examples/coupons_app_cache/wiring
 	./examples/coupons_app_cache/workflow
+	./examples/coupons_app_sql/wiring
+	./examples/coupons_app_sql/workflow
 	./examples/digota/wiring
 	./examples/digota/workflow
 	./examples/dsb_hotel/tests
 	./examples/dsb_hotel/wiring
 	./examples/dsb_hotel/workflow
 	./examples/dsb_hotel/workload
-	./examples/dsb_sn/tests
-	./examples/dsb_sn/wiring
-	./examples/dsb_sn/workflow
 	./examples/dsb_media/wiring
 	./examples/dsb_media/workflow
 	./examples/dsb_media_sql/wiring
 	./examples/dsb_media_sql/workflow
+	./examples/dsb_sn/tests
+	./examples/dsb_sn/wiring
+	./examples/dsb_sn/workflow
 	./examples/employee_app/wiring
 	./examples/employee_app/workflow
 	./examples/foobar/wiring

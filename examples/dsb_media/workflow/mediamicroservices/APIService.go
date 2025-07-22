@@ -8,6 +8,7 @@ type APIService interface {
 	//RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
 	//WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieInfo, error)
 	RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieId, MovieInfo, error)
+	ReadMovie(ctx context.Context, reqID int64, movieID string) (MovieId, MovieInfo, error)
 }
 
 type APIServiceImpl struct {
@@ -39,4 +40,16 @@ func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movie
 	}
 
 	return movieId, movieInfo, nil
+}
+
+func (api *APIServiceImpl) ReadMovie(ctx context.Context, reqID int64, movieId string) (MovieId, MovieInfo, error) {
+	movie1, err1 := api.movieIdService.ReadMovieId(ctx, reqID, movieId)
+	movie2, err2 := api.movieInfoService.ReadMovieInfo(ctx, reqID, movieId)
+	if err1 != nil {
+		return MovieId{}, MovieInfo{}, err1
+	}
+	if err2 != nil {
+		return MovieId{}, MovieInfo{}, err1
+	}
+	return movie1, movie2, nil
 }

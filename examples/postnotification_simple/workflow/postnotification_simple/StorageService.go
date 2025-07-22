@@ -7,12 +7,12 @@ import (
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
+	//"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
 )
 
 type StorageService interface {
 	//StorePost(ctx context.Context, reqID int64, post Post) error
-	StorePost(ctx context.Context, reqID int64, text string) (int64, error)
+	StorePost(ctx context.Context, reqID int64, text string) (*Post, error)
 	ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error)
 	DeletePost(ctx context.Context, postID int64) error
 }
@@ -46,12 +46,12 @@ func (s *StorageServiceImpl) DeletePost(ctx context.Context, postID int64) error
 	return err
 }
 
-func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (int64, error) {
+func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (*Post, error) {
 	postID_STORAGE_SVC := rand.Int63()
 	timestamp := rand.Int63()
 	mentions := []string{"alice", "bob"}
 
-	post := Post{
+	post := &Post{
 		ReqID:     reqID,
 		PostID:    postID_STORAGE_SVC,
 		Text:      text,
@@ -69,21 +69,30 @@ func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text st
 		mymentions = append(mymentions, mention)
 	}
 
-	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
+	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
 	if err != nil {
-		return postID_STORAGE_SVC, err
+		return nil, err
 	}
 	err = collection.InsertOne(ctx, post)
 	if err != nil {
-		return -1, err
+		return nil, err
 	}
 
-	message := TriggerAnalyticsMessage{
+	collection2, err := s.postsDb.GetCollection(ctx, "test_tb", "test")
+	if err != nil {
+		return nil, err
+	}
+	err = collection2.InsertOne(ctx, post.PostID)
+	if err != nil {
+		return nil, err
+	}
+
+	/* message := TriggerAnalyticsMessage{
 		PostID: common.Int64ToString(post.PostID),
 	}
-	_, err = s.analyticsQueue.Push(ctx, message)
+	_, err = s.analyticsQueue.Push(ctx, message) */
 
-	return postID_STORAGE_SVC, err
+	return post, err
 }
 
 func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error) {

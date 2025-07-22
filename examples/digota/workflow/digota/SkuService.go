@@ -12,6 +12,7 @@ import (
 
 type SkuService interface {
 	New(ctx context.Context, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
+	//New2(ctx context.Context, id string, currency int32, price uint64, parent string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
 	Get(ctx context.Context, id string) (*Sku, error)
 	/* List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error)
 	Update(ctx context.Context, id string, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
@@ -20,12 +21,45 @@ type SkuService interface {
 
 type SkuServiceImpl struct {
 	db backend.NoSQLDatabase
+	/* productService ProductService */
 }
 
-func NewSkuServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (SkuService, error) {
-	s := &SkuServiceImpl{db: db}
+func NewSkuServiceImpl(ctx context.Context/* , productService ProductService */, db backend.NoSQLDatabase) (SkuService, error) {
+	s := &SkuServiceImpl{/* productService: productService,  */db: db}
 	return s, nil
 }
+
+/* func (s *SkuServiceImpl) New2(ctx context.Context, id string, currency int32, price uint64, parent string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) {
+	product, err := s.productService.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	sku := &Sku{
+			Name:              product.Name,
+			Currency:          currency,
+			Active:            product.Active,
+			Price:             price,
+			Parent:            parent,
+			Metadata:          product.Metadata,
+			PackageDimensions: packageDimensions,
+			Inventory:         inventory,
+			Attributes:        attributes,
+		}
+
+	err = validation.Validate(sku)
+	if err != nil {
+		return nil, err
+	}
+
+	collection, err := s.db.GetCollection(ctx, "skus", "skus")
+	if err != nil {
+		return nil, err
+	}
+	err = collection.InsertOne(ctx, *sku)
+	return sku, err
+
+} */
 
 func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) {
 	sku := &Sku{
@@ -163,4 +197,4 @@ func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
 	err = collection.DeleteOne(ctx, filter)
 	return err
 }
- */
+*/

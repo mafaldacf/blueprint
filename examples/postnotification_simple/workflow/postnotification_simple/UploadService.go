@@ -77,15 +77,15 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 
 	common.TestFunc()
 
-	postID_UploadSVC, _ := u.storageService.StorePost(ctx, reqID, text)
+	post, _ := u.storageService.StorePost(ctx, reqID, text)
 
 	message := Message{
 		ReqID:          reqID,
-		PostID_MESSAGE: postID_UploadSVC,
+		PostID_MESSAGE: post.PostID,
 	}
 	_, err := u.notificationsQueue.Push(ctx, message)
 	if err != nil {
 		return 0, err
 	}
-	return postID_UploadSVC, nil
+	return post.PostID, nil
 }

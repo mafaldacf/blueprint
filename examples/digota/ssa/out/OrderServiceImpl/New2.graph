@@ -1,0 +1,90 @@
+t0 (t0): local Shipping (shipping2)
+	|--value--> _shipping2 (shipping2,t14): parameter shipping2 : Shipping
+	|--field(3)--> t12 (t12): &t0.Carrier [#3]
+	|--field(0)--> t23 (t23): &t0.Name [#0]
+
+*_shipping1 (shipping1): parameter shipping1 : *Shipping
+	|--field(0)--> t22 (t22): &shipping1.Name [#0]
+
+*_ctx (ctx): parameter ctx : context.Context
+
+*_shipping2 (shipping2,t14): parameter shipping2 : Shipping
+
+*_items (items): parameter items : []*OrderItem
+	|--idx(t4 + 1:int)--> t7 (t7): &items[t5]
+
+*t1 (t1): new Order (complit)
+	|--field(3)--> t2 (t2): &t1.Items [#3]
+	|--field(8)--> t13 (t13): &t1.Shipping [#8]
+	|--field(9)--> t15 (t15): &t1.Shipping2 [#9]
+
+*t2 (t2): &t1.Items [#3]
+	|--value--> _items (items): parameter items : []*OrderItem
+
+t3 (t3): len(items)
+	|--param(0)--> _items (items): parameter items : []*OrderItem
+
+t4 (t4): phi [0: -1:int, 4: t5, 5: t5] #rangeindex
+	|--phi--> -1:int (-1:int): -1:int
+	|--phi--> t5 (t5): t4 + 1:int
+	|--phi--> t5 (t5): t4 + 1:int
+
+t5 (t5): t4 + 1:int
+
+t6 (t6): t5 < t3
+
+*t7 (t7): &items[t5]
+	|--value--> t8 (t8): *t7
+
+*t8 (t8): *t7
+	|--field(1)--> t9 (t9): &t8.Quantity [#1]
+
+*t9 (t9): &t8.Quantity [#1]
+	|--value--> t10 (t10): *t9
+
+*t10 (t10): *t9
+
+t11 (t11): t10 <= 0:int64
+
+t12 (t12): &t0.Carrier [#3]
+	|--value--> "mycarrier":string ("mycarrier":string): "mycarrier":string
+
+*t13 (t13): &t1.Shipping [#8]
+	|--value--> _shipping1 (shipping1): parameter shipping1 : *Shipping
+
+*_shipping2 (shipping2,t14): parameter shipping2 : Shipping
+
+*t15 (t15): &t1.Shipping2 [#9]
+	|--value--> _shipping2 (shipping2,t14): parameter shipping2 : Shipping
+
+t16 (t16): &s.db [#1]
+	|--value--> t17 (t17): *t16
+
+t17 (t17): *t16
+
+t18 (t18): invoke t17.GetCollection(ctx, "orders":string, "orders":string)
+	|--param(0)--> _ctx (ctx): parameter ctx : context.Context
+	|--param(1)--> "orders":string ("orders":string): "orders":string
+	|--param(2)--> "orders":string ("orders":string): "orders":string
+	|--ret(0)--> t19 (t19): extract t18 #0
+	|--ret(1)--> t20 (t20): extract t18 #1
+
+t19 (t19): extract t18 #0
+
+t20 (t20): extract t18 #1
+
+t21 (t21): t20 != nil:error
+
+*t22 (t22): &shipping1.Name [#0]
+	|--value--> "myname1":string ("myname1":string): "myname1":string
+
+t23 (t23): &t0.Name [#0]
+	|--value--> "myname2":string ("myname2":string): "myname2":string
+
+*t24 (t24): make interface{} <- *Order (t1)
+	|--interface of--> t1 (t1): new Order (complit)
+
+t25 (t25): invoke t19.InsertOne(ctx, t24)
+	|--param(0)--> _ctx (ctx): parameter ctx : context.Context
+	|--param(1)--> t24 (t24): make interface{} <- *Order (t1)
+

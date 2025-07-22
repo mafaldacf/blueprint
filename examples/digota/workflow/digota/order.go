@@ -1,17 +1,22 @@
 package digota
 
 type Order struct {
-	Id       string            `json:"id,omitempty" bson:"_id"`
-	Amount   int64             `json:"amount,omitempty"`
-	Currency int32             `json:"currency,omitempty"`
-	Items    []*OrderItem      `json:"items,omitempty"`
-	Metadata map[string]string `json:"metadata,omitempty"`
-	Email    string            `json:"email,omitempty"`
-	ChargeId string            `json:"chargeId,omitempty"`
-	Status   int32             `json:"Status,omitempty"`
-	Shipping *Shipping         `json:"shipping,omitempty"`
-	Created  int64             `json:"created,omitempty"`
-	Updated  int64             `json:"updated,omitempty"`
+	Id        string            `json:"id,omitempty" bson:"_id"`
+	Amount    int64             `json:"amount,omitempty"`
+	Currency  int32             `json:"currency,omitempty"`
+	Items     []*OrderItem      `json:"items,omitempty"`
+	Metadata  map[string]string `json:"metadata,omitempty"`
+	Email     string            `json:"email,omitempty"`
+	ChargeId  string            `json:"chargeId,omitempty"`
+	Status    int32             `json:"Status,omitempty"`
+	Shipping  *Shipping         `json:"shipping,omitempty"`
+	Shipping2 Shipping          `json:"shipping2,omitempty"`
+	Created   int64             `json:"created,omitempty"`
+	Updated   int64             `json:"updated,omitempty"`
+}
+
+type Test struct {
+	Value int
 }
 
 type OrderItem struct {
@@ -21,6 +26,7 @@ type OrderItem struct {
 	Currency    int32  `json:"currency,omitempty" validate:"omitempty,gte=1,lte=128"`
 	Parent      string `json:"parent,omitempty" validate:"omitempty,uuid4"`
 	Description string `json:"description,omitempty"`
+	Test        *Test  `json:"test ,omitempty"`
 }
 
 func (item *OrderItem) IsTypeReserved() bool { return item.Type == 0 }

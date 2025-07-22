@@ -1,5 +1,5 @@
 module github.com/blueprint-uservices/blueprint/examples/digota
 
-go 1.21
+go 1.23.0
 
-toolchain go1.21.5
+toolchain go1.24.0

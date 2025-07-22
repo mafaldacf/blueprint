@@ -1,8 +1,6 @@
 module github.com/blueprint-uservices/blueprint/examples/postnotification_simple/wiring
 
-go 1.21
-
-toolchain go1.21.5
+go 1.22.4
 
 require (
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
