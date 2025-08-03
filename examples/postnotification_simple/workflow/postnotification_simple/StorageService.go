@@ -6,47 +6,23 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
-
-	//"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
 )
 
 type StorageService interface {
-	//StorePost(ctx context.Context, reqID int64, post Post) error
-	StorePost(ctx context.Context, reqID int64, text string) (*Post, error)
+	StorePost(ctx context.Context, reqID int64, text string) (int64, error)
 	ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error)
-	DeletePost(ctx context.Context, postID int64) error
 }
 
 type StorageServiceImpl struct {
-	postsDb        backend.NoSQLDatabase
-	analyticsQueue backend.Queue
+	postsDb backend.NoSQLDatabase
 }
 
-func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase, analyticsQueue backend.Queue) (StorageService, error) {
-	s := &StorageServiceImpl{postsDb: postsDb, analyticsQueue: analyticsQueue}
+func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase) (StorageService, error) {
+	s := &StorageServiceImpl{postsDb: postsDb}
 	return s, nil
 }
 
-/* func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, post Post) error {
-	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
-	if err != nil {
-		return err
-	}
-	err = collection.InsertOne(ctx, post)
-	return err
-} */
-
-func (s *StorageServiceImpl) DeletePost(ctx context.Context, postID int64) error {
-	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
-	if err != nil {
-		return err
-	}
-	filter := bson.D{{Key: "postid", Value: postID}}
-	err = collection.DeleteOne(ctx, filter)
-	return err
-}
-
-func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (*Post, error) {
+func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (int64, error) {
 	postID_STORAGE_SVC := rand.Int63()
 	timestamp := rand.Int63()
 	mentions := []string{"alice", "bob"}
@@ -71,33 +47,28 @@ func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text st
 
 	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 	err = collection.InsertOne(ctx, post)
 	if err != nil {
-		return nil, err
+		return -1, err
 	}
 
-	collection2, err := s.postsDb.GetCollection(ctx, "test_tb", "test")
+	/* collection2, err := s.postsDb.GetCollection(ctx, "test_tb", "test")
 	if err != nil {
 		return nil, err
 	}
 	err = collection2.InsertOne(ctx, post.PostID)
 	if err != nil {
 		return nil, err
-	}
+	} */
 
-	/* message := TriggerAnalyticsMessage{
-		PostID: common.Int64ToString(post.PostID),
-	}
-	_, err = s.analyticsQueue.Push(ctx, message) */
-
-	return post, err
+	return post.PostID, err
 }
 
 func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error) {
 	var post Post
-	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
+	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
 	if err != nil {
 		return post, err
 	}
@@ -110,6 +81,6 @@ func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID i
 	if !res || err != nil {
 		return post, err
 	}
-	
+
 	return post, err
 }

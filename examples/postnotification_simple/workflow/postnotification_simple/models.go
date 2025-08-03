@@ -15,9 +15,9 @@ type Post struct {
 }
 
 type Message struct {
-	ReqID          int64
-	PostID_MESSAGE int64
-	Timestamp      int64
+	ReqID     int64
+	PostID    int64
+	Timestamp int64
 }
 
 type Analytics struct {
