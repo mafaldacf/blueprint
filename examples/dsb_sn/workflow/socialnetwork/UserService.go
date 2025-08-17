@@ -98,7 +98,7 @@ func (u *UserServiceImpl) Login(ctx context.Context, reqID int64, username strin
 	u.userCache.Get(ctx, username+":Login", &login)
 	if login.UserID == -1 {
 		var user User
-		collection, err := u.userDB.GetCollection(ctx, "user", "user")
+		collection, err := u.userDB.GetCollection(ctx, "user_db", "user")
 		if err != nil {
 			return "", err
 		}
@@ -149,7 +149,7 @@ func (u *UserServiceImpl) ComposeCreatorWithUsername(ctx context.Context, reqID 
 	u.userCache.Get(ctx, username+":UserID", &user_id)
 	if user_id == -1 {
 		var user User
-		collection, err := u.userDB.GetCollection(ctx, "user", "user")
+		collection, err := u.userDB.GetCollection(ctx, "user_db", "user")
 		if err != nil {
 			return Creator{}, err
 		}
@@ -177,7 +177,7 @@ func (u *UserServiceImpl) ComposeCreatorWithUsername(ctx context.Context, reqID 
 
 // Implements UserService interface
 func (u *UserServiceImpl) RegisterUserWithId(ctx context.Context, reqID int64, firstName string, lastName string, username string, password string, userID int64) error {
-	collection, err := u.userDB.GetCollection(ctx, "user", "user")
+	collection, err := u.userDB.GetCollection(ctx, "user_db", "user")
 	if err != nil {
 		return err
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"regexp"
 	"strings"
-	"sync"
 )
 
 // The TextService interface
@@ -38,7 +37,8 @@ func (t *TextServiceImpl) ComposeText(ctx context.Context, reqID int64, text str
 	var err1, err2 error
 	var urls []URL
 	var user_mentions []UserMention
-	var wg sync.WaitGroup
+
+	/* var wg sync.WaitGroup
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
@@ -48,7 +48,12 @@ func (t *TextServiceImpl) ComposeText(ctx context.Context, reqID int64, text str
 		defer wg.Done()
 		user_mentions, err2 = t.userMentionService.ComposeUserMentions(ctx, reqID, usernames)
 	}()
-	wg.Wait()
+	wg.Wait() */
+
+	urls, err1 = t.urlShortenService.ComposeUrls(ctx, reqID, url_strings)
+	user_mentions, err2 = t.userMentionService.ComposeUserMentions(ctx, reqID, usernames)
+	
+
 	if err1 != nil {
 		return text, user_mentions, urls, err1
 	}

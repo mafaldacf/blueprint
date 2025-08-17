@@ -56,7 +56,7 @@ func (u *UserMentionServiceImpl) ComposeUserMentions(ctx context.Context, reqID 
 		for name := range usernames_not_cached {
 			names = append(names, `"`+name+`"`)
 		}
-		collection, err := u.userDB.GetCollection(ctx, "user", "user")
+		collection, err := u.userDB.GetCollection(ctx, "user_db", "user")
 		if err != nil {
 			return user_mentions, err
 		}

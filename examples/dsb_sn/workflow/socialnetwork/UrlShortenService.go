@@ -48,7 +48,7 @@ func (u *UrlShortenServiceImpl) ComposeUrls(ctx context.Context, reqID int64, ur
 	}
 
 	if len(target_urls) > 0 {
-		collection, err := u.urlShortenDB.GetCollection(ctx, "url-shorten", "url-shorten")
+		collection, err := u.urlShortenDB.GetCollection(ctx, "urlshorten_db", "urlshorten")
 		if err != nil {
 			return []URL{}, err
 		}

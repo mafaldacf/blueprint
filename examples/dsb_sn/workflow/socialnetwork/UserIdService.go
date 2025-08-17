@@ -35,7 +35,7 @@ func (u *UserIDServiceImpl) GetUserId(ctx context.Context, reqID int64, username
 	}
 	if !exists {
 		var user User
-		collection, err := u.userDB.GetCollection(ctx, "user", "user")
+		collection, err := u.userDB.GetCollection(ctx, "user_db", "user")
 		if err != nil {
 			return -1, err
 		}

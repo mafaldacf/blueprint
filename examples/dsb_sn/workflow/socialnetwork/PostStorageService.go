@@ -42,7 +42,7 @@ func NewPostStorageServiceImpl(ctx context.Context, postStorageCache backend.Cac
 
 // Implements PostStorageService interface
 func (p *PostStorageServiceImpl) StorePost(ctx context.Context, reqID int64, post Post) error {
-	collection, err := p.postStorageDB.GetCollection(ctx, "post", "post")
+	collection, err := p.postStorageDB.GetCollection(ctx, "post_db", "post")
 	if err != nil {
 		return err
 	}
@@ -58,7 +58,7 @@ func (p *PostStorageServiceImpl) ReadPost(ctx context.Context, reqID int64, post
 	}
 	if !exists {
 		// Post was not in Cache, check DB!
-		collection, err := p.postStorageDB.GetCollection(ctx, "post", "post")
+		collection, err := p.postStorageDB.GetCollection(ctx, "post_db", "post")
 		if err != nil {
 			return post, err
 		}
@@ -109,7 +109,7 @@ func (p *PostStorageServiceImpl) ReadPosts(ctx context.Context, reqID int64, pos
 		for k := range unique_post_ids {
 			unique_pids = append(unique_pids, k)
 		}
-		collection, err := p.postStorageDB.GetCollection(ctx, "post", "post")
+		collection, err := p.postStorageDB.GetCollection(ctx, "post_db", "post")
 		if err != nil {
 			return []Post{}, err
 		}

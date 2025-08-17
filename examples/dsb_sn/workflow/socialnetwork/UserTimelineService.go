@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
@@ -78,7 +77,7 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 	db_start := start + int64(len(post_ids))
 	var new_post_ids []int64
 	if db_start < stop {
-		collection, err := u.userTimelineDB.GetCollection(ctx, "usertimeline", "usertimeline")
+		collection, err := u.userTimelineDB.GetCollection(ctx, "usertimeline_db", "usertimeline")
 		if err != nil {
 			return []int64{}, err
 		}
@@ -115,10 +114,10 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 
 	post_ids = append(new_post_ids, post_ids...)
 	fmt.Println(post_ids)
-	post_channel := make(chan bool)
-	err_post_channel := make(chan error)
+	/* post_channel := make(chan bool)
+	err_post_channel := make(chan error) */
 	//var posts []Post
-	go func() {
+	/* go func() {
 		var err error
 		_, err = u.postStorageService.ReadPosts(ctx, reqID, post_ids)
 		if err != nil {
@@ -127,7 +126,12 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 			return
 		}
 		post_channel <- true
-	}()
+	}() */
+
+	_, err = u.postStorageService.ReadPosts(ctx, reqID, post_ids)
+	if err != nil {
+		return []int64{}, err
+	}
 
 	if len(new_post_ids) > 0 {
 		err := u.userTimelineCache.Put(ctx, userIDStr, post_ids)
@@ -135,18 +139,18 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 			return []int64{}, err
 		}
 	}
-	select {
+	/* select {
 	case <-post_channel:
 		break
 	case err := <-err_post_channel:
 		return []int64{}, err
-	}
+	} */
 	return post_ids, nil
 }
 
 // Implements UserTimelineService interface
 func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID int64, postID int64, userID int64, timestamp int64) error {
-	collection, err := u.userTimelineDB.GetCollection(ctx, "usertimeline", "usertimeline")
+	collection, err := u.userTimelineDB.GetCollection(ctx, "usertimeline_db", "usertimeline")
 	if err != nil {
 		return err
 	}

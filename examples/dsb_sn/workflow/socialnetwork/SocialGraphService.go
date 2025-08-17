@@ -71,7 +71,7 @@ func (s *SocialGraphServiceImpl) GetFollowers(ctx context.Context, reqID int64, 
 		return followers, err
 	}
 	if !exists {
-		collection, err := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+		collection, err := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 		if err != nil {
 			return followers, err
 		}
@@ -111,7 +111,7 @@ func (s *SocialGraphServiceImpl) GetFollowees(ctx context.Context, reqID int64, 
 		return followees, err
 	}
 	if !exists {
-		collection, err := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+		collection, err := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 		if err != nil {
 			return followees, err
 		}
@@ -155,7 +155,7 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 		if err_internal != nil {
 			err1 = err_internal
 			return
@@ -177,7 +177,7 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 	}()
 	go func() {
 		defer wg.Done()
-		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 		if err_internal != nil {
 			err1 = err_internal
 			return
@@ -230,7 +230,7 @@ func (s *SocialGraphServiceImpl) Unfollow(ctx context.Context, reqID int64, user
 	wg.Add(3)
 	go func() {
 		defer wg.Done()
-		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 		if err_internal != nil {
 			err1 = err_internal
 			return
@@ -251,7 +251,7 @@ func (s *SocialGraphServiceImpl) Unfollow(ctx context.Context, reqID int64, user
 	}()
 	go func() {
 		defer wg.Done()
-		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 		if err_internal != nil {
 			err2 = err_internal
 			return
@@ -358,7 +358,7 @@ func (s *SocialGraphServiceImpl) UnfollowWithUsername(ctx context.Context, reqID
 
 // Implements SocialGraphService interface
 func (s *SocialGraphServiceImpl) InsertUser(ctx context.Context, reqID int64, userID int64) error {
-	collection, err := s.socialGraphDB.GetCollection(ctx, "social-graph", "social-graph")
+	collection, err := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
 	if err != nil {
 		return err
 	}
