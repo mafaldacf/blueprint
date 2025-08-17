@@ -19,6 +19,7 @@ const (
 
 type OrderService interface {
 	New(ctx context.Context, currency int32, items []*OrderItem, metadata map[string]string, email string, shipping *Shipping) (*Order, error)
+	Run(ctx context.Context) error
 	/* Get(ctx context.Context, id string) (*Order, error)
 	List(ctx context.Context, page int64, limit int64, sort int32) (*OrderList, error)
 	Pay(ctx context.Context, id string, card *Card, paymentProviderID int32) (*Order, error)
@@ -28,10 +29,11 @@ type OrderService interface {
 type OrderServiceImpl struct {
 	skuService SkuService
 	db         backend.NoSQLDatabase
+	queue      backend.Queue
 }
 
-func NewOrderServiceImpl(ctx context.Context, skuService SkuService, db backend.NoSQLDatabase) (OrderService, error) {
-	s := &OrderServiceImpl{skuService: skuService, db: db}
+func NewOrderServiceImpl(ctx context.Context, skuService SkuService, db backend.NoSQLDatabase, queue backend.Queue) (OrderService, error) {
+	s := &OrderServiceImpl{skuService: skuService, db: db, queue: queue}
 	return s, nil
 }
 
@@ -147,9 +149,8 @@ func (s *OrderServiceImpl) getUpdatedOrderItems(ctx context.Context, items []*Or
 
 func (s *OrderServiceImpl) New2(ctx context.Context, items []*OrderItem, shipping1 *Shipping, shipping2 Shipping) (*Order, error) {
 	order := &Order{
-		Items:     items,
+		Items: items,
 	}
-
 
 	for _, myitem1 := range items {
 		if myitem1.Quantity <= 0 {
@@ -163,7 +164,7 @@ func (s *OrderServiceImpl) New2(ctx context.Context, items []*OrderItem, shippin
 	order.Shipping = shipping1
 	order.Shipping2 = shipping2
 
-	collection, err := s.db.GetCollection(ctx, "orders", "orders")
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
 	if err != nil {
 		return nil, err
 	}
@@ -177,17 +178,16 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 		Currency: currency,
 		Items:    items,
 		Metadata: metadata,
-		/* Email:    email,
-		Shipping: shipping, */
+		Email:    email,
+		Shipping: shipping,
 	}
 
-	/* orderItems, err := s.getUpdatedOrderItems(ctx, items)
+	orderItems, err := s.getUpdatedOrderItems(ctx, items)
 	if err != nil {
 		return nil, err
 	}
-	order.Items = orderItems */
+	order.Items = orderItems
 
-	var orderItems []*OrderItem
 	for _, myitem1 := range items {
 		if myitem1.IsTypeTax() {
 			if myitem1.Quantity <= 0 {
@@ -206,24 +206,24 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 				myitem2.Currency = item.Currency
 				myitem2.Description = item.Name
 			}
+		} else if myitem2.IsTypeDiscount() {
+			// nothing to fetch yet
+			if myitem2.Description == "" {
+				myitem2.Description = defaultDiscountDescription
+			}
+		} else if myitem2.IsTypeShipping() {
+			// nothing to fetch yet
+			if myitem2.Description == "" {
+				myitem2.Description = defaultShippingDescription
+			}
+		} else if myitem2.IsTypeTax() {
+			// nothing to fetch yet
+			if myitem2.Description == "" {
+				myitem2.Description = defaultTaxDescription
+			}
 		}
 	}
 	order.Items = orderItems
-
-	// ------------------------------------------
-	// simplified version of getUpdatedOrderItems
-	// ------------------------------------------
-	//var orderItems []*OrderItem
-
-	/* for _, myitem1 := range order.Items {
-		itemFromSku, err := s.skuService.Get(ctx, myitem1.Parent)
-		if err != nil {
-			return nil, err
-		}
-		myitem1.Amount = int64(itemFromSku.Price)
-		myitem1.Currency = itemFromSku.Currency
-		myitem1.Description = itemFromSku.Name
-	} */
 
 	amount, err := calculateTotal(order.Currency, order.Items)
 	if err != nil {
@@ -231,7 +231,7 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 	}
 	order.Amount = amount
 
-	collection, err := s.db.GetCollection(ctx, "orders", "orders")
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +242,7 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 }
 
 /* func (s *OrderServiceImpl) Get(ctx context.Context, id string) (*Order, error) {
-	collection, err := s.db.GetCollection(ctx, "orders", "orders")
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
 	if err != nil {
 		return nil, err
 	}
@@ -266,7 +266,7 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 }
 
 func (s *OrderServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*OrderList, error) {
-	collection, err := s.db.GetCollection(ctx, "orders", "orders")
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
 	if err != nil {
 		return nil, err
 	}
@@ -314,4 +314,23 @@ func calculateTotal(currency int32, orderItems []*OrderItem) (int64, error) {
 		}
 	}
 	return m.Amount(), nil
+}
+
+type QueueMessage struct {
+	id string
+}
+
+func (s *OrderServiceImpl) Run(ctx context.Context) error {
+	/* var message QueueMessage
+	s.queue.Pop(ctx, &message)
+
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "id", Value: message.id}}
+	err = collection.DeleteOne(ctx, filter)
+	return err */
+	return nil
 }

@@ -1,8 +1,8 @@
 module github.com/blueprint-uservices/blueprint/examples/sockshop/wiring
 
-go 1.21
+go 1.22
 
-toolchain go1.22.1
+toolchain go1.24.0
 
 require github.com/blueprint-uservices/blueprint/blueprint v0.0.0
 
@@ -45,12 +45,12 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.26.0 // indirect
 	go.opentelemetry.io/otel/trace v1.26.0 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
+	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d // indirect
 	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	golang.org/x/tools v0.20.0 // indirect
+	golang.org/x/tools v0.21.0 // indirect
 )
 
 replace github.com/blueprint-uservices/blueprint/blueprint => ../../../blueprint

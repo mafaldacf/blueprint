@@ -2,8 +2,6 @@ package mediamicroservices_sql
 
 import (
 	"context"
-	"os"
-	"strings"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 )
@@ -14,7 +12,7 @@ type MovieId struct {
 }
 
 type MovieIdService interface {
-	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
+	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, string, error)
 	ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error)
 }
 
@@ -24,16 +22,16 @@ type MovieIdServiceImpl struct {
 
 func NewMovieIdServiceImpl(ctx context.Context, movieIdDB backend.RelationalDB) (MovieIdService, error) {
 	m := &MovieIdServiceImpl{movieIdDB: movieIdDB}
-	return m, m.createTables(ctx)
+	return m, nil //,m.createTables(ctx)
 }
 
-func (m *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error) {
+func (m *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, string, error) {
 	movieId := MovieId{
 		MovieID: movieID,
 		Title:   title,
 	}
 	_ , err := m.movieIdDB.Exec(ctx, "INSERT INTO movieid(movieid, title) VALUES (?, ?);", movieID, title)
-	return movieId, err
+	return movieId, movieID, err
 }
 
 func (m *MovieIdServiceImpl) ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error) {
@@ -42,7 +40,7 @@ func (m *MovieIdServiceImpl) ReadMovieId(ctx context.Context, reqID int64, movie
 	return movieId, err
 }
 
-func (m *MovieIdServiceImpl) createTables(ctx context.Context) error {
+/* func (m *MovieIdServiceImpl) createTables(ctx context.Context) error {
 	sqlBytes, err := os.ReadFile("database/movieid.sql")
 	if err != nil {
 		return err
@@ -55,4 +53,4 @@ func (m *MovieIdServiceImpl) createTables(ctx context.Context) error {
 		}
 	}
 	return nil
-}
+} */

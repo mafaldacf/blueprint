@@ -29,17 +29,17 @@ func NewAPIServiceImpl(ctx context.Context, movieIdService MovieIdService, movie
 } */
 
 func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieId, MovieInfo, error) {
-	movieId, err := api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
+	movie, _, err := api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, err
 	}
 
-	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, reqID, movieID, title, casts)
+	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, reqID, movie.MovieID, title, casts)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, err
 	}
 
-	return movieId, movieInfo, nil
+	return movie, movieInfo, nil
 }
 
 func (api *APIServiceImpl) ReadMovie(ctx context.Context, reqID int64, movieId string) (MovieId, MovieInfo, error) {

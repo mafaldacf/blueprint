@@ -2,8 +2,6 @@ package mediamicroservices_sql
 
 import (
 	"context"
-	"os"
-	"strings"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 )
@@ -23,9 +21,9 @@ type MovieInfoServiceImpl struct {
 	movieInfoDB backend.RelationalDB
 }
 
-func NewMovieInfoServiceImpl(ctx context.Context, movieIdDB backend.RelationalDB) (MovieInfoService, error) {
-	m := &MovieInfoServiceImpl{movieInfoDB: movieIdDB}
-	return m, m.createTables(ctx)
+func NewMovieInfoServiceImpl(ctx context.Context, movieInfoDB backend.RelationalDB) (MovieInfoService, error) {
+	m := &MovieInfoServiceImpl{movieInfoDB: movieInfoDB}
+	return m, nil //, m.createTables(ctx)
 }
 
 func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieInfo, error) {
@@ -34,7 +32,7 @@ func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, 
 		Title:   title,
 		Casts:   casts,
 	}
-	_ , err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, casts) VALUES (?, ?);", movieID, title, casts)
+	_ , err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, casts) VALUES (?, ?, ?);", movieID, title, casts)
 	return movieInfo, err
 }
 
@@ -44,7 +42,7 @@ func (m *MovieInfoServiceImpl) ReadMovieInfo(ctx context.Context, reqID int64, m
 	return movieInfo, err
 }
 
-func (m *MovieInfoServiceImpl) createTables(ctx context.Context) error {
+/* func (m *MovieInfoServiceImpl) createTables(ctx context.Context) error {
 	sqlBytes, err := os.ReadFile("database/movieinfo.sql")
 	if err != nil {
 		return err
@@ -57,4 +55,4 @@ func (m *MovieInfoServiceImpl) createTables(ctx context.Context) error {
 		}
 	}
 	return nil
-}
+} */

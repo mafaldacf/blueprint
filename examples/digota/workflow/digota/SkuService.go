@@ -6,8 +6,7 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
-
-	"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
+	//"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
 )
 
 type SkuService interface {
@@ -15,17 +14,18 @@ type SkuService interface {
 	//New2(ctx context.Context, id string, currency int32, price uint64, parent string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
 	Get(ctx context.Context, id string) (*Sku, error)
 	/* List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error)
-	Update(ctx context.Context, id string, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
-	Delete(ctx context.Context, id string) error */
+	Update(ctx context.Context, id string, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) */
+	Delete(ctx context.Context, id string) error
 }
 
 type SkuServiceImpl struct {
-	db backend.NoSQLDatabase
+	db    backend.NoSQLDatabase
+	queue backend.Queue
 	/* productService ProductService */
 }
 
-func NewSkuServiceImpl(ctx context.Context/* , productService ProductService */, db backend.NoSQLDatabase) (SkuService, error) {
-	s := &SkuServiceImpl{/* productService: productService,  */db: db}
+func NewSkuServiceImpl(ctx context.Context /* , productService ProductService */, db backend.NoSQLDatabase, queue backend.Queue) (SkuService, error) {
+	s := &SkuServiceImpl{ /* productService: productService,  */ db: db, queue: queue}
 	return s, nil
 }
 
@@ -74,12 +74,12 @@ func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, a
 		Attributes:        attributes,
 	}
 
-	err := validation.Validate(sku)
+	/* err := validation.Validate(sku)
 	if err != nil {
 		return nil, err
-	}
+	} */
 
-	collection, err := s.db.GetCollection(ctx, "skus", "skus")
+	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, a
 }
 
 func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
-	collection, err := s.db.GetCollection(ctx, "skus", "skus")
+	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
 }
 
 /* func (s *SkuServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error) {
-	collection, err := s.db.GetCollection(ctx, "skus", "skus")
+	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
 }
 
 func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) {
-	collection, err := s.db.GetCollection(ctx, "skus", "skus")
+	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return nil, err
 	}
@@ -186,15 +186,24 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 	err = collection.InsertOne(ctx, *item)
 	return item, err
 }
+*/
 
 func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
-	collection, err := s.db.GetCollection(ctx, "skus", "skus")
+	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return err
 	}
 
 	filter := bson.D{{Key: "id", Value: id}}
 	err = collection.DeleteOne(ctx, filter)
+	/* if err != nil {
+		return err
+	}
+
+	message := QueueMessage{
+		id: id,
+	}
+	_, err = s.queue.Push(ctx, message) */
+
 	return err
 }
-*/

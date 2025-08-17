@@ -1,0 +1,8 @@
+go 1.23.0
+
+use (
+	./payment_service_proc
+	./runtime
+	./workflow
+	
+)

@@ -18,8 +18,8 @@ use (
 	./examples/dsb_hotel/workload
 	./examples/dsb_media/wiring
 	./examples/dsb_media/workflow
-	./examples/dsb_media_sql/wiring
-	./examples/dsb_media_sql/workflow
+	//./examples/dsb_media_sql/wiring
+	//./examples/dsb_media_sql/workflow
 	./examples/dsb_sn/tests
 	./examples/dsb_sn/wiring
 	./examples/dsb_sn/workflow
@@ -43,6 +43,8 @@ use (
 	./examples/sockshop/workload
 	./examples/sockshop2/wiring
 	./examples/sockshop2/workflow
+	./examples/sockshop3/wiring
+	./examples/sockshop3/workflow
 	./examples/threechain2/wiring
 	./examples/threechain2/workflow
 	./examples/train_ticket/tests

@@ -1,6 +1,6 @@
 package validation
 
-import (
+/* import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/go-playground/validator.v9"
@@ -18,4 +18,4 @@ func Validate(req interface{}) error {
 		return status.Errorf(codes.InvalidArgument, "Request validation failed: %s", err)
 	}
 	return nil
-}
+} */

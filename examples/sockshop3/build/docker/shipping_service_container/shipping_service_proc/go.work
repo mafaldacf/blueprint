@@ -1,0 +1,8 @@
+go 1.23.0
+
+use (
+	./runtime
+	./shipping_service_proc
+	./workflow
+	
+)

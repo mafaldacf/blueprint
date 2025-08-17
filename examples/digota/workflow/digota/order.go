@@ -20,11 +20,11 @@ type Test struct {
 }
 
 type OrderItem struct {
-	Type        int32  `json:"type,omitempty" validate:"required,gte=1,lte=4"`
-	Quantity    int64  `json:"quantity,omitempty" validate:"omitempty,gte=0"`
+	Type        int32  `json:"type,omitempty"`
+	Quantity    int64  `json:"quantity,omitempty"`
 	Amount      int64  `json:"amount,omitempty"`
-	Currency    int32  `json:"currency,omitempty" validate:"omitempty,gte=1,lte=128"`
-	Parent      string `json:"parent,omitempty" validate:"omitempty,uuid4"`
+	Currency    int32  `json:"currency,omitempty"`
+	Parent      string `json:"parent,omitempty"`
 	Description string `json:"description,omitempty"`
 	Test        *Test  `json:"test ,omitempty"`
 }

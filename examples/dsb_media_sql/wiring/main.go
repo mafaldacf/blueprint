@@ -7,8 +7,9 @@
 package main
 
 import (
-	"github.com/blueprint-uservices/blueprint/examples/mediamicroservices_sql/wiring/specs"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
+
+	"github.com/blueprint-uservices/blueprint/examples/dsb_media_sql/wiring/specs"
 )
 
 func main() {

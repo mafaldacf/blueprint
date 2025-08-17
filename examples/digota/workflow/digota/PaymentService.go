@@ -7,7 +7,7 @@ import (
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
+	//"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
 )
 
 type PaymentService interface {
@@ -34,12 +34,12 @@ func (s *PaymentServiceImpl) NewCharge(ctx context.Context, currency int32, tota
 		Statement:    statement,
 	}
 
-	err := validation.Validate(charge)
+	/* err := validation.Validate(charge)
 	if err != nil {
 		return nil, err
-	}
+	} */
 
-	collection, err := s.db.GetCollection(ctx, "payments", "payments")
+	collection, err := s.db.GetCollection(ctx, "payments_db", "payments")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (s *PaymentServiceImpl) NewCharge(ctx context.Context, currency int32, tota
 }
 
 func (s *PaymentServiceImpl) Get(ctx context.Context, id string) (*Charge, error) {
-	collection, err := s.db.GetCollection(ctx, "payments", "payments")
+	collection, err := s.db.GetCollection(ctx, "payments_db", "payments")
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +72,7 @@ func (s *PaymentServiceImpl) Get(ctx context.Context, id string) (*Charge, error
 }
 
 func (s *PaymentServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*ChargeList, error) {
-	collection, err := s.db.GetCollection(ctx, "payments", "payments")
+	collection, err := s.db.GetCollection(ctx, "payments_db", "payments")
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (s *PaymentServiceImpl) List(ctx context.Context, page int64, limit int64, 
 }
 
 func (s *PaymentServiceImpl) RefundCharge(ctx context.Context, id string, amount uint64, reason int32) (*Charge, error) {
-	collection, err := s.db.GetCollection(ctx, "payments", "payments")
+	collection, err := s.db.GetCollection(ctx, "payments_db", "payments")
 	if err != nil {
 		return nil, err
 	}

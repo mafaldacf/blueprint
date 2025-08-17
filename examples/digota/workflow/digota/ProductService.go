@@ -7,7 +7,7 @@ import (
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
+	//"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
 )
 
 type ProductService interface {
@@ -40,12 +40,12 @@ func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, 
 		Url:         url,
 	}
 
-	err := validation.Validate(product)
+	/* err := validation.Validate(product)
 	if err != nil {
 		return nil, err
-	}
+	} */
 
-	collection, err := s.db.GetCollection(ctx, "products", "products")
+	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, 
 }
 
 func (s *ProductServiceImpl) Get(ctx context.Context, id string) (*Product, error) {
-	collection, err := s.db.GetCollection(ctx, "products", "products")
+	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (s *ProductServiceImpl) Get(ctx context.Context, id string) (*Product, erro
 }
 
 func (s *ProductServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*ProductList, error) {
-	collection, err := s.db.GetCollection(ctx, "products", "products")
+	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (s *ProductServiceImpl) List(ctx context.Context, page int64, limit int64, 
 }
 
 func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error) {
-	collection, err := s.db.GetCollection(ctx, "products", "products")
+	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return nil, err
 	}
@@ -153,12 +153,18 @@ func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string,
 }
 
 func (s *ProductServiceImpl) Delete(ctx context.Context, id string) error {
-	collection, err := s.db.GetCollection(ctx, "products", "products")
+	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return err
 	}
 
 	filter := bson.D{{Key: "id", Value: id}}
 	err = collection.DeleteOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+
+	err = s.skuService.Delete(ctx, id)
+
 	return err
 }
