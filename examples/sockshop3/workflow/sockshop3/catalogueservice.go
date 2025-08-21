@@ -60,7 +60,7 @@ func (s *CatalogueServiceImpl) Count(ctx context.Context, tags []string) (int, e
 
 func (s *CatalogueServiceImpl) Get(ctx context.Context, id string) (Sock, error) {
 	collection, _ := s.catalogue_db.GetCollection(ctx, "catalogue_db", "catalogue")
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "ID", Value: id}}
 	var sock Sock
 	result, _ := collection.FindOne(ctx, query)
 	result.One(ctx, &sock)
@@ -73,7 +73,7 @@ func (s *CatalogueServiceImpl) Get(ctx context.Context, id string) (Sock, error)
 func (s *CatalogueServiceImpl) Tags(ctx context.Context) ([]string, error) {
 	collection, _ := s.catalogue_db.GetCollection(ctx, "catalogue_db", "catalogue")
 	var socks []Sock
-	projection := bson.D{{Key: "tags", Value: true}}
+	projection := bson.D{{Key: "Tags", Value: true}}
 	filter := bson.D{}
 	result, _ := collection.FindMany(ctx, filter, projection)
 	result.All(ctx, &socks)
@@ -87,7 +87,7 @@ func (s *CatalogueServiceImpl) Tags(ctx context.Context) ([]string, error) {
 // AddTags implements CatalogueService.
 func (s *CatalogueServiceImpl) AddTags(ctx context.Context, tags []string) error {
 	collection, _ := s.catalogue_db.GetCollection(ctx, "catalogue_db", "catalogue")
-	update := bson.D{{Key: "tags", Value: tags}}
+	update := bson.D{{Key: "Tags", Value: tags}}
 	filter := bson.D{}
 	collection.Upsert(ctx, filter, update)
 	return nil
@@ -103,7 +103,7 @@ func (s *CatalogueServiceImpl) AddSock(ctx context.Context, sock Sock) (string, 
 // DeleteSock implements CatalogueService.
 func (s *CatalogueServiceImpl) DeleteSock(ctx context.Context, id string) error {
 	collection, _ := s.catalogue_db.GetCollection(ctx, "catalogue_db", "catalogue")
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "ID", Value: id}}
 	collection.DeleteOne(ctx, query)
 	return nil
 }

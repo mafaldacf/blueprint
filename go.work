@@ -16,6 +16,8 @@ use (
 	./examples/dsb_hotel/wiring
 	./examples/dsb_hotel/workflow
 	./examples/dsb_hotel/workload
+	//./examples/dsb_hotel2/wiring
+	//./examples/dsb_hotel2/workflow
 	./examples/dsb_media/wiring
 	./examples/dsb_media/workflow
 	//./examples/dsb_media_sql/wiring
@@ -26,8 +28,8 @@ use (
 	./examples/employee_app/wiring
 	./examples/employee_app/workflow
 	./examples/foobar/wiring
-	./examples/foobar/workflow
-	./examples/leaf/wiring
+	//./examples/foobar/workflow
+	//./examples/leaf/wiring
 	./examples/leaf/workflow
 	./examples/postnotification/wiring
 	./examples/postnotification/workflow

@@ -53,7 +53,7 @@ func (s *PaymentServiceImpl) Get(ctx context.Context, id string) (*Charge, error
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (s *PaymentServiceImpl) RefundCharge(ctx context.Context, id string, amount
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err

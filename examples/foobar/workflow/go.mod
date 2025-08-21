@@ -1,15 +1,13 @@
 module github.com/blueprint-uservices/blueprint/examples/foobar/workflow
 
-go 1.22
+go 1.22.4
 
-toolchain go1.24.0
-
-require github.com/blueprint-uservices/blueprint/runtime v0.0.0-20250316104815-061b4fb3d09f
+require github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240405152959-f078915d2306
 
 require (
-	go.mongodb.org/mongo-driver v1.15.0 // indirect
-	go.opentelemetry.io/otel v1.26.0 // indirect
-	go.opentelemetry.io/otel/metric v1.26.0 // indirect
-	go.opentelemetry.io/otel/trace v1.26.0 // indirect
-	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
+	go.mongodb.org/mongo-driver v1.12.1 // indirect
+	go.opentelemetry.io/otel v1.21.0 // indirect
+	go.opentelemetry.io/otel/metric v1.21.0 // indirect
+	go.opentelemetry.io/otel/trace v1.21.0 // indirect
+	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691 // indirect
 )

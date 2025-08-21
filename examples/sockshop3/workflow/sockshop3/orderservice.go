@@ -48,7 +48,7 @@ type OrderServiceImpl struct {
 
 // GetOrder implements OrderService.
 func (s *OrderServiceImpl) GetOrder(ctx context.Context, orderID string) (Order, error) {
-	filter := bson.D{{"id", orderID}}
+	filter := bson.D{{Key: "ID", Value: orderID}}
 	collection, _ := s.db.GetCollection(ctx, "order_db", "orders")
 	cursor, err := collection.FindOne(ctx, filter)
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *OrderServiceImpl) GetOrder(ctx context.Context, orderID string) (Order,
 
 // GetOrders implements OrderService.
 func (s *OrderServiceImpl) GetOrders(ctx context.Context, customerID string) ([]Order, error) {
-	filter := bson.D{{"customerid", customerID}}
+	filter := bson.D{{Key: "CustomerID", Value: customerID}}
 	collection, _ := s.db.GetCollection(ctx, "order_db", "orders")
 	cursor, err := collection.FindMany(ctx, filter)
 	if err != nil {

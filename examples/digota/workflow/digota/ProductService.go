@@ -61,7 +61,7 @@ func (s *ProductServiceImpl) Get(ctx context.Context, id string) (*Product, erro
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err
@@ -110,7 +110,7 @@ func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string,
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err
@@ -158,7 +158,7 @@ func (s *ProductServiceImpl) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
-	filter := bson.D{{Key: "id", Value: id}}
+	filter := bson.D{{Key: "Id", Value: id}}
 	err = collection.DeleteOne(ctx, filter)
 	if err != nil {
 		return err

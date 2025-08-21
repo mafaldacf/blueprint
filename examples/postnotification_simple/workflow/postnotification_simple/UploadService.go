@@ -11,6 +11,7 @@ import (
 
 type UploadService interface {
 	UploadPost(ctx context.Context, username string, text string) (int64, error)
+	DeletePost(ctx context.Context, postID int64) error
 }
 
 type UploadServiceImpl struct {
@@ -38,4 +39,8 @@ func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, tex
 		return 0, err
 	}
 	return postID, nil
+}
+
+func (u *UploadServiceImpl) DeletePost(ctx context.Context, postID int64) error {
+	return u.storageService.DeletePost(ctx, postID)
 }

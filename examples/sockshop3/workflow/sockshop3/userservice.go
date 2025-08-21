@@ -106,7 +106,7 @@ func (s *UserServiceImpl) Register(ctx context.Context, username, password, emai
 func (s *UserServiceImpl) GetUsers(ctx context.Context, userid string) ([]User, error) {
 	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
 	var users []User
-	filter := bson.D{{Key: "userid", Value: userid}}
+	filter := bson.D{{Key: "UserID", Value: userid}}
 	result, _ := collection.FindMany(ctx, filter)
 	result.All(ctx, &users)
 	return users, nil
@@ -121,8 +121,8 @@ func (s *UserServiceImpl) PostUser(ctx context.Context, u User) (string, error) 
 func (s *UserServiceImpl) GetAddresses(ctx context.Context, addressid string) ([]Address, error) {
 	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
 	var addresses []Address
-	filter := bson.D{{Key: "addresses", Value: addressid}}
-	projection := bson.D{{Key: "addresses", Value: true}}
+	filter := bson.D{{Key: "Addresses", Value: addressid}}
+	projection := bson.D{{Key: "Addresses", Value: true}}
 	result, _ := collection.FindMany(ctx, filter, projection)
 	result.All(ctx, &addresses)
 	return addresses, nil
@@ -130,8 +130,8 @@ func (s *UserServiceImpl) GetAddresses(ctx context.Context, addressid string) ([
 
 func (s *UserServiceImpl) PostAddress(ctx context.Context, userid string, address Address) (string, error) {
 	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
-	filter := bson.D{{Key: "userid", Value: userid}}
-	update := bson.D{{Key: "address", Value: address}}
+	filter := bson.D{{Key: "UserID", Value: userid}}
+	update := bson.D{{Key: "Address", Value: address}}
 	collection.Upsert(ctx, filter, update)
 	return userid, nil
 }
@@ -139,8 +139,8 @@ func (s *UserServiceImpl) PostAddress(ctx context.Context, userid string, addres
 func (s *UserServiceImpl) GetCards(ctx context.Context, cardid string) ([]Card, error) {
 	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
 	var cards []Card
-	filter := bson.D{{Key: "cards", Value: cardid}}
-	projection := bson.D{{Key: "cards", Value: true}}
+	filter := bson.D{{Key: "Cards", Value: cardid}}
+	projection := bson.D{{Key: "Cards", Value: true}}
 	result, _ := collection.FindMany(ctx, filter, projection)
 	result.All(ctx, &cards)
 	return cards, nil
@@ -148,15 +148,15 @@ func (s *UserServiceImpl) GetCards(ctx context.Context, cardid string) ([]Card, 
 
 func (s *UserServiceImpl) PostCard(ctx context.Context, userid string, card Card) (string, error) {
 	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
-	filter := bson.D{{Key: "userid", Value: userid}}
-	update := bson.D{{Key: "card", Value: card}}
+	filter := bson.D{{Key: "UserID", Value: userid}}
+	update := bson.D{{Key: "Card", Value: card}}
 	collection.Upsert(ctx, filter, update)
 	return userid, nil
 }
 
 func (s *UserServiceImpl) Delete(ctx context.Context, entity string, id string) error {
 	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "UserID", Value: id}}
 	collection.DeleteOne(ctx, query)
 	return nil
 }

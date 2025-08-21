@@ -93,7 +93,7 @@ func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err
@@ -142,7 +142,7 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err
@@ -194,7 +194,7 @@ func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
 		return err
 	}
 
-	filter := bson.D{{Key: "id", Value: id}}
+	filter := bson.D{{Key: "Id", Value: id}}
 	err = collection.DeleteOne(ctx, filter)
 	/* if err != nil {
 		return err

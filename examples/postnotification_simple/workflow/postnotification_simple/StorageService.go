@@ -11,6 +11,7 @@ import (
 type StorageService interface {
 	StorePost(ctx context.Context, reqID int64, text string) (int64, error)
 	ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error)
+	DeletePost(ctx context.Context, postID int64) error
 }
 
 type StorageServiceImpl struct {
@@ -72,7 +73,7 @@ func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID i
 	if err != nil {
 		return post, err
 	}
-	query := bson.D{{Key: "postid", Value: postID}}
+	query := bson.D{{Key: "PostID", Value: postID}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return post, err
@@ -83,4 +84,14 @@ func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID i
 	}
 
 	return post, err
+}
+
+func (s *StorageServiceImpl) DeletePost(ctx context.Context, postID int64) error {
+	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
+	if err != nil {
+		return err
+	}
+
+	query := bson.D{{Key: "PostID", Value: postID}}
+	return collection.DeleteOne(ctx, query)
 }

@@ -247,7 +247,7 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 		return nil, err
 	}
 
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return nil, err
@@ -329,7 +329,7 @@ func (s *OrderServiceImpl) Run(ctx context.Context) error {
 		return err
 	}
 
-	filter := bson.D{{Key: "id", Value: message.id}}
+	filter := bson.D{{Key: "Id", Value: message.id}}
 	err = collection.DeleteOne(ctx, filter)
 	return err */
 	return nil

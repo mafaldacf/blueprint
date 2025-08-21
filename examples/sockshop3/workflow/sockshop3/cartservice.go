@@ -57,14 +57,14 @@ func (s *CartServiceImpl) AddItem(ctx context.Context, customerID string, item I
 	}
 
 	collection.InsertOne(ctx, cart)
-	//collection.Upsert(ctx, bson.D{{"id", customerID}}, cart)
+	//collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
 	return item, nil
 }
 
 // DeleteCart implements CartService.
 func (s *CartServiceImpl) DeleteCart(ctx context.Context, customerID string) error {
 	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	return collection.DeleteMany(ctx, bson.D{{"id", customerID}})
+	return collection.DeleteMany(ctx, bson.D{{Key: "ID", Value: customerID}})
 }
 
 // GetCart implements CartService.
@@ -86,10 +86,10 @@ func (s *CartServiceImpl) MergeCarts(ctx context.Context, customerID string, ses
 		ID: customerID,
 	}
 	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	collection.Upsert(ctx, bson.D{{"id", customerID}}, cart)
+	collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
 
 	// Only delete the session after successfully merging over to customer
-	return collection.DeleteOne(ctx, bson.D{{"id", sessionID}})
+	return collection.DeleteOne(ctx, bson.D{{Key: "ID", Value: sessionID}})
 }
 
 // RemoveItem implements CartService.
@@ -98,7 +98,7 @@ func (s *CartServiceImpl) RemoveItem(ctx context.Context, customerID string, ite
 		ID: customerID,
 	}
 	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	collection.ReplaceOne(ctx, bson.D{{"id", customerID}}, cart)
+	collection.ReplaceOne(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
 	return nil
 }
 
@@ -109,6 +109,6 @@ func (s *CartServiceImpl) UpdateItem(ctx context.Context, customerID string, ite
 		Items: []Item{item},
 	}
 	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	collection.Upsert(ctx, bson.D{{"id", customerID}}, cart)
+	collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
 	return nil
 }

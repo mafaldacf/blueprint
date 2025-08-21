@@ -50,7 +50,7 @@ func (service *ShippingServiceImpl) PostShipping(ctx context.Context, shipment S
 // GetShipment implements ShippingService.
 func (s *ShippingServiceImpl) GetShipment(ctx context.Context, id string) (Shipment, error) {
 	collection, _ := s.db.GetCollection(ctx, "ship_db", "shipments")
-	cursor, err := collection.FindOne(ctx, bson.D{{"id", id}})
+	cursor, err := collection.FindOne(ctx, bson.D{{Key: "ID", Value: id}})
 	if err != nil {
 		return Shipment{}, err
 	}
@@ -62,6 +62,6 @@ func (s *ShippingServiceImpl) GetShipment(ctx context.Context, id string) (Shipm
 // UpdateStatus implements ShippingService.
 func (s *ShippingServiceImpl) UpdateStatus(ctx context.Context, id string, status string) error {
 	collection, _ := s.db.GetCollection(ctx, "ship_db", "shipments")
-	collection.UpdateOne(ctx, bson.D{{"id", id}}, bson.D{{"$set", bson.D{{"status", status}}}})
+	collection.UpdateOne(ctx, bson.D{{Key: "ID", Value: id}}, bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: status}}}})
 	return nil
 }
