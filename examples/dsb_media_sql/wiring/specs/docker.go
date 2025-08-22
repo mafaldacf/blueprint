@@ -23,6 +23,8 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 
 	movieid_db := mysql.Container(spec, "movieid_db")
 	movieinfo_db := mysql.Container(spec, "movieinfo_db")
+	castinfo_db := mysql.Container(spec, "castinfo_db")
+	plot_db := mysql.Container(spec, "plot_db")
 
 	movieid_service := workflow.Service[mediamicroservices_sql.MovieIdService](spec, "movieid_service", movieid_db)
 	movieid_ctr := applyDockerDefaults(spec, movieid_service, "movieid_proc", "movieid_container")
@@ -32,7 +34,15 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	movieinfo_ctr := applyDockerDefaults(spec, movieinfo_service, "movieinfo_proc", "movieinfo_container")
 	containers = append(containers, movieinfo_ctr)
 
-	api_service := workflow.Service[mediamicroservices_sql.APIService](spec, "api_service", movieid_service, movieinfo_service)
+	castinfo_service := workflow.Service[mediamicroservices_sql.CastInfoService](spec, "castinfo_service", castinfo_db)
+	castinfo_ctr := applyDockerDefaults(spec, castinfo_service, "castinfo_proc", "castinfo_container")
+	containers = append(containers, castinfo_ctr)
+
+	plot_service := workflow.Service[mediamicroservices_sql.PlotService](spec, "plot_service", plot_db)
+	plot_ctr := applyDockerDefaults(spec, plot_service, "plot_ctr", "plot_container")
+	containers = append(containers, plot_ctr)
+
+	api_service := workflow.Service[mediamicroservices_sql.APIService](spec, "api_service", movieid_service, movieinfo_service, castinfo_service, plot_service)
 	api_ctr := applyHTTPDefaults(spec, api_service, "api_proc", "api_container")
 	containers = append(containers, api_ctr)
 

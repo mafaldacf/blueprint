@@ -7,13 +7,14 @@ import (
 )
 
 type MovieInfo struct {
-	MovieID string `bson:"_id"`
-	Title   string `bson:"title"`
-	Casts   string `bson:"casts"`
+	movieid string `bson:"_id"`
+	title   string `bson:"title"`
+	castid  string `bson:"cast_id"`
+	plotid  string `bson:"plot_id"`
 }
 
 type MovieInfoService interface {
-	WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieInfo, error)
+	WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, castID string, plotID string) (MovieInfo, error)
 	ReadMovieInfo(ctx context.Context, reqID int64, movieID string) (MovieInfo, error)
 }
 
@@ -26,13 +27,14 @@ func NewMovieInfoServiceImpl(ctx context.Context, movieInfoDB backend.Relational
 	return m, nil //, m.createTables(ctx)
 }
 
-func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts string) (MovieInfo, error) {
+func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, castID string, plotID string) (MovieInfo, error) {
 	movieInfo := MovieInfo{
-		MovieID: movieID,
-		Title:   title,
-		Casts:   casts,
+		movieid: movieID,
+		title:   title,
+		castid:  castID,
+		plotid:  plotID,
 	}
-	_ , err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, casts) VALUES (?, ?, ?);", movieID, title, casts)
+	_, err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, castid, plotid) VALUES (?, ?, ?, ?);", movieID, title, castID, plotID)
 	return movieInfo, err
 }
 

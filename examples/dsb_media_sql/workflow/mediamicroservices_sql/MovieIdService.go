@@ -7,13 +7,14 @@ import (
 )
 
 type MovieId struct {
-	MovieID string `bson:"_id"`
-	Title   string `bson:"title"`
+	movieid string `bson:"_id"`
+	title   string `bson:"title"`
 }
 
 type MovieIdService interface {
 	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, string, error)
 	ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error)
+	ReadMovieId2(ctx context.Context, reqID int64, title string) (MovieId, error)
 }
 
 type MovieIdServiceImpl struct {
@@ -27,16 +28,22 @@ func NewMovieIdServiceImpl(ctx context.Context, movieIdDB backend.RelationalDB) 
 
 func (m *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, string, error) {
 	movieId := MovieId{
-		MovieID: movieID,
-		Title:   title,
+		movieid: movieID,
+		title:   title,
 	}
-	_ , err := m.movieIdDB.Exec(ctx, "INSERT INTO movieid(movieid, title) VALUES (?, ?);", movieID, title)
+	_, err := m.movieIdDB.Exec(ctx, "INSERT INTO movieid(movieid, title) VALUES (?, ?);", movieID, title)
 	return movieId, movieID, err
 }
 
 func (m *MovieIdServiceImpl) ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error) {
 	var movieId MovieId
 	err := m.movieIdDB.Select(ctx, &movieId, "SELECT * FROM movieid WHERE movieid = ?", movieID)
+	return movieId, err
+}
+
+func (m *MovieIdServiceImpl) ReadMovieId2(ctx context.Context, reqID int64, title string) (MovieId, error) {
+	var movieId MovieId
+	err := m.movieIdDB.Select(ctx, &movieId, "SELECT * FROM movieid WHERE title = ?", title)
 	return movieId, err
 }
 

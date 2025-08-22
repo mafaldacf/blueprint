@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Foo struct {
@@ -31,6 +32,7 @@ type FooPtr struct {
 
 type FooService interface {
 	WriteFoo(ctx context.Context, id string, text string) (Foo, error)
+	ReadFoo(ctx context.Context, id string) (Foo, error)
 }
 
 type FooServiceImpl struct {
@@ -47,6 +49,19 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (
 	if err != nil {
 		return Foo{}, err
 	}
+
+	// --------
+	// ORIGINAL
+	// --------
+	foo := Foo{
+		FooID: id,
+		Text:  text,
+	}
+	err = collection.InsertOne(ctx, foo)
+	if err != nil {
+		return Foo{}, err
+	}
+	return foo, nil 
 
 	// ------------
 	// EXPERIMENT 1
@@ -106,7 +121,7 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (
 	// EXPERIMENT 3
 	// ------------
 
-	var foo0 = &Foo{}
+	/* var foo0 = &Foo{}
 	var foo1 = &Foo{}
 	foo1.SetOtherFoo(foo0)
 	foo0.FooID = "myid0"
@@ -116,5 +131,27 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (
 		return Foo{}, err
 	}
 
-	return *foo1, nil
+	return *foo1, nil */
+}
+
+func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
+	var bar Foo
+
+	collection, err := s.fooDb.GetCollection(ctx, "foo_db", "foo")
+	if err != nil {
+		return Foo{}, err
+	}
+
+	query := bson.D{{Key: "FooID", Value: id}}
+	result, err := collection.FindOne(ctx, query)
+	if err != nil {
+		return Foo{}, err
+	}
+
+	res, err := result.One(ctx, &bar)
+	if !res || err != nil {
+		return Foo{}, err
+	}
+
+	return bar, nil
 }
