@@ -35,7 +35,7 @@ func (d *FrontendImpl) WriteFooBar(ctx context.Context, id string, fooText strin
 
 func (d *FrontendImpl) ReadFooBar(ctx context.Context, id string)  (Foo, Bar, error) {
 	foo, err1 := d.fooService.ReadFoo(ctx, id)
-	bar, err2 := d.barService.ReadBar(ctx, id)
+	bar, err2 := d.barService.ReadBar(ctx, foo.FooID)
 	if err1 != nil {
 		return Foo{}, Bar{}, err1
 	}

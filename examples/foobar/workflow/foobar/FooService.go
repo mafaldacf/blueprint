@@ -135,7 +135,7 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (
 }
 
 func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
-	var bar Foo
+	var foo Foo
 
 	collection, err := s.fooDb.GetCollection(ctx, "foo_db", "foo")
 	if err != nil {
@@ -143,15 +143,15 @@ func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 	}
 
 	query := bson.D{{Key: "FooID", Value: id}}
-	result, err := collection.FindOne(ctx, query)
+	cursor, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return Foo{}, err
 	}
 
-	res, err := result.One(ctx, &bar)
+	res, err := cursor.One(ctx, &foo)
 	if !res || err != nil {
 		return Foo{}, err
 	}
 
-	return bar, nil
+	return foo, nil
 }

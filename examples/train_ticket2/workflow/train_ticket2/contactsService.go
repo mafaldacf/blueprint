@@ -37,7 +37,7 @@ func (c *ContactsServiceImpl) FindContactsById(ctx context.Context, id string) (
 	if err != nil {
 		return Contact{}, err
 	}
-	query := bson.D{{Key: "id", Value: id}}
+	query := bson.D{{Key: "ID", Value: id}}
 	res, err := coll.FindOne(ctx, query)
 	if err != nil {
 		return Contact{}, err

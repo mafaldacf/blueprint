@@ -1,10 +1,9 @@
-package socialnetwork
+package socialnetwork2
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
@@ -115,18 +114,11 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 
 	post_ids = append(new_post_ids, post_ids...)
 	fmt.Println(post_ids)
-	post_channel := make(chan bool)
-	err_post_channel := make(chan error)
-	go func() {
-		var err error
-		_, err = u.postStorageService.ReadPosts(ctx, reqID, post_ids)
-		if err != nil {
-			log.Println(err)
-			err_post_channel <- err
-			return
-		}
-		post_channel <- true
-	}()
+
+	_, err = u.postStorageService.ReadPosts(ctx, reqID, post_ids)
+	if err != nil {
+		return []int64{}, err
+	}
 
 	if len(new_post_ids) > 0 {
 		err := u.userTimelineCache.Put(ctx, userIDStr, post_ids)
@@ -134,12 +126,7 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 			return []int64{}, err
 		}
 	}
-	select {
-	case <-post_channel:
-		break
-	case err := <-err_post_channel:
-		return []int64{}, err
-	}
+	
 	return post_ids, nil
 }
 
@@ -150,7 +137,7 @@ func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID i
 		return err
 	}
 
-	query := bson.D{{"userid", userID}}
+	query := bson.D{{Key: "UserID", Value: userID}}
 	results, err := collection.FindMany(ctx, query)
 	var userPosts []UserPosts
 	if err != nil {

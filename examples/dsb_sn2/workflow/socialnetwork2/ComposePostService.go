@@ -1,9 +1,7 @@
-package socialnetwork
+package socialnetwork2
 
 import (
 	"context"
-	"log"
-	"sync"
 	"time"
 )
 
@@ -39,25 +37,16 @@ func (c *ComposePostServiceImpl) ComposePost(ctx context.Context, reqID int64, u
 	var medias []Media
 	var urls []URL
 	var usermentions []UserMention
-	var wg sync.WaitGroup
-	wg.Add(4)
-	go func() {
-		defer wg.Done()
-		up_text, usermentions, urls, err1 = c.textService.ComposeText(ctx, reqID, text)
-	}()
-	go func() {
-		defer wg.Done()
-		medias, err2 = c.mediaService.ComposeMedia(ctx, reqID, mediaTypes, mediaIDs)
-	}()
-	go func() {
-		defer wg.Done()
-		uniqueID, err3 = c.uniqueIDService.ComposeUniqueId(ctx, reqID, postType)
-	}()
-	go func() {
-		defer wg.Done()
-		creator, err4 = c.userService.ComposeCreatorWithUserId(ctx, reqID, userID, username)
-	}()
-	wg.Wait()
+
+	// service calls: 
+	// - urlShortenService.ComposeUrls() w/ database write only (multi)
+	// - userMentionService.ComposeUserMentions() w/ database and cache writes (multi)
+	up_text, usermentions, urls, err1 = c.textService.ComposeText(ctx, reqID, text)
+
+	// no database writes
+	medias, err2 = c.mediaService.ComposeMedia(ctx, reqID, mediaTypes, mediaIDs)
+	uniqueID, err3 = c.uniqueIDService.ComposeUniqueId(ctx, reqID, postType)
+	creator, err4 = c.userService.ComposeCreatorWithUserId(ctx, reqID, userID, username)
 
 	if err1 != nil {
 		return -1, []int64{}, err1
@@ -86,23 +75,12 @@ func (c *ComposePostServiceImpl) ComposePost(ctx context.Context, reqID int64, u
 		usermentionIds = append(usermentionIds, um.UserID)
 	}
 
-	var wg2 sync.WaitGroup
-	wg2.Add(3)
-	go func() {
-		defer wg2.Done()
-		err1 = c.postStorageService.StorePost(ctx, reqID, post)
-	}()
-	go func() {
-		defer wg2.Done()
-		err2 = c.userTimelineService.WriteUserTimeline(ctx, reqID, uniqueID, userID, timestamp)
-		log.Println(err2)
-	}()
-	go func() {
-		defer wg2.Done()
-		err3 = c.homeTimelineService.WriteHomeTimeline(ctx, reqID, uniqueID, userID, timestamp, usermentionIds)
-		log.Println(err3)
-	}()
-	wg2.Wait()
+	// database write only
+	err1 = c.postStorageService.StorePost(ctx, reqID, post)
+	// database + cache writes 
+	err2 = c.userTimelineService.WriteUserTimeline(ctx, reqID, uniqueID, userID, timestamp)
+	// cache write only
+	err3 = c.homeTimelineService.WriteHomeTimeline(ctx, reqID, uniqueID, userID, timestamp, usermentionIds)
 
 	if err1 != nil {
 		return uniqueID, usermentionIds, err1

@@ -22,9 +22,11 @@ use (
 	./examples/dsb_media/workflow
 	//./examples/dsb_media_sql/wiring
 	//./examples/dsb_media_sql/workflow
-	//./examples/dsb_sn/tests
-	//./examples/dsb_sn/wiring
-	//./examples/dsb_sn/workflow
+	./examples/dsb_sn/tests
+	./examples/dsb_sn/wiring
+	./examples/dsb_sn/workflow
+	//./examples/dsb_sn2/wiring
+	//./examples/dsb_sn2/workflow
 	./examples/employee_app/wiring
 	./examples/employee_app/workflow
 	./examples/foobar/wiring

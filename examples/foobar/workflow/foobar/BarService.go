@@ -54,12 +54,12 @@ func (s *BarServiceImpl) ReadBar(ctx context.Context, id string) (Bar, error) {
 	}
 
 	query := bson.D{{Key: "BarID", Value: id}}
-	result, err := collection.FindOne(ctx, query)
+	cursor, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return Bar{}, err
 	}
 
-	res, err := result.One(ctx, &bar)
+	res, err := cursor.One(ctx, &bar)
 	if !res || err != nil {
 		return Bar{}, err
 	}

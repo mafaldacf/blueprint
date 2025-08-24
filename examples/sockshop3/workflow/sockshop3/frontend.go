@@ -106,8 +106,9 @@ func (f *FrontendImpl) AddItem(ctx context.Context, sessionID string, itemID str
 		return sessionID, err
 	}
 
-	//FIXME: should pass sock.ID instead of itemID but analyzer is not detecting FOREIGN KEY!!
-	_, err = f.cart.AddItem(ctx, sessionID, Item{ID: itemID, Quantity: 1, UnitPrice: sock.Price})
+	// also works with:
+	// _, err = f.cart.AddItem(ctx, sessionID, Item{ID: itemID, Quantity: 1, UnitPrice: sock.Price})
+	_, err = f.cart.AddItem(ctx, sessionID, Item{ID: sock.ID, Quantity: 1, UnitPrice: sock.Price})
 	return sessionID, err
 }
 

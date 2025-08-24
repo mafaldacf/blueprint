@@ -1,10 +1,10 @@
-module github.com/blueprint-uservices/blueprint/examples/dsb_hotel2/workflow
+module github.com/blueprint-uservices/blueprint/examples/dsb_sn2/workflow
 
 go 1.22.4
 
 require (
 	github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240405152959-f078915d2306
-	github.com/hailocab/go-geoindex v0.0.0-20160127134810-64631bfe9711
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	go.mongodb.org/mongo-driver v1.12.1
 )
 
