@@ -1,9 +1,5 @@
 package train_ticket2
 
-import (
-	"github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow/food"
-)
-
 type StationFoodStore struct {
 	ID           string
 	StationName  string
@@ -11,5 +7,5 @@ type StationFoodStore struct {
 	Telephone    string
 	BusinessTime string
 	DeliveryFee  float64
-	Foods        []food.Food
+	Foods        Food
 }

@@ -3,7 +3,7 @@
 # specs
 
 ```go
-import "github.com/blueprint-uservices/blueprint/examples/train_ticket/wiring/specs"
+import "github.com/blueprint-uservices/blueprint/examples/train_ticket2/wiring/specs"
 ```
 
 ## Index

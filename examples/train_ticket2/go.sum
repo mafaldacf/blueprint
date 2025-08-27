@@ -1,5 +1,5 @@
-github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow v0.0.0-20250815220819-bcd4a51069cb h1:1jH7mN+lkR4HOaH7diweaefYRoYZVtuy0TjeKDcmzcA=
-github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow v0.0.0-20250815220819-bcd4a51069cb/go.mod h1:uVAs3X9GOdfSPdzYmZjWge8fTFmrTiIAHdOKYucdMAs=
+github.com/blueprint-uservices/blueprint/examples/train_ticket2/workflow v0.0.0-20250815220819-bcd4a51069cb h1:1jH7mN+lkR4HOaH7diweaefYRoYZVtuy0TjeKDcmzcA=
+github.com/blueprint-uservices/blueprint/examples/train_ticket2/workflow v0.0.0-20250815220819-bcd4a51069cb/go.mod h1:uVAs3X9GOdfSPdzYmZjWge8fTFmrTiIAHdOKYucdMAs=
 github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240619221802-d064c5861c1e h1:yRCPuCqLAQDDPB5yE+zPLy6cvX9ysAFQGt/hv5S7e+8=
 github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240619221802-d064c5861c1e/go.mod h1:pWgaE60Wfg1GDkFUz17NcxxaFk66/s2RRO5UZG9lCXA=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

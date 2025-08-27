@@ -1,7 +1,5 @@
 github.com/blueprint-uservices/blueprint/blueprint v0.0.0-20240405152959-f078915d2306 h1:qN3n6Pr7fGalqno6+sbGH/Wx8HC+izyTft5waFKVDRQ=
 github.com/blueprint-uservices/blueprint/blueprint v0.0.0-20240405152959-f078915d2306/go.mod h1:zV7A7jdUp7+9i/ypOd3IPstNrXtf+KKZbcCYVF6PggU=
-github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow v0.0.0-20250815220819-bcd4a51069cb h1:1jH7mN+lkR4HOaH7diweaefYRoYZVtuy0TjeKDcmzcA=
-github.com/blueprint-uservices/blueprint/examples/train_ticket/workflow v0.0.0-20250815220819-bcd4a51069cb/go.mod h1:uVAs3X9GOdfSPdzYmZjWge8fTFmrTiIAHdOKYucdMAs=
 github.com/blueprint-uservices/blueprint/plugins v0.0.0-20240405152959-f078915d2306 h1:r4xbdRQ0sIws4iRdtj2cIQkwr2xbWCxTQvYSqbQ4NXU=
 github.com/blueprint-uservices/blueprint/plugins v0.0.0-20240405152959-f078915d2306/go.mod h1:m8rwGiggsPmEZ2dqL36JF8mPR7KJ0nXqBvkKAqKz6OI=
 github.com/blueprint-uservices/blueprint/runtime v0.0.0-20240619221802-d064c5861c1e h1:yRCPuCqLAQDDPB5yE+zPLy6cvX9ysAFQGt/hv5S7e+8=
