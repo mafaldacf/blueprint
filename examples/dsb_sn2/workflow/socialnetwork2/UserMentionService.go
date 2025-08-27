@@ -3,9 +3,9 @@ package socialnetwork2
 import (
 	"context"
 	"log"
-	"strings"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // The UserMentionService interface
@@ -28,6 +28,7 @@ func NewUserMentionServiceImpl(ctx context.Context, userCache backend.Cache, use
 
 // Implements the UserMentionService interface
 func (u *UserMentionServiceImpl) ComposeUserMentions(ctx context.Context, reqID int64, usernames []string) ([]UserMention, error) {
+	return nil, nil
 	usernames_not_cached := make(map[string]bool)
 	rev_lookup := make(map[string]string)
 	var keys []string
@@ -60,12 +61,17 @@ func (u *UserMentionServiceImpl) ComposeUserMentions(ctx context.Context, reqID 
 		if err != nil {
 			return user_mentions, err
 		}
-		in_str := strings.Join(names, ",")
+		/* in_str := strings.Join(names, ",")
 		query := `{"Username": {"$in": [` + in_str + `]}}`
 		query_d, err := parseNoSQLDBQuery(query)
 		if err != nil {
 			log.Println(err)
 			return []UserMention{}, err
+		} */
+		query_d := bson.D{
+			{Key: "Username", Value: bson.D{
+				{Key: "$in", Value: names},
+			}},
 		}
 		vals, err := collection.FindMany(ctx, query_d)
 		if err != nil {

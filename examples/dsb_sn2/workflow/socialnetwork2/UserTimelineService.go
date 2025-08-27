@@ -81,16 +81,25 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 		if err != nil {
 			return []int64{}, err
 		}
-		query := fmt.Sprintf(`{"UserID": %[1]d}`, userID)
-		projection := fmt.Sprintf(`{"posts": {"$slice": [0, %[1]d]}}`, stop)
+		/* query := fmt.Sprintf(`{"UserID": %[1]d}`, userID)
 		query_d, err := parseNoSQLDBQuery(query)
 		if err != nil {
 			return []int64{}, err
-		}
+		} */
+		query_d := bson.D{{Key: "UserID", Value: userID}}
+
+		/* projection := fmt.Sprintf(`{"posts": {"$slice": [0, %[1]d]}}`, stop)
 		projection_d, err := parseNoSQLDBQuery(projection)
 		if err != nil {
 			return []int64{}, err
-		}
+		} */
+
+		projection_d := bson.D{
+		{Key: "posts", Value: bson.D{
+			{Key: "$slice", Value: bson.A{0, stop}},
+		}},
+	}
+
 		post_db_val, err := collection.FindOne(ctx, query_d, projection_d)
 		if err != nil {
 			return []int64{}, err
@@ -147,7 +156,7 @@ func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID i
 
 	if len(userPosts) == 0 {
 		fmt.Println("Inserting new entry for", userID)
-		userPosts := UserPosts{UserID: userID, Posts: []PostInfo{PostInfo{PostID: postID, Timestamp: timestamp}}}
+		userPosts := UserPosts{UserID: userID, Posts: []PostInfo{{PostID: postID, Timestamp: timestamp}}}
 		err := collection.InsertOne(ctx, userPosts)
 		if err != nil {
 			return errors.New("Failed to insert user timeline user to Database")
@@ -156,10 +165,23 @@ func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID i
 		fmt.Println("Adding a new post for user", userID)
 		postIDstr := strconv.FormatInt(postID, 10)
 		timestampstr := strconv.FormatInt(timestamp, 10)
-		update := fmt.Sprintf(`{"$push": {"Posts": {"$each": [{"PostID": %s, "Timestamp": %s}], "$position": 0}}}`, postIDstr, timestampstr)
+		/* update := fmt.Sprintf(`{"$push": {"Posts": {"$each": [{"PostID": %s, "Timestamp": %s}], "$position": 0}}}`, postIDstr, timestampstr)
 		update_d, err := parseNoSQLDBQuery(update)
 		if err != nil {
 			return err
+		} */
+		update_d := bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "Posts", Value: bson.D{
+					{Key: "$each", Value: bson.A{
+						bson.D{
+							{Key: "PostID", Value: postIDstr},
+							{Key: "Timestamp", Value: timestampstr},
+						},
+					}},
+					{Key: "$position", Value: 0},
+				}},
+			}},
 		}
 		_, err = collection.UpdateMany(ctx, query, update_d)
 		if err != nil {

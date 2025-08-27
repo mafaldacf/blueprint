@@ -182,11 +182,13 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 		Shipping: shipping,
 	}
 
-	orderItems, err := s.getUpdatedOrderItems(ctx, items)
+	/* orderItems, err := s.getUpdatedOrderItems(ctx, items)
 	if err != nil {
 		return nil, err
 	}
-	order.Items = orderItems
+	order.Items = orderItems */
+
+	var orderItems []*OrderItem
 
 	for _, myitem1 := range items {
 		if myitem1.IsTypeTax() {

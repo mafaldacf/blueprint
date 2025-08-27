@@ -3,11 +3,8 @@ package socialnetwork2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"strconv"
-	"strings"
-	"sync"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
@@ -90,7 +87,7 @@ func (p *PostStorageServiceImpl) ReadPosts(ctx context.Context, reqID int64, pos
 	}
 	values := make([]Post, len(keys))
 	var retvals []interface{}
-	for idx, _ := range values {
+	for idx := range values {
 		retvals = append(retvals, &values[idx])
 	}
 	p.postStorageCache.Mget(ctx, keys, retvals)
@@ -113,12 +110,37 @@ func (p *PostStorageServiceImpl) ReadPosts(ctx context.Context, reqID int64, pos
 		if err != nil {
 			return []Post{}, err
 		}
-		id_str := strings.Join(strings.Fields(fmt.Sprint(unique_pids)), ",")
+		/* id_str := strings.Join(strings.Fields(fmt.Sprint(unique_pids)), ",")
 		query := `{"PostID": {"$in": ` + id_str + `}}`
 		query_d, err := parseNoSQLDBQuery(query)
 		if err != nil {
 			return []Post{}, err
+		} */
+
+		// ------
+		// TEST 3
+		// ------
+
+		query_d := bson.D{
+			{Key: "PostID", Value: bson.D{
+				{Key: "$in", Value: unique_pids},
+			}},
 		}
+
+		// ------
+		// TEST 2
+		// ------
+		/* query_d := bson.D{
+			{Key: "PostID", Value: bson.D{
+				{Key: "$in", Value: postIDs},
+			}},
+		} */
+		// ------
+		// TEST 1
+		// ------
+		/* postID := postIDs[0]
+		query_d := bson.D{{Key: "PostID", Value: postID}} */
+
 		vals, err := collection.FindMany(ctx, query_d)
 		if err != nil {
 			log.Println(err)
@@ -129,16 +151,9 @@ func (p *PostStorageServiceImpl) ReadPosts(ctx context.Context, reqID int64, pos
 			return []Post{}, err
 		}
 		retposts = append(retposts, new_posts...)
-		var wg sync.WaitGroup
 		for _, new_post := range new_posts {
-			wg.Add(1)
-
-			go func(new_post Post) {
-				defer wg.Done()
-				p.postStorageCache.Put(ctx, strconv.FormatInt(new_post.PostID, 10), new_post)
-			}(new_post)
+			p.postStorageCache.Put(ctx, strconv.FormatInt(new_post.PostID, 10), new_post)
 		}
-		wg.Wait()
 	}
 	return retposts, nil
 }
