@@ -54,8 +54,8 @@ use (
 	./examples/train_ticket/tests
 	./examples/train_ticket/wiring
 	./examples/train_ticket/workflow
-	./examples/train_ticket2/wiring
-	./examples/train_ticket2/workflow
+	//./examples/train_ticket2/wiring
+	//./examples/train_ticket2/workflow
 	./plugins
 	./runtime
 	./test/wiring

@@ -4,7 +4,7 @@ package train_ticket2
 type TrainType struct {
 	ID           string
 	Name         string
-	EconomyClass int64
-	ComfortClass int64
+	EconomyClass int
+	ComfortClass int
 	AvgSpeed     int64
 }

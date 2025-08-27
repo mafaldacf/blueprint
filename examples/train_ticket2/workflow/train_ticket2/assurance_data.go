@@ -5,7 +5,7 @@ import (
 )
 
 type AssuranceType struct {
-	Index int64
+	Index int
 	Name  string
 	Price float64
 }
@@ -13,7 +13,7 @@ type AssuranceType struct {
 var TRAFFIC_ACCIDENT = AssuranceType{1, "Traffic Accident Assurance", 3.0}
 var ALL_ASSURANCES = []AssuranceType{TRAFFIC_ACCIDENT}
 
-func getAssuranceType(ctx context.Context, index int64) (AssuranceType, error) {
+func getAssuranceType(ctx context.Context, index int) (AssuranceType, error) {
 	if index == TRAFFIC_ACCIDENT.Index {
 		return TRAFFIC_ACCIDENT, nil
 	}

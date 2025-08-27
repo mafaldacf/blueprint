@@ -17,7 +17,7 @@ type AssuranceService interface {
 	// Find an assurance by Order ID
 	FindAssuranceByOrderId(ctx context.Context, orderId string) (Assurance, error)
 	// Creates a new Assurance
-	Create(ctx context.Context, typeindex int64, orderId string) (Assurance, error)
+	Create(ctx context.Context, typeindex int, orderId string) (Assurance, error)
 	// Deletes the assurance with ID `id`
 	DeleteById(ctx context.Context, id string) error
 	// Delete the assurance associated with order that has id `orderId`
@@ -138,7 +138,7 @@ func (a *AssuranceServiceImpl) Modify(ctx context.Context, assurance Assurance) 
 	return assurance, nil
 }
 
-func (a *AssuranceServiceImpl) Create(ctx context.Context, typeindex int64, orderid string) (Assurance, error) {
+func (a *AssuranceServiceImpl) Create(ctx context.Context, typeindex int, orderid string) (Assurance, error) {
 	at, err := getAssuranceType(ctx, typeindex)
 	if err != nil {
 		return Assurance{}, err
