@@ -14,3 +14,14 @@ type TravelResult struct {
 	Route     Route
 	Prices    map[string]string
 }
+type TravelInfo struct {
+	LoginID             string
+	TripID              string
+	TrainTypeName       string
+	RouteID             string
+	StartStationName    string
+	TerminalStationName string
+	StationsName        string
+	StartTime           string
+	EndTime             string
+}

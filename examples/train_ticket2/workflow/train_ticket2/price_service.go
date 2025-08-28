@@ -134,10 +134,8 @@ func (p *PriceServiceImpl) FindByRouteIDAndTrainType(ctx context.Context, routeI
 
 func (p *PriceServiceImpl) FindByRouteIDsAndTrainTypes(ctx context.Context, rtsAndTypes []string) (map[string]PriceConfig, error) {
 	res := make(map[string]PriceConfig)
-	// TODO: Maybe implement this as a single query
-
-	// FIXME: ORIGINAL FORLOOP
-	/* for _, rt := range rtsAndTypes {
+	
+	for _, rt := range rtsAndTypes {
 		pieces := strings.Split(rt, ":")
 		routeid := pieces[0]
 		trainType := pieces[1]
@@ -146,15 +144,7 @@ func (p *PriceServiceImpl) FindByRouteIDsAndTrainTypes(ctx context.Context, rtsA
 		if err == nil {
 			res[rt] = pc
 		}
-	} */
-	
-	// FIXME: TEMPORARY WORKAROUND FOR FORLOOP
-	rt := rtsAndTypes[0]
-	pieces := strings.Split(rt, ":")
-	routeid := pieces[0]
-	trainType := pieces[1]
-	pc, _ := p.FindByRouteIDAndTrainType(ctx, routeid, trainType)
-	res[rt] = pc
+	}
 	
 	return res, nil
 }

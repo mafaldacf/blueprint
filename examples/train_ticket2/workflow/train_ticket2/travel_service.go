@@ -11,15 +11,65 @@ import (
 
 type TravelService interface {
 	GetTripAllDetailInfo(ctx context.Context, gtdi TripAllDetailInfo) (TripAllDetail, error)
+	CreateTrip(ctx context.Context, info TravelInfo) (Trip, error)
+	DeleteTrip(ctx context.Context, tripID string) error
 }
 
 type TravelServiceImpl struct {
 	basicService BasicService
+	seatService  SeatService
 	travelDB     backend.NoSQLDatabase
 }
 
-func NewTravelServiceImpl(ctx context.Context, basicService BasicService, travelDB backend.NoSQLDatabase) (TravelService, error) {
-	return &TravelServiceImpl{basicService: basicService, travelDB: travelDB}, nil
+func NewTravelServiceImpl(ctx context.Context, basicService BasicService, seatService SeatService, travelDB backend.NoSQLDatabase) (TravelService, error) {
+	return &TravelServiceImpl{basicService: basicService, seatService: seatService, travelDB: travelDB}, nil
+}
+
+func (t *TravelServiceImpl) CreateTrip(ctx context.Context, info TravelInfo) (Trip, error) {
+	collection, err := t.travelDB.GetCollection(ctx, "travel_db", "trip")
+	if err != nil {
+		return Trip{}, err
+	}
+
+	filter := bson.D{{Key: "TripID", Value: info.TripID}}
+	res, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return Trip{}, err
+	}
+	var trip Trip
+	ok, err := res.One(ctx, &trip)
+	if err != nil {
+		return Trip{}, err
+	}
+	if ok {
+		return Trip{}, fmt.Errorf("trip (%s) already exists", info.TripID)
+	}
+	
+	trip = Trip{
+		TripID:              info.TripID,
+		TrainTypeName:       info.TrainTypeName,
+		RouteID:             info.RouteID,
+		StartStationName:    info.StartStationName,
+		StationsName:        info.StationsName,
+		TerminalStationName: info.TerminalStationName,
+		StartTime:           info.StartTime,
+		EndTime:             info.EndTime,
+	}
+	err = collection.InsertOne(ctx, trip)
+	if err != nil {
+		return Trip{}, err
+	}
+	return trip, err
+}
+
+func (t *TravelServiceImpl) DeleteTrip(ctx context.Context, tripID string) error {
+	collection, err := t.travelDB.GetCollection(ctx, "travel_db", "trip")
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{{Key: "TripID", Value: tripID}}
+	return collection.DeleteOne(ctx, filter)
 }
 
 func (t *TravelServiceImpl) GetTripAllDetailInfo(ctx context.Context, gtdi TripAllDetailInfo) (TripAllDetail, error) {
@@ -61,14 +111,21 @@ func (t *TravelServiceImpl) GetTripAllDetailInfo(ctx context.Context, gtdi TripA
 	}
 
 	// set trip response
-
 	route := travelResult.Route
-	//stationList := route.Stations
+	stationList := route.Stations
 
-	//firstClassTotalNum := tr.TrainType.ComfortClass
-	//secondClassTotalNum := tr.TrainType.EconomyClass
+	firstClassTotalNum := travelResult.TrainType.ComfortClass
+	secondClassTotalNum := travelResult.TrainType.EconomyClass
 
-	var first, second int // TODO getRestTicketNumber() for POST /api/v1/seatservice/seats/left_tickets
+	first, err := t.seatService.GetLeftTicketOfInterval(ctx, SeatRequest{departureTime, trip.TripID, startPlaceName, endPlaceName, 1, firstClassTotalNum, stationList})
+	if err != nil {
+		return TripAllDetail{}, err
+	}
+
+	second, err := t.seatService.GetLeftTicketOfInterval(ctx, SeatRequest{departureTime, trip.TripID, startPlaceName, endPlaceName, 2, secondClassTotalNum, stationList})
+	if err != nil {
+		return TripAllDetail{}, err
+	}
 
 	indexStart := indexOf(route.Stations, startPlaceName)
 	indexEnd := indexOf(route.Stations, endPlaceName)
@@ -107,49 +164,6 @@ func (t *TravelServiceImpl) GetTripAllDetailInfo(ctx context.Context, gtdi TripA
 	}
 
 	return gtdr, nil
-}
-
-func setResponse(trip Trip, tr TravelResult, startPlaceName string, endPlaceName string, departureTime string) (TripResponse, error) {
-	route := tr.Route
-	//stationList := route.Stations
-
-	//firstClassTotalNum := tr.TrainType.ComfortClass
-	//secondClassTotalNum := tr.TrainType.EconomyClass
-
-	var first, second int // TODO getRestTicketNumber() for POST /api/v1/seatservice/seats/left_tickets
-
-	indexStart := indexOf(route.Stations, startPlaceName)
-	indexEnd := indexOf(route.Stations, endPlaceName)
-	distanceStart := route.Distances[indexStart] - route.Distances[0]
-	distanceEnd := route.Distances[indexEnd] - route.Distances[0]
-	trainType := tr.TrainType
-	minutesStart := 60 * distanceStart / trainType.AvgSpeed
-	minutesEnd := 60 * distanceEnd / trainType.AvgSpeed
-
-	start, err := time.ParseInLocation(CALENDAR_LAYOUT, trip.StartTime, time.Local)
-	if err != nil {
-		return TripResponse{}, err
-	}
-	calendarStart := start.Add(time.Duration(minutesStart) * time.Minute)
-	calendarEnd := start.Add(time.Duration(minutesEnd) * time.Minute)
-
-	startTime := calendarStart.Format(CALENDAR_LAYOUT)
-	endTime := calendarEnd.Format(CALENDAR_LAYOUT)
-
-	response := TripResponse{
-		TripID:               trip.TripID,
-		TrainTypeName:        trip.TrainTypeName,
-		ConfortClass:         first,
-		EconomyClass:         second,
-		PriceForConfortClass: tr.Prices["confortClass"],
-		PriceForEconomyClass: tr.Prices["economyClass"],
-		StartStation:         startPlaceName,
-		TerminalStation:      endPlaceName,
-		StartTime:            startTime,
-		EndTime:              endTime,
-	}
-
-	return response, nil
 }
 
 func afterToday(dateStr string) bool {

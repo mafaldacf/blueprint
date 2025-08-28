@@ -11,7 +11,7 @@ import (
 // TrainService manages the different types of trains in the application
 type TrainService interface {
 	// Creates a new type of train
-	Create(ctx context.Context, ttype TrainType) (bool, error)
+	Create(ctx context.Context, ttype TrainType) error
 	// Retrieves the type of train using its `id`
 	Retrieve(ctx context.Context, id string) (TrainType, error)
 	// Retrieves the type of train using its `name`
@@ -36,30 +36,30 @@ func NewTrainServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (TrainSe
 	return &TrainServiceImpl{db: db}, nil
 }
 
-func (ts *TrainServiceImpl) Create(ctx context.Context, tt TrainType) (bool, error) {
+func (ts *TrainServiceImpl) Create(ctx context.Context, tt TrainType) error {
 	coll, err := ts.db.GetCollection(ctx, "train_db", "train")
 	if err != nil {
-		return false, err
+		return err
 	}
 	query := bson.D{{Key: "Name", Value: tt.Name}}
 	res, err := coll.FindOne(ctx, query)
 	if err != nil {
-		return false, err
+		return err
 	}
 	var saved_tt TrainType
 	exists, err := res.One(ctx, &saved_tt)
 	if err != nil {
-		return false, err
+		return err
 	}
 	if exists {
-		return false, errors.New("TrainType already exists")
+		return errors.New("TrainType already exists")
 	}
 
 	err = coll.InsertOne(ctx, tt)
 	if err != nil {
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
 func (ts *TrainServiceImpl) Retrieve(ctx context.Context, id string) (TrainType, error) {

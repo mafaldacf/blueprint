@@ -2,6 +2,8 @@ package train_ticket2
 
 import (
 	"context"
+	"errors"
+	"fmt"
 )
 
 type AssuranceType struct {
@@ -17,9 +19,7 @@ func getAssuranceType(ctx context.Context, index int) (AssuranceType, error) {
 	if index == TRAFFIC_ACCIDENT.Index {
 		return TRAFFIC_ACCIDENT, nil
 	}
-	// FIXME: ADD SUPPORT FOR ORIGINAL CODE
-	/* return AssuranceType{}, errors.New(fmt.Sprintf("Assurance with index %d does not exist", index)) */
-	return AssuranceType{}, nil
+	return AssuranceType{}, errors.New(fmt.Sprintf("Assurance with index %d does not exist", index))
 }
 
 type Assurance struct {

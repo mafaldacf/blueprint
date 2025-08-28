@@ -126,7 +126,7 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 		ContactsDocumentNumber: contact.DocumentNumber,
 		DocumentType:           contact.DocumentType,
 		SeatClass:              oti.SeatType,
-		Seatnumber:             strconv.Itoa(ticket.SeatNo),
+		SeatNumber:             strconv.Itoa(ticket.SeatNo),
 		Price:                  travelResult.Prices["economyClass"],
 		TravelDate:             oti.Date,
 	}
@@ -191,7 +191,7 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 		StartPlace:  cor.FromStation,
 		EndPlace:    cor.ToStation,
 		Username:    user.Username,
-		SeatNumber:  cor.Seatnumber,
+		SeatNumber:  cor.SeatNumber,
 		OrderNumber: cor.ID,
 		Price:       cor.Price,
 		StartTime:   cor.TravelTime,

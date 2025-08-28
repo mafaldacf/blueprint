@@ -15,9 +15,9 @@ type ContactsService interface {
 	// Find all contacts associated with an account with ID `id`
 	FindContactsByAccountId(ctx context.Context, id string) ([]Contact, error)
 	// Create a new contact
-	CreateContacts(ctx context.Context, c Contact, userID string) error
+	CreateContacts(ctx context.Context, c Contact) error
 	// Delete an existing contact
-	Delete(ctx context.Context, c Contact) error
+	Delete(ctx context.Context, id string) error
 	// Get all existing contacts
 	GetAllContacts(ctx context.Context) ([]Contact, error)
 	// Modify an existing contact
@@ -71,7 +71,7 @@ func (c *ContactsServiceImpl) FindContactsByAccountId(ctx context.Context, id st
 	return account_contacts, nil
 }
 
-func (c *ContactsServiceImpl) CreateContacts(ctx context.Context, contact Contact, userID string) error {
+func (c *ContactsServiceImpl) CreateContacts(ctx context.Context, contact Contact) error {
 	coll, err := c.contactsDB.GetCollection(ctx, "contacts_db", "contacts")
 	if err != nil {
 		return err
@@ -89,16 +89,15 @@ func (c *ContactsServiceImpl) CreateContacts(ctx context.Context, contact Contac
 	if err != nil {
 		return err
 	}
-	contact.AccountID = userID
 	return coll.InsertOne(ctx, contact)
 }
 
-func (c *ContactsServiceImpl) Delete(ctx context.Context, contact Contact) error {
+func (c *ContactsServiceImpl) Delete(ctx context.Context, id string) error {
 	coll, err := c.contactsDB.GetCollection(ctx, "contacts_db", "contacts")
 	if err != nil {
 		return err
 	}
-	query := bson.D{{Key: "ID", Value: contact.ID}}
+	query := bson.D{{Key: "ID", Value: id}}
 	return coll.DeleteOne(ctx, query)
 }
 

@@ -1,5 +1,14 @@
 package train_ticket2
 
+const (
+	ORDER_STATUS_NOT_PAID  = iota // 0
+	ORDER_STATUS_PAID             // 1
+	ORDER_STATUS_CHANGE           // 2
+	ORDER_STATUS_COLLECTED        // 3
+	ORDER_STATUS_USED             // 4
+	ORDER_STATUS_CANCELED         // 5
+)
+
 type Order struct {
 	ID                     string
 	BoughtDate             string
@@ -12,7 +21,7 @@ type Order struct {
 	TrainNumber            string
 	CoachNumber            int
 	SeatClass              int
-	Seatnumber             string
+	SeatNumber             string
 	FromStation            string
 	ToStation              string
 	Status                 int
