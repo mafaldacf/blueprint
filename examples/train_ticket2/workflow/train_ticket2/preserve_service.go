@@ -117,7 +117,7 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 
 	// 4.3. Send order request
 	order := Order{
-		TrainNumber:            oti.TripID,
+		TrainNumber:            gtdi.TripID,
 		AccountID:              oti.AccountID,
 		FromStation:            oti.From,
 		ToStation:              oti.To,

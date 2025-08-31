@@ -81,7 +81,7 @@ func (api *APIServiceImpl) ReadPage(ctx context.Context, reqID int64, movieID st
 
 	/* return movie, movieInfo, CastInfo{}, Plot{}, nil */
 
-	castInfo, err3 := api.castInfoService.ReadCastInfo(ctx, reqID, movieInfo.plotid)
+	castInfo, err3 := api.castInfoService.ReadCastInfo(ctx, reqID, movieInfo.castid)
 	if err3 != nil {
 		return MovieId{}, MovieInfo{}, CastInfo{}, Plot{}, err3
 	}

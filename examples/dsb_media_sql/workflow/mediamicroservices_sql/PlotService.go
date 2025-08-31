@@ -36,6 +36,6 @@ func (m *PlotServiceImpl) WritePlot(ctx context.Context, reqID int64, plotID str
 
 func (m *PlotServiceImpl) ReadPlot(ctx context.Context, reqID int64, PlotID string) (Plot, error) {
 	var Plot Plot
-	err := m.PlotDB.Select(ctx, &Plot, "SELECT * FROM plot WHERE Plotid = ?", PlotID)
+	err := m.PlotDB.Select(ctx, &Plot, "SELECT * FROM plot WHERE plotid = ?", PlotID)
 	return Plot, err
 }
