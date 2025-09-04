@@ -12,7 +12,7 @@ type MovieId struct {
 }
 
 type MovieIdService interface {
-	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, string, error)
+	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
 	ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error)
 	ReadMovieId2(ctx context.Context, reqID int64, title string) (MovieId, error)
 }
@@ -26,13 +26,14 @@ func NewMovieIdServiceImpl(ctx context.Context, movieIdDB backend.RelationalDB) 
 	return m, nil //,m.createTables(ctx)
 }
 
-func (m *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, string, error) {
-	movieId := MovieId{
+func (m *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error) {
+	movie := MovieId{
 		movieid: movieID,
 		title:   title,
 	}
-	_, err := m.movieIdDB.Exec(ctx, "INSERT INTO movieid(movieid, title) VALUES (?, ?);", movieID, title)
-	return movieId, movieID, err
+	_, err := m.movieIdDB.Exec(ctx, "INSERT INTO movieid(movieid, title) VALUES (?, ?);", 
+		movieID, title)
+	return movie, err
 }
 
 func (m *MovieIdServiceImpl) ReadMovieId(ctx context.Context, reqID int64, movieID string) (MovieId, error) {

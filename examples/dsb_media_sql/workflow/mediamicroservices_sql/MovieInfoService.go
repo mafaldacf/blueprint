@@ -34,7 +34,8 @@ func (m *MovieInfoServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, 
 		castid:  castID,
 		plotid:  plotID,
 	}
-	_, err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, castid, plotid) VALUES (?, ?, ?, ?);", movieID, title, castID, plotID)
+	_, err := m.movieInfoDB.Exec(ctx, "INSERT INTO movieinfo(movieid, title, castid, plotid) VALUES (?, ?, ?, ?);", 
+		movieID, title, castID, plotID)
 	return movieInfo, err
 }
 

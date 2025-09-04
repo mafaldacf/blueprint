@@ -32,7 +32,7 @@ func NewAPIServiceImpl(ctx context.Context, movieIdService MovieIdService, movie
 } */
 
 func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castID string, castName string, castGender string, castIntro string, plotID string, plotText string) (MovieId, MovieInfo, CastInfo, Plot, error) {
-	movie, _, err := api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
+	movie, err := api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, CastInfo{}, Plot{}, err
 	}
@@ -41,8 +41,6 @@ func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movie
 	if err != nil {
 		return MovieId{}, MovieInfo{}, CastInfo{}, Plot{}, err
 	}
-
-	/* return movie, movieInfo, CastInfo{}, Plot{}, nil */
 
 	castInfo, err := api.castInfoService.WriteCastInfo(ctx, reqID, castID, castName, castGender, castIntro)
 	if err != nil {
