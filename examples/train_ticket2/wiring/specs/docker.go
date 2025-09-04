@@ -111,7 +111,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	allServices = append(allServices, delivery_queue)
 	allServices = append(allServices, delivery_db)
 	delivery_service := workflow.Service[train_ticket2.DeliveryService](spec, "delivery_service", delivery_queue, delivery_db)
-	delivery_service_ctr := applyDockerQueueHandlerDefaults(spec, delivery_service, "delivery_service_proc", "delivery_service_container")
+	delivery_service_ctr := applyDockerDefaults(spec, delivery_service, "delivery_service_proc", "delivery_service_container")
 	containers = append(containers, delivery_service_ctr)
 
 	payment_db := mongodb.Container(spec, "payment_db")
@@ -149,8 +149,12 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, seat_service_ctr)
 	allServices = append(allServices, seat_service)
 
-	basic_service := workflow.Service[train_ticket2.BasicService](spec, "basic_service", station_service, train_service, route_service, price_service)
-	basic_service_ctr := applyDockerDefaults(spec, basic_service, "basic_service_proc", "basic_service_container")
+	basic_service := workflow.Service[train_ticket2.BasicService](spec, "basic_service",
+		station_service, train_service, route_service, price_service,
+		// extra
+		order_service, food_service, assurance_service, consign_service, delivery_service,
+	)
+	basic_service_ctr := applyHTTPDefaults(spec, basic_service, "basic_service_proc", "basic_service_container")
 	containers = append(containers, basic_service_ctr)
 	allServices = append(allServices, basic_service)
 

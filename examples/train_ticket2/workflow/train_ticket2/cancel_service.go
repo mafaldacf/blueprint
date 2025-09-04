@@ -80,11 +80,12 @@ func (c *CancelServiceImpl) CancelOrder(ctx context.Context, orderID string, log
 			SeatClass:   strconv.Itoa(order.SeatClass),
 			StartTime:   order.TravelTime,
 		}
+		fmt.Printf("[CANCEL] notify info: %v\n", notifyInfo)
 
-		_, err = c.emailQueue.Push(ctx, notifyInfo)
+		/* _, err = c.emailQueue.Push(ctx, notifyInfo)
 		if err != nil {
 			return err
-		}
+		} */
 	}
 
 	return nil

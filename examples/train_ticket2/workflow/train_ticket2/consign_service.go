@@ -2,12 +2,16 @@ package train_ticket2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type ConsignService interface {
 	InsertConsign(ctx context.Context, consignRequest ConsignRequest) (ConsignRecord, error)
+	// extra
+	FindConsign(ctx context.Context, orderID string) (ConsignRecord, error)
 }
 
 type ConsignServiceImpl struct {
@@ -47,5 +51,28 @@ func (c *ConsignServiceImpl) InsertConsign(ctx context.Context, consignRequest C
 		return ConsignRecord{}, err
 	}
 
+	return consignRecord, nil
+}
+
+func (c *ConsignServiceImpl) FindConsign(ctx context.Context, orderID string) (ConsignRecord, error) {
+	collection, err := c.consignDB.GetCollection(ctx, "consign_db", "consign_record")
+	if err != nil {
+		return ConsignRecord{}, err
+	}
+
+	filter := bson.D{{Key: "OrderID", Value: orderID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return ConsignRecord{}, err
+	}
+
+	var consignRecord ConsignRecord
+	ok, err := cursor.One(ctx, &consignRecord)
+	if err != nil {
+		return ConsignRecord{}, err
+	}
+	if !ok {
+		return ConsignRecord{}, fmt.Errorf("consign (%s) not found", orderID)
+	}
 	return consignRecord, nil
 }

@@ -9,6 +9,8 @@ import (
 
 type BasicService interface {
 	QueryForTravel(ctx context.Context, info Travel) (TravelResult, error)
+	// extra
+	QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error)
 }
 
 type BasicServiceImpl struct {
@@ -16,6 +18,12 @@ type BasicServiceImpl struct {
 	trainService   TrainService
 	routeService   RouteService
 	priceService   PriceService
+	// extra
+	orderService     OrderService
+	foodService      FoodService
+	assuranceService AssuranceService
+	consignService   ConsignService
+	deliveryService  DeliveryService
 }
 
 func NewBasicServiceImpl(ctx context.Context,
@@ -23,12 +31,22 @@ func NewBasicServiceImpl(ctx context.Context,
 	trainService TrainService,
 	routeService RouteService,
 	priceService PriceService,
+	orderService OrderService,
+	foodService FoodService,
+	assuranceService AssuranceService,
+	consignService ConsignService,
+	deliveryService DeliveryService,
 ) (BasicService, error) {
 	return &BasicServiceImpl{
-		stationService: stationService,
-		trainService:   trainService,
-		routeService:   routeService,
-		priceService:   priceService,
+		stationService:   stationService,
+		trainService:     trainService,
+		routeService:     routeService,
+		priceService:     priceService,
+		orderService:     orderService,
+		foodService:      foodService,
+		assuranceService: assuranceService,
+		consignService:   consignService,
+		deliveryService:  deliveryService,
 	}, nil
 }
 
@@ -95,4 +113,32 @@ func (b *BasicServiceImpl) QueryForTravel(ctx context.Context, info Travel) (Tra
 		Percent:   1.0,
 	}
 	return result, nil
+}
+
+func (b *BasicServiceImpl) QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error) {
+	order, err := b.orderService.Find(ctx, orderID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+	foodOrder, err := b.foodService.FindFoodOrder(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	assurance, err := b.assuranceService.FindAssuranceByOrderId(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	consign, err := b.consignService.FindConsign(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	delivery, err := b.deliveryService.FindDelivery(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	return order, foodOrder, assurance, consign, delivery, nil
 }

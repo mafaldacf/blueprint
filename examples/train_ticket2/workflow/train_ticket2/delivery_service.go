@@ -1,4 +1,4 @@
-//Package delivery implements ts-delivery service from the original train ticket application
+// Package delivery implements ts-delivery service from the original train ticket application
 package train_ticket2
 
 import (
@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/exp/slog"
 )
 
@@ -15,6 +16,7 @@ import (
 // the delivery queue
 type DeliveryService interface {
 	Run(ctx context.Context) error
+	FindDelivery(ctx context.Context, orderID string) (Delivery, error)
 }
 
 type DeliveryServiceImpl struct {
@@ -49,4 +51,27 @@ func (d *DeliveryServiceImpl) Run(ctx context.Context) error {
 			}
 		}
 	}
+}
+
+func (d *DeliveryServiceImpl) FindDelivery(ctx context.Context, orderID string) (Delivery, error) {
+	collection, err := d.db.GetCollection(ctx, "delivery_db", "delivery")
+	if err != nil {
+		return Delivery{}, err
+	}
+
+	filter := bson.D{{Key: "OrderID", Value: orderID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return Delivery{}, err
+	}
+
+	var delivery Delivery
+	ok, err := cursor.One(ctx, &delivery)
+	if err != nil {
+		return Delivery{}, err
+	}
+	if !ok {
+		return Delivery{}, fmt.Errorf("delivery (%s) not found", orderID)
+	}
+	return delivery, nil
 }

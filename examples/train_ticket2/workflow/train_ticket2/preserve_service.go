@@ -117,7 +117,7 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 
 	// 4.3. Send order request
 	order := Order{
-		TrainNumber:            gtdi.TripID,
+		TrainNumber:            oti.TripID,
 		AccountID:              oti.AccountID,
 		FromStation:            oti.From,
 		ToStation:              oti.To,
@@ -196,10 +196,11 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 		Price:       cor.Price,
 		StartTime:   cor.TravelTime,
 	}
-	_, err = p.emailQueue.Push(ctx, notifyInfo)
+	fmt.Printf("[PRESERVE] notify info: %v\n", notifyInfo)
+	/* _, err = p.emailQueue.Push(ctx, notifyInfo)
 	if err != nil {
 		return Order{}, err
-	}
+	} */
 
 	return cor, nil
 }
