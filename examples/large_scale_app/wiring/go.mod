@@ -1,10 +1,10 @@
-module github.com/blueprint-uservices/blueprint/examples/train_ticket2/wiring
+module github.com/blueprint-uservices/blueprint/examples/large_scale_app/wiring
 
 go 1.22.4
 
 require (
 	github.com/blueprint-uservices/blueprint/blueprint v0.0.0-20240405152959-f078915d2306
-	github.com/blueprint-uservices/blueprint/examples/train_ticket2/workflow v0.0.0
+	github.com/blueprint-uservices/blueprint/examples/large_scale_app/workflow v0.0.0
 )
 
 require (
@@ -18,7 +18,7 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240424034433-3c2c7870ae76 // indirect
 	golang.org/x/crypto v0.22.0 // indirect
-	golang.org/x/text v0.17.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 )
 
 require (
@@ -42,4 +42,4 @@ require (
 	golang.org/x/tools v0.20.0 // indirect
 )
 
-replace github.com/blueprint-uservices/blueprint/examples/train_ticket2/workflow => ../workflow
+replace github.com/blueprint-uservices/blueprint/examples/large_scale_app/workflow => ../workflow
