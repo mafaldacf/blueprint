@@ -4,26 +4,27 @@ import (
 	"context"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
-	"go.mongodb.org/mongo-driver/bson"
+	//"go.mongodb.org/mongo-driver/bson"
 )
 
 type Foo struct {
 	FooID    string
 	Text     string
-	OtherFoo *Foo
+	BarItems []Bar
+	//OtherFoo *Foo
 }
 
 func (f *Foo) GetID() string {
 	return f.FooID
 }
 
-func (f *Foo) SetOtherFoo(other *Foo) {
+/* func (f *Foo) SetOtherFoo(other *Foo) {
 	f.OtherFoo = other
-}
+} */
 
-func (f *Foo) GetOtherFoo() *Foo {
+/* func (f *Foo) GetOtherFoo() *Foo {
 	return f.OtherFoo
-}
+} */
 
 type FooPtr struct {
 	FooMap  map[string]*Foo
@@ -31,37 +32,51 @@ type FooPtr struct {
 }
 
 type FooService interface {
-	WriteFoo(ctx context.Context, id string, text string) (Foo, error)
-	ReadFoo(ctx context.Context, id string) (Foo, error)
+	WriteFoo(ctx context.Context, id string, text string, bars []Bar) (Foo, error)
+	//ReadFoo(ctx context.Context, id string) (Foo, error)
 }
 
 type FooServiceImpl struct {
-	fooDb backend.NoSQLDatabase
+	fooDb      backend.NoSQLDatabase
+	barService BarService
 }
 
-func NewFooServiceImpl(ctx context.Context, fooDb backend.NoSQLDatabase) (FooService, error) {
-	d := &FooServiceImpl{fooDb: fooDb}
+func NewFooServiceImpl(ctx context.Context, barService BarService, fooDb backend.NoSQLDatabase) (FooService, error) {
+	d := &FooServiceImpl{barService: barService, fooDb: fooDb}
 	return d, nil
 }
 
-func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (Foo, error) {
+func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, barItems []Bar) (Foo, error) {
 	collection, err := s.fooDb.GetCollection(ctx, "foo_db", "foo")
 	if err != nil {
 		return Foo{}, err
+	}
+
+	/* var barItems []Bar
+	for _, item := range bars {
+		barItems = append(barItems, item)
+	} */
+
+	for _, item := range barItems {
+		_, err := s.barService.ReadBar(ctx, item.BarID)
+		if err != nil {
+			return Foo{}, err
+		}
 	}
 
 	// --------
 	// ORIGINAL
 	// --------
 	foo := Foo{
-		FooID: id,
-		Text:  text,
+		FooID:    id,
+		Text:     text,
+		BarItems: barItems,
 	}
 	err = collection.InsertOne(ctx, foo)
 	if err != nil {
 		return Foo{}, err
 	}
-	return foo, nil 
+	return foo, nil
 
 	// ------------
 	// EXPERIMENT 1
@@ -100,12 +115,12 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (
 
 	/* var foo0, foo1, foo2 Foo
 	foo1.FooID = "myid1"
-	
+
 	err = collection.InsertOne(ctx, foo1)
 	if err != nil {
 		return Foo{}, err
 	}
-	
+
 	foo1.OtherFoo = &foo0
 	foo0.FooID = "myid0"
 	foo1.OtherFoo.FooID = "myotherfooid0"
@@ -134,7 +149,7 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string) (
 	return *foo1, nil */
 }
 
-func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
+/* func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 	var foo Foo
 
 	collection, err := s.fooDb.GetCollection(ctx, "foo_db", "foo")
@@ -155,3 +170,4 @@ func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 
 	return foo, nil
 }
+*/

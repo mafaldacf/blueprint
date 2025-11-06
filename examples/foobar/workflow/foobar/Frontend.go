@@ -6,8 +6,8 @@ import (
 )
 
 type Frontend interface {
-	WriteFooBar(ctx context.Context, id string, fooText string, barText string) (string, error)
-	ReadFooBar(ctx context.Context, id string) (Foo, Bar, error)
+	WriteFooBar(ctx context.Context, id string, fooText string, bars []Bar, barText string) (string, error)
+	//ReadFooBar(ctx context.Context, id string) (Foo, Bar, error)
 }
 
 type FrontendImpl struct {
@@ -20,20 +20,20 @@ func NewFrontendImpl(ctx context.Context, fooService FooService, barService BarS
 	return d, nil
 }
 
-func (d *FrontendImpl) WriteFooBar(ctx context.Context, id string, fooText string, barText string) (string, error) {
-	foo, err1 := d.fooService.WriteFoo(ctx, id, fooText)
-	bar, err2 := d.barService.WriteBar(ctx, id, barText)
+func (d *FrontendImpl) WriteFooBar(ctx context.Context, id string, fooText string, bars []Bar, barText string) (string, error) {
+	foo, err1 := d.fooService.WriteFoo(ctx, id, fooText, bars)
+	/* bar, err2 := d.barService.WriteBar(ctx, id, barText) */
 	if err1 != nil {
 		return "", err1
 	}
-	if err2 != nil {
+	/* if err2 != nil {
 		return "", err2
-	}
-	out := fmt.Sprintf("%s, %s", foo.Text, bar.Text)
+	} */
+	out := fmt.Sprintf("%s, %s", foo.Text, foo.BarItems[0].Text)
 	return out, nil
 }
 
-func (d *FrontendImpl) ReadFooBar(ctx context.Context, id string)  (Foo, Bar, error) {
+/* func (d *FrontendImpl) ReadFooBar(ctx context.Context, id string)  (Foo, Bar, error) {
 	foo, err1 := d.fooService.ReadFoo(ctx, id)
 	bar, err2 := d.barService.ReadBar(ctx, foo.FooID)
 	if err1 != nil {
@@ -43,4 +43,4 @@ func (d *FrontendImpl) ReadFooBar(ctx context.Context, id string)  (Foo, Bar, er
 		return Foo{}, Bar{}, err2
 	}
 	return foo, bar, nil
-}
+} */
