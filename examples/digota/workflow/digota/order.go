@@ -15,10 +15,6 @@ type Order struct {
 	Updated   int64             `json:"updated,omitempty"`
 }
 
-type Test struct {
-	Value int
-}
-
 type OrderItem struct {
 	Type        int32  `json:"type,omitempty"`
 	Quantity    int64  `json:"quantity,omitempty"`
@@ -26,7 +22,6 @@ type OrderItem struct {
 	Currency    int32  `json:"currency,omitempty"`
 	Parent      string `json:"parent,omitempty"`
 	Description string `json:"description,omitempty"`
-	Test        *Test  `json:"test ,omitempty"`
 }
 
 func (item *OrderItem) IsTypeReserved() bool { return item.Type == 0 }

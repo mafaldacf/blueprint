@@ -6,7 +6,7 @@ import (
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
 	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
-	"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
+	//"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
 )
 
@@ -26,31 +26,31 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	orders_db := mongodb.Container(spec, "orders_db")
 	payments_db := mongodb.Container(spec, "payments_db")
 	products_db := mongodb.Container(spec, "products_db")
-	queue := rabbitmq.Container(spec, "queue", "queue")
+	//queue := rabbitmq.Container(spec, "queue", "queue")
 	allServices = append(allServices, skus_db)
 	allServices = append(allServices, orders_db)
 	allServices = append(allServices, payments_db)
 	allServices = append(allServices, products_db)
 
-	sku_service := workflow.Service[digota.SkuService](spec, "sku_service", skus_db, queue)
-	sku_service_ctr := applyDockerDefaults(spec, sku_service, "sku_service_proc", "sku_service_container")
+	product_service := workflow.Service[digota.ProductService](spec, "product_service", products_db)
+	product_service_ctr := applyHTTPDefaults(spec, product_service, "product_service_proc", "product_service_container")
+	containers = append(containers, product_service_ctr)
+	allServices = append(allServices, "product_service")
+
+	sku_service := workflow.Service[digota.SkuService](spec, "sku_service", product_service, skus_db/* , queue */)
+	sku_service_ctr := applyHTTPDefaults(spec, sku_service, "sku_service_proc", "sku_service_container")
 	containers = append(containers, sku_service_ctr)
 	allServices = append(allServices, "sku_service")
 
-	order_service := workflow.Service[digota.OrderService](spec, "order_service", sku_service, orders_db, queue)
+	order_service := workflow.Service[digota.OrderService](spec, "order_service", sku_service, orders_db/* , queue */)
 	order_service_ctr := applyHTTPDefaults(spec, order_service, "order_service_proc", "order_service_container")
 	containers = append(containers, order_service_ctr)
 	allServices = append(allServices, "order_service")
 
 	payment_service := workflow.Service[digota.PaymentService](spec, "payment_service", payments_db)
-	payment_service_ctr := applyDockerDefaults(spec, payment_service, "payment_service_proc", "payment_service_container")
+	payment_service_ctr := applyHTTPDefaults(spec, payment_service, "payment_service_proc", "payment_service_container")
 	containers = append(containers, payment_service_ctr)
 	allServices = append(allServices, "payment_service")
-
-	product_service := workflow.Service[digota.ProductService](spec, "product_service", sku_service, products_db)
-	product_service_ctr := applyHTTPDefaults(spec, product_service, "product_service_proc", "product_service_container")
-	containers = append(containers, product_service_ctr)
-	allServices = append(allServices, "product_service")
 
 	tests := gotests.Test(spec, allServices...)
 	containers = append(containers, tests)

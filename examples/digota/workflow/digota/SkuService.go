@@ -6,62 +6,42 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
-	//"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
 )
 
 type SkuService interface {
 	New(ctx context.Context, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
-	//New2(ctx context.Context, id string, currency int32, price uint64, parent string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
 	Get(ctx context.Context, id string) (*Sku, error)
-	/* List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error)
-	Update(ctx context.Context, id string, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) */
+	List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error)
+	Update(ctx context.Context, id string, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error)
 	Delete(ctx context.Context, id string) error
 }
 
 type SkuServiceImpl struct {
 	db    backend.NoSQLDatabase
-	queue backend.Queue
-	/* productService ProductService */
+	/* queue backend.Queue */
+	productService ProductService
 }
 
-func NewSkuServiceImpl(ctx context.Context /* , productService ProductService */, db backend.NoSQLDatabase, queue backend.Queue) (SkuService, error) {
-	s := &SkuServiceImpl{ /* productService: productService,  */ db: db, queue: queue}
+func NewSkuServiceImpl(ctx context.Context, productService ProductService, db backend.NoSQLDatabase/* , queue backend.Queue */) (SkuService, error) {
+	s := &SkuServiceImpl{productService: productService,  db: db/* , queue: queue */}
 	return s, nil
 }
 
-/* func (s *SkuServiceImpl) New2(ctx context.Context, id string, currency int32, price uint64, parent string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) {
-	product, err := s.productService.Get(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	sku := &Sku{
-			Name:              product.Name,
-			Currency:          currency,
-			Active:            product.Active,
-			Price:             price,
-			Parent:            parent,
-			Metadata:          product.Metadata,
-			PackageDimensions: packageDimensions,
-			Inventory:         inventory,
-			Attributes:        attributes,
-		}
-
-	err = validation.Validate(sku)
-	if err != nil {
-		return nil, err
-	}
-
-	collection, err := s.db.GetCollection(ctx, "skus", "skus")
-	if err != nil {
-		return nil, err
-	}
-	err = collection.InsertOne(ctx, *sku)
-	return sku, err
-
-} */
-
 func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) {
+	product, err := s.productService.Get(ctx, parent)
+	if err != nil {
+		return nil, err
+	}
+
+	var validAttr = make(map[string]string)
+	for k, v := range attributes {
+		for _, pv := range product.Attributes {
+			if k == pv {
+				validAttr[k] = v
+			}
+		}
+	}
+	
 	sku := &Sku{
 		Name:              name,
 		Currency:          currency,
@@ -71,19 +51,14 @@ func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, a
 		Metadata:          metadata,
 		PackageDimensions: packageDimensions,
 		Inventory:         inventory,
-		Attributes:        attributes,
+		Attributes:        validAttr,
 	}
-
-	/* err := validation.Validate(sku)
-	if err != nil {
-		return nil, err
-	} */
 
 	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return nil, err
 	}
-	err = collection.InsertOne(ctx, *sku)
+	err = collection.InsertOne(ctx, sku)
 	return sku, err
 }
 
@@ -111,7 +86,7 @@ func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
 	return sku, nil
 }
 
-/* func (s *SkuServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error) {
+func (s *SkuServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error) {
 	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
 		return nil, err
@@ -148,8 +123,8 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 		return nil, err
 	}
 
-	var item *Sku = &Sku{}
-	found, err := result.One(ctx, item)
+	var sku *Sku = &Sku{}
+	found, err := result.One(ctx, sku)
 	if err != nil {
 		return nil, err
 	}
@@ -157,36 +132,64 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 		return nil, fmt.Errorf("sku not found for id (%s)", id)
 	}
 
+	product, err := s.productService.Get(ctx, parent)
+	if err != nil {
+		return nil, err
+	}
+
+	var attrs = make(map[string]string)
+
+	if x := attributes; x != nil {
+		attrs = x
+	} else {
+		attrs = sku.Attributes
+	}
+
+	var validAttr = make(map[string]string)
+	// save only the valid attr
+	for k, v := range attrs {
+		for _, pv := range product.Attributes {
+			if k == pv {
+				validAttr[k] = v
+			}
+		}
+	}
+	sku.Attributes = validAttr
+
 	// update fields
-	item.Attributes = attributes
-	item.Active = active
+	
+	sku.Active = active
 
 	if name != "" {
-		item.Name = name
+		sku.Name = name
 	}
 	if price != 0 {
-		item.Price = price
+		sku.Price = price
 	}
 	if !CurrencyIsReserved(currency) {
-		item.Currency = currency
+		sku.Currency = currency
 	}
 	if metadata != nil {
-		item.Metadata = metadata
+		sku.Metadata = metadata
 	}
 	if image != "" {
-		item.Image = image
+		sku.Image = image
 	}
 	if packageDimensions != nil {
-		item.PackageDimensions = packageDimensions
+		sku.PackageDimensions = packageDimensions
 	}
 	if inventory != nil {
-		item.Inventory = inventory
+		sku.Inventory = inventory
 	}
 
-	err = collection.InsertOne(ctx, *item)
-	return item, err
+	filter := bson.D{{Key: "Id", Value: id}}
+	ok, err := collection.Upsert(ctx, filter, sku)
+	if !ok {
+		return nil, fmt.Errorf("sku not updated for id (%s)", id)
+	}
+	return sku, err
 }
-*/
+
 
 func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
 	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
@@ -196,6 +199,7 @@ func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
 
 	filter := bson.D{{Key: "Id", Value: id}}
 	err = collection.DeleteOne(ctx, filter)
+
 	/* if err != nil {
 		return err
 	}

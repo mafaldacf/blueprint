@@ -6,8 +6,6 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
-
-	//"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
 )
 
 type PaymentService interface {
@@ -33,11 +31,6 @@ func (s *PaymentServiceImpl) NewCharge(ctx context.Context, currency int32, tota
 		Email:        email,
 		Statement:    statement,
 	}
-
-	/* err := validation.Validate(charge)
-	if err != nil {
-		return nil, err
-	} */
 
 	collection, err := s.db.GetCollection(ctx, "payments_db", "payments")
 	if err != nil {

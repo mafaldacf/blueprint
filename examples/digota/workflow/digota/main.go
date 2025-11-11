@@ -9,10 +9,9 @@ import (
 func main() {
 	ctx := context.Background()
 
-	var skusDB backend.NoSQLDatabase
-	var queue backend.Queue
-	skuService, _ := NewSkuServiceImpl(ctx, skusDB, queue)
+	var db backend.NoSQLDatabase
+	service, _ := NewProductServiceImpl(ctx, db)
 
 	var id string
-	skuService.Get(ctx, id)
+	service.Get(ctx, id)
 }

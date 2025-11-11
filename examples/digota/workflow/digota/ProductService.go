@@ -6,8 +6,6 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
-
-	//"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota/validation"
 )
 
 type ProductService interface {
@@ -19,16 +17,15 @@ type ProductService interface {
 }
 
 type ProductServiceImpl struct {
-	skuService SkuService
 	db backend.NoSQLDatabase
 }
 
-func NewProductServiceImpl(ctx context.Context, skuService SkuService, db backend.NoSQLDatabase) (ProductService, error) {
-	s := &ProductServiceImpl{skuService: skuService, db: db}
+func NewProductServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (ProductService, error) {
+	s := &ProductServiceImpl{db: db}
 	return s, nil
 }
 
-func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error) {
+func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error) {	
 	product := &Product{
 		Name:        name,
 		Active:      active,
@@ -40,18 +37,11 @@ func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, 
 		Url:         url,
 	}
 
-	/* err := validation.Validate(product)
-	if err != nil {
-		return nil, err
-	} */
-
 	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return nil, err
 	}
 	err = collection.InsertOne(ctx, *product)
-
-	s.skuService.New(ctx, name, 0, true, 0, "parent", nil, "image", nil, nil, nil)
 	return product, err
 }
 
@@ -148,7 +138,12 @@ func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string,
 		product.Url = url
 	}
 
-	err = collection.InsertOne(ctx, *product)
+	filter := bson.D{{Key: "Id", Value: id}}
+	ok, err := collection.Upsert(ctx, filter, product)
+	if !ok {
+		return nil, fmt.Errorf("product not updated for id (%s)", id)
+	}
+
 	return product, err
 }
 
@@ -159,12 +154,5 @@ func (s *ProductServiceImpl) Delete(ctx context.Context, id string) error {
 	}
 
 	filter := bson.D{{Key: "Id", Value: id}}
-	err = collection.DeleteOne(ctx, filter)
-	if err != nil {
-		return err
-	}
-
-	err = s.skuService.Delete(ctx, id)
-
-	return err
+	return collection.DeleteOne(ctx, filter)
 }
