@@ -5,8 +5,6 @@ import (
 	"math/rand"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
-
-	"github.com/blueprint-uservices/blueprint/examples/postnotification_simple/workflow/postnotification_simple/common"
 )
 
 type UploadService interface {
@@ -25,9 +23,6 @@ func NewUploadServiceImpl(ctx context.Context, storageService StorageService, no
 
 func (u *UploadServiceImpl) UploadPost(ctx context.Context, username string, text string) (int64, error) {
 	reqID := rand.Int63()
-
-	common.TestFunc()
-
 	postID, _ := u.storageService.StorePost(ctx, reqID, text)
 
 	message := Message{

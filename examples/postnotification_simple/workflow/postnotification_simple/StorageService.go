@@ -24,26 +24,19 @@ func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase) (
 }
 
 func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (int64, error) {
-	postID_STORAGE_SVC := rand.Int63()
+	postID := rand.Int63()
 	timestamp := rand.Int63()
 	mentions := []string{"alice", "bob"}
 
 	post := &Post{
 		ReqID:     reqID,
-		PostID:    postID_STORAGE_SVC,
+		PostID:    postID,
 		Text:      text,
 		Mentions:  mentions,
 		Timestamp: timestamp,
 		Creator: Creator{
 			Username: "some username",
 		},
-	}
-
-	myval := 0
-	var mymentions []string
-	for idx, mention := range mentions {
-		myval += idx
-		mymentions = append(mymentions, mention)
 	}
 
 	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
@@ -54,15 +47,6 @@ func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text st
 	if err != nil {
 		return -1, err
 	}
-
-	/* collection2, err := s.postsDb.GetCollection(ctx, "test_tb", "test")
-	if err != nil {
-		return nil, err
-	}
-	err = collection2.InsertOne(ctx, post.PostID)
-	if err != nil {
-		return nil, err
-	} */
 
 	return post.PostID, err
 }

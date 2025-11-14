@@ -7,15 +7,13 @@ package sockshop3
 
 import (
 	"context"
+	"errors"
+	"fmt"
 )
-
-// PaymentService provides payment services
 type PaymentService interface {
 	Authorise(ctx context.Context, amount float32) (Authorisation, error)
 }
 
-// Returns a payment service where any transaction above the preconfigured
-// threshold will return an invalid payment amount
 func NewPaymentServiceImpl(ctx context.Context, declineOverAmount string) (PaymentService, error) {
 	return &PaymentServiceImpl{
 		declineOverAmount: float32(50),
@@ -26,10 +24,23 @@ type PaymentServiceImpl struct {
 	declineOverAmount float32
 }
 
+var ErrInvalidPaymentAmount = errors.New("invalid payment amount")
+
 func (s *PaymentServiceImpl) Authorise(ctx context.Context, amount float32) (Authorisation, error) {
-	authorization := Authorisation{
-		Authorised: false,
-		Message:    "Payment declined: amount exceeds",
+	if amount == 0 {
+		return Authorisation{}, ErrInvalidPaymentAmount
 	}
-	return authorization, nil
+	if amount < 0 {
+		return Authorisation{}, ErrInvalidPaymentAmount
+	}
+	if amount <= s.declineOverAmount {
+		return Authorisation{
+			Authorised: true,
+			Message:    "Payment authorised",
+		}, nil
+	}
+	return Authorisation{
+		Authorised: false,
+		Message:    fmt.Sprintf("Payment declined: amount exceeds %.2f", s.declineOverAmount),
+	}, nil
 }

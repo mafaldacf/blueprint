@@ -15,74 +15,62 @@ package sockshop3
 
 import (
 	"context"
+	"crypto/sha1"
 	"errors"
+	"fmt"
+	"io"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type UserService interface {
-	// Log in to an existing user account.  Returns an error if the password
-	// doesn't match the registered password
 	Login(ctx context.Context, username, password string) (User, error)
-
-	// Register a new user account.
-	// Returns the user ID
 	Register(ctx context.Context, username, password, email, first, last string) (string, error)
-
-	// Look up a user by id.  If id is the empty string, returns all users.
 	GetUsers(ctx context.Context, id string) ([]User, error)
-
-	// Insert a (possibly new) user into the DB.  Returns the user's ID
 	PostUser(ctx context.Context, user User) (string, error)
-
-	// Look up an address by id.  If id is the empty string, returns all addresses.
 	GetAddresses(ctx context.Context, id string) ([]Address, error)
-
-	// Insert a (possibly new) address into the DB.  Returns the address ID
 	PostAddress(ctx context.Context, userid string, address Address) (string, error)
-
-	// Look up a card by id.  If id is the empty string, returns all cards.
 	GetCards(ctx context.Context, cardid string) ([]Card, error)
-
-	// Insert a (possibly new) card into the DB.  Returns the card ID
 	PostCard(ctx context.Context, userid string, card Card) (string, error)
-
-	// Deletes an entity with ID id from the DB.
-	//
-	// entity can be one of "customers", "addresses", or "cards".
-	// ID should be the id of the entity to delete
 	Delete(ctx context.Context, entity string, id string) error
 }
-
-// An implementation of the UserService that stores information in a NoSQLDatabase.
-// It uses three collections within the database: users, addresses, and cards.
-// Addresses and cards are stored separately from user information, because having
-// a user account is optional when placing an order.
 type UserServiceImpl struct {
 	db backend.NoSQLDatabase
 }
 
-// Creates a UserService implementation that stores user, address, and credit card
-// information in a NoSQLDatabase.
-//
-// Returns an error if unable to get the users, addresses, or cards collection from the DB
 func NewUserServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (UserService, error) {
 	return &UserServiceImpl{db: db}, nil
 }
 
 func (s *UserServiceImpl) Login(ctx context.Context, username, password string) (User, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
-	query := bson.D{{Key: "username", Value: username}}
-	projection := bson.D{{Key: "password", Value: true}}
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return User{}, err
+	}
+	
+	// get user by name
+	query := bson.D{{Key: "Username", Value: username}}
+	projection := bson.D{{Key: "Password", Value: true}}
 	var user User
-	result, _ := collection.FindOne(ctx, query, projection)
-	result.One(ctx, &user)
+	result, err := collection.FindOne(ctx, query, projection)
+	if err != nil {
+		return User{}, err
+	}
+	_, err  = result.One(ctx, &user)
+	if err != nil {
+		return User{}, err
+	}
 
 	// Check the password
-	if user.Password != password {
+	if user.Password != calculatePassHash(password, user.Salt) {
 		return User{}, errors.New("Unauthorized")
 	}
+
+	// get user attributes
+	// TODO
+
 	return user, nil
 }
 
@@ -98,13 +86,23 @@ func (s *UserServiceImpl) Register(ctx context.Context, username, password, emai
 	u.Cards = Card{}
 
 	// Save the user in the DB
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
-	collection.InsertOne(ctx, u)
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return "", err
+	}
+	err = collection.InsertOne(ctx, u)
+	if err != nil {
+		return "", err
+	}
 	return u.UserID, nil
 }
 
 func (s *UserServiceImpl) GetUsers(ctx context.Context, userid string) ([]User, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return nil, err
+	}
+	
 	var users []User
 	filter := bson.D{{Key: "UserID", Value: userid}}
 	result, _ := collection.FindMany(ctx, filter)
@@ -113,13 +111,21 @@ func (s *UserServiceImpl) GetUsers(ctx context.Context, userid string) ([]User, 
 }
 
 func (s *UserServiceImpl) PostUser(ctx context.Context, u User) (string, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return "", err
+	}
+
 	collection.InsertOne(ctx, u)
 	return u.UserID, nil
 }
 
 func (s *UserServiceImpl) GetAddresses(ctx context.Context, addressid string) ([]Address, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return nil, err
+	}
+
 	var addresses []Address
 	filter := bson.D{{Key: "Addresses", Value: addressid}}
 	projection := bson.D{{Key: "Addresses", Value: true}}
@@ -129,7 +135,11 @@ func (s *UserServiceImpl) GetAddresses(ctx context.Context, addressid string) ([
 }
 
 func (s *UserServiceImpl) PostAddress(ctx context.Context, userid string, address Address) (string, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return "", err
+	}
+
 	filter := bson.D{{Key: "UserID", Value: userid}}
 	update := bson.D{{Key: "Address", Value: address}}
 	collection.Upsert(ctx, filter, update)
@@ -137,7 +147,11 @@ func (s *UserServiceImpl) PostAddress(ctx context.Context, userid string, addres
 }
 
 func (s *UserServiceImpl) GetCards(ctx context.Context, cardid string) ([]Card, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return nil, err
+	}
+
 	var cards []Card
 	filter := bson.D{{Key: "Cards", Value: cardid}}
 	projection := bson.D{{Key: "Cards", Value: true}}
@@ -147,16 +161,80 @@ func (s *UserServiceImpl) GetCards(ctx context.Context, cardid string) ([]Card, 
 }
 
 func (s *UserServiceImpl) PostCard(ctx context.Context, userid string, card Card) (string, error) {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
-	filter := bson.D{{Key: "UserID", Value: userid}}
-	update := bson.D{{Key: "Card", Value: card}}
-	collection.Upsert(ctx, filter, update)
-	return userid, nil
+	if userid == "" {
+		// An anonymous user; simply insert the card to the DB
+		dbcard := dbCard{Card: card, ID: primitive.NewObjectID()}
+		collection, err := s.db.GetCollection(ctx, "user_db", "cards")
+		if err != nil {
+			return "", err
+		}
+		if _, err := collection.UpsertID(ctx, dbcard.ID, card); err != nil {
+			return dbcard.ID.String(), err
+		}
+
+		// Update the provided card
+		dbcard.Card.ID = dbcard.ID.Hex()
+		card = dbcard.Card
+		return card.ID, err
+	}
+
+	// A userid is provided; first check it's valid
+	id, err := primitive.ObjectIDFromHex(userid)
+	if err != nil {
+		return "", errors.New("invalid ID Hex")
+	}
+
+	// Insert the card to the DB
+	collection, err := s.db.GetCollection(ctx, "user_db", "cards")
+	if err != nil {
+		return "", err
+	}
+	dbcard := dbCard{Card: card, ID: primitive.NewObjectID()}
+	collection.UpsertID(ctx, dbcard.ID, dbcard)
+
+	// Update the provided card
+	dbcard.Card.ID = dbcard.ID.Hex()
+	card = dbcard.Card
+
+	// Update the user
+	filter := bson.D{{Key: "_id", Value: id}}
+	update := bson.D{{Key: "$addToSet", Value: bson.D{{"cards", card.ID}}}}
+	collection, err = s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return "", err
+	}
+	_, err = collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return "", err
+	}
+
+	return card.ID, nil
 }
 
 func (s *UserServiceImpl) Delete(ctx context.Context, entity string, id string) error {
-	collection, _ := s.db.GetCollection(ctx, "user_db", "users")
+	collection, err := s.db.GetCollection(ctx, "user_db", "users")
+	if err != nil {
+		return err
+	}
+
+	switch entity {
+	case "customers":
+		//TODO
+	case "addresses":
+		//TODO
+	case "cards":
+		//TODO
+	default:
+		return errors.New("Invalid entity " + entity)
+	}
+
 	query := bson.D{{Key: "UserID", Value: id}}
-	collection.DeleteOne(ctx, query)
-	return nil
+	return collection.DeleteOne(ctx, query)
+}
+
+func calculatePassHash(pass, salt string) string {
+	h := sha1.New()
+	io.WriteString(h, salt)
+	io.WriteString(h, pass)
+	return fmt.Sprintf("%x", h.Sum(nil))
 }

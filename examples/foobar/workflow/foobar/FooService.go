@@ -11,6 +11,7 @@ type Foo struct {
 	FooID    string
 	Text     string
 	BarItems []Bar
+	FooMap   map[string]string
 	//OtherFoo *Foo
 }
 
@@ -18,21 +19,13 @@ func (f *Foo) GetID() string {
 	return f.FooID
 }
 
-/* func (f *Foo) SetOtherFoo(other *Foo) {
-	f.OtherFoo = other
-} */
-
-/* func (f *Foo) GetOtherFoo() *Foo {
-	return f.OtherFoo
-} */
-
 type FooPtr struct {
 	FooMap  map[string]*Foo
 	FooMap2 map[string]*Foo
 }
 
 type FooService interface {
-	WriteFoo(ctx context.Context, id string, text string, bars []Bar) (Foo, error)
+	WriteFoo(ctx context.Context, id string, text string, key string, val string, bars []Bar) (Foo, error)
 	//ReadFoo(ctx context.Context, id string) (Foo, error)
 }
 
@@ -46,7 +39,7 @@ func NewFooServiceImpl(ctx context.Context, barService BarService, fooDb backend
 	return d, nil
 }
 
-func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, barItems []Bar) (Foo, error) {
+func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, key string, val string, barItems []Bar) (Foo, error) {
 	collection, err := s.fooDb.GetCollection(ctx, "foo_db", "foo")
 	if err != nil {
 		return Foo{}, err
@@ -57,12 +50,12 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, b
 		barItems = append(barItems, item)
 	} */
 
-	for _, item := range barItems {
+	/* for _, item := range barItems {
 		_, err := s.barService.ReadBar(ctx, item.BarID)
 		if err != nil {
 			return Foo{}, err
 		}
-	}
+	} */
 
 	// --------
 	// ORIGINAL
@@ -71,11 +64,16 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, b
 		FooID:    id,
 		Text:     text,
 		BarItems: barItems,
+		FooMap:   make(map[string]string),
 	}
+	foo.FooMap["first_key"] = id
+	foo.FooMap["second_key"] = text
+	foo.FooMap[key] = val
 	err = collection.InsertOne(ctx, foo)
 	if err != nil {
 		return Foo{}, err
 	}
+
 	return foo, nil
 
 	// ------------

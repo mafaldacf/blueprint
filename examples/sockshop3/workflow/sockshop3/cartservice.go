@@ -3,112 +3,302 @@ package sockshop3
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 type CartService interface {
-	// Get all items in a customer's cart.  A customer might not have a cart,
-	// in which case the empty list is returned.  customerID can be a userID
-	// for a logged in user, or a sessionID for an anonymous user.
+	// carts
 	GetCart(ctx context.Context, customerID string) ([]Item, error)
-
-	// Delete a customer's cart
 	DeleteCart(ctx context.Context, customerID string) error
-
-	// Merge two carts.  Used when an anonymous customer logs in
 	MergeCarts(ctx context.Context, customerID, sessionID string) error
 
-	// Get a specific item from a customer's cart
-	GetItem(ctx context.Context, customerID string, itemID string) (Item, error)
-
-	// Add an item to a customer's cart.
-	// If the item already exists in the cart, then the total quantity is
-	// updated to reflect the combined total.
-	// Returns the current state of the item in the customer's cart.
+	// items
 	AddItem(ctx context.Context, customerID string, item Item) (Item, error)
-
-	// Remove an item from the customer's cart
-	RemoveItem(ctx context.Context, customerID, itemID string) error
-
-	// Updates an item in the customer's cart to the value provided.
 	UpdateItem(ctx context.Context, customerID string, item Item) error
+	RemoveItem(ctx context.Context, customerID, itemID string) error
+	GetItem(ctx context.Context, customerID string, itemID string) (Item, error)
 }
-
-// Implementation of [CartService]
 type CartServiceImpl struct {
 	db backend.NoSQLDatabase
 }
 
-// Creates a [CartService] instance that persists cart data in the provided db
 func NewCartServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (CartService, error) {
 	return &CartServiceImpl{db: db}, nil
 }
 
-// AddItem implements CartService.
 func (s *CartServiceImpl) AddItem(ctx context.Context, customerID string, item Item) (Item, error) {
-	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-
-	//dummy logic for testing purposes
-	cart := cart{
-		ID: customerID,
-		Items: []Item{item},
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return Item{}, err
 	}
 
-	collection.InsertOne(ctx, cart)
-	//collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
+	// get cart
+	filter := bson.D{{Key: "ID", Value: customerID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return Item{}, err
+	}
+	var cart Cart
+	ok, err := cursor.One(ctx, &cart)
+	if !ok {
+		return Item{}, fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return Item{}, err
+	}
+
+	// find item
+	var found bool
+	for i := range cart.Items {
+		if cart.Items[i].ID == item.ID {
+			cart.Items[i].Quantity += item.Quantity
+			item = cart.Items[i]
+			break
+		}
+	}
+
+	if !found {
+		cart.Items = append(cart.Items, item)
+	}
+
+	collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
 	return item, nil
 }
 
-// DeleteCart implements CartService.
 func (s *CartServiceImpl) DeleteCart(ctx context.Context, customerID string) error {
-	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return nil
+	}
 	return collection.DeleteMany(ctx, bson.D{{Key: "ID", Value: customerID}})
 }
 
-// GetCart implements CartService.
 func (s *CartServiceImpl) GetCart(ctx context.Context, customerID string) ([]Item, error) {
-	cart := &cart{
-		ID: customerID,
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return nil, nil
 	}
+
+	// get cart
+	filter := bson.D{{Key: "ID", Value: customerID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	var cart Cart
+	ok, err := cursor.One(ctx, &cart)
+	if !ok {
+		return nil, fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return nil, err
+	}
+
 	return cart.Items, nil
 }
 
-// GetItem implements CartService.
 func (s *CartServiceImpl) GetItem(ctx context.Context, customerID string, itemID string) (Item, error) {
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return Item{}, nil
+	}
+
+	// get cart
+	filter := bson.D{{Key: "ID", Value: customerID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return Item{}, err
+	}
+	var cart Cart
+	ok, err := cursor.One(ctx, &cart)
+	if !ok {
+		return Item{}, fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return Item{}, err
+	}
+
+	// find item
+	for i := range cart.Items {
+		if cart.Items[i].ID == itemID {
+			return cart.Items[i], nil
+		}
+	}
+
 	return Item{}, nil
 }
 
-// MergeCarts implements CartService.
 func (s *CartServiceImpl) MergeCarts(ctx context.Context, customerID string, sessionID string) error {
-	cart := &cart{
-		ID: customerID,
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return nil
 	}
-	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
+
+	// get cart (session)
+	filter := bson.D{{Key: "ID", Value: sessionID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	var sessionCart Cart
+	ok, err := cursor.One(ctx, &sessionCart)
+	if !ok {
+		return fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return err
+	}
+
+	// get cart (customer)
+	filter = bson.D{{Key: "ID", Value: sessionID}}
+	cursor, err = collection.FindOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	var customerCart Cart
+	ok, err = cursor.One(ctx, &customerCart)
+	if !ok {
+		return fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return err
+	}
+
+	if len(sessionCart.Items) == 0 {
+		// No update to perform
+		return nil
+	}
+
+	// Update quantity of existing items; append new items
+	customerCartItems := make(map[string]*Item)
+	for i := 0; i < len(customerCart.Items); i++ {
+		customerCartItems[customerCart.Items[i].ID] = &customerCart.Items[i]
+	}
+
+	for _, item := range sessionCart.Items {
+		if existing, exists := customerCartItems[item.ID]; exists {
+			existing.Quantity += item.Quantity
+			existing.UnitPrice = item.UnitPrice
+		} else {
+			customerCart.Items = append(customerCart.Items, item)
+		}
+	}
+	
+	_, err = collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, customerCart)
+	if err != nil {
+		return err
+	}
 
 	// Only delete the session after successfully merging over to customer
 	return collection.DeleteOne(ctx, bson.D{{Key: "ID", Value: sessionID}})
 }
 
-// RemoveItem implements CartService.
 func (s *CartServiceImpl) RemoveItem(ctx context.Context, customerID string, itemID string) error {
-	cart := &cart{
-		ID: customerID,
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return nil
 	}
-	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	collection.ReplaceOne(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
-	return nil
+
+	// get cart
+	filter := bson.D{{Key: "ID", Value: customerID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	var cart Cart
+	ok, err := cursor.One(ctx, &cart)
+	if !ok {
+		return fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return err
+	}
+
+	// remove item
+	removed := false
+	for i := 0; i < len(cart.Items); i++ {
+		if cart.Items[i].ID == itemID {
+			cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
+			i--
+			removed = true
+		}
+	}
+	if !removed {
+		return nil
+	}
+
+	if len(cart.Items) == 0 {
+		// delete cart
+		return collection.DeleteMany(ctx, bson.D{{Key: "ID", Value: customerID}})
+	}
+	_, err = collection.ReplaceOne(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
+	return err
 }
 
-// UpdateItem implements CartService.
 func (s *CartServiceImpl) UpdateItem(ctx context.Context, customerID string, item Item) error {
-	cart := &cart{
-		ID: customerID,
-		Items: []Item{item},
+	collection, err := s.db.GetCollection(ctx, "cart_db", "carts")
+	if err != nil {
+		return nil
 	}
-	collection, _ := s.db.GetCollection(ctx, "cart_db", "carts")
-	collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
-	return nil
+
+	// get cart
+	filter := bson.D{{Key: "ID", Value: customerID}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return err
+	}
+	var cart Cart
+	ok, err := cursor.One(ctx, &cart)
+	if !ok {
+		return fmt.Errorf("could not get cart for id (%s)", customerID)
+	}
+	if err != nil {
+		return err
+	}
+	
+	// find item
+	var found bool
+	for i := range cart.Items {
+		if cart.Items[i].ID == item.ID {
+			// item exists in the cart
+			cart.Items[i].Quantity = item.Quantity
+			cart.Items[i].UnitPrice = item.UnitPrice
+
+			// TODO
+			// After updating, item quantity is gone, so remove item from cart
+			/* if cart.Items[i].Quantity < 0 {
+				// remove item
+				for i := 0; i < len(cart.Items); i++ {
+					if cart.Items[i].ID == item.ID {
+						cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
+						i--
+					}
+				}
+			} */
+			
+			// If no items left in cart, delete cart
+			if len(cart.Items) == 0 {
+				// delete cart
+				return collection.DeleteMany(ctx, bson.D{{Key: "ID", Value: customerID}})
+			}
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Item doesn't exist in cart and no items added, so do nothing
+		if item.Quantity <= 0 {
+			return nil
+		}
+
+		// Item needs to be added to cart
+		cart.Items = append(cart.Items, item)
+	}
+
+	_, err = collection.Upsert(ctx, bson.D{{Key: "ID", Value: customerID}}, cart)
+	return err
 }

@@ -8,6 +8,7 @@ import (
 	"github.com/blueprint-uservices/blueprint/plugins/http"
 	"github.com/blueprint-uservices/blueprint/plugins/linuxcontainer"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
+	"github.com/blueprint-uservices/blueprint/plugins/mysql"
 	"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
 	"github.com/blueprint-uservices/blueprint/plugins/thrift"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
@@ -48,7 +49,7 @@ func makeDockerRabbitSpec(spec wiring.WiringSpec) ([]string, error) {
 	user_db := mongodb.Container(spec, "user_db")
 	cart_db := mongodb.Container(spec, "cart_db")
 	order_db := mongodb.Container(spec, "order_db")
-	catalogue_db := mongodb.Container(spec, "catalogue_db")
+	catalogue_db := mysql.Container(spec, "catalogue_db")
 	shipdb := mongodb.Container(spec, "ship_db")
 	shipqueue := rabbitmq.Container(spec, "ship_queue", "ship_queue")
 
