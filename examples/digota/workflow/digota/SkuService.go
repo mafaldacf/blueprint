@@ -183,9 +183,9 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 	}
 
 	filter := bson.D{{Key: "Id", Value: id}}
-	ok, err := collection.Upsert(ctx, filter, sku)
-	if !ok {
-		return nil, fmt.Errorf("sku not updated for id (%s)", id)
+	n, err := collection.ReplaceOne(ctx, filter, sku)
+	if n == 0 {
+		return nil, fmt.Errorf("sku not found for id (%s)", id)
 	}
 	return sku, err
 }

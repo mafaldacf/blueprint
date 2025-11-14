@@ -139,9 +139,9 @@ func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string,
 	}
 
 	filter := bson.D{{Key: "Id", Value: id}}
-	ok, err := collection.Upsert(ctx, filter, product)
-	if !ok {
-		return nil, fmt.Errorf("product not updated for id (%s)", id)
+	n, err := collection.ReplaceOne(ctx, filter, product)
+	if n == 0 {
+		return nil, fmt.Errorf("product not found for id (%s)", id)
 	}
 
 	return product, err
