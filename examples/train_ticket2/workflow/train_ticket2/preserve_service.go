@@ -90,7 +90,7 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 
 	// 4.1. Query for travel
 	travelQuery := Travel{
-		Trip:          Trip{},
+		Trip:          gtdr.trip,
 		StartPlace:    oti.From,
 		EndPlace:      oti.To,
 		DepartureTime: dateToString(),

@@ -74,7 +74,7 @@ func (b *BasicServiceImpl) QueryForTravel(ctx context.Context, info Travel) (Tra
 		return TravelResult{}, err
 	}
 
-	routeID := info.Trip.ID
+	routeID := info.Trip.RouteID
 	route, err := b.routeService.GetRouteById(ctx, routeID)
 	if err != nil {
 		return TravelResult{}, err
