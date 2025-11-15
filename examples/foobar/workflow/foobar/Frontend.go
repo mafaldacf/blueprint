@@ -2,45 +2,46 @@ package foobar
 
 import (
 	"context"
-	"fmt"
 )
 
 type Frontend interface {
-	WriteFooBar(ctx context.Context, id string, fooText string, bars []Bar, barText string, key string, val string) (string, error)
-	//ReadFooBar(ctx context.Context, id string) (Foo, Bar, error)
+	ReadMoviePlot(ctx context.Context, movieID string) (Movie, Plot, error)
+	ReadRoutePrice(ctx context.Context, routeID string) (Route, Price, error)
 }
 
 type FrontendImpl struct {
-	barService BarService
-	fooService FooService
+	barService   MovieService
+	movieService MovieService
+	plotService  PlotService
+	priceService PriceService
+	routeService RouteService
 }
 
-func NewFrontendImpl(ctx context.Context, fooService FooService, barService BarService) (Frontend, error) {
-	d := &FrontendImpl{fooService: fooService, barService: barService}
-	return d, nil
+func NewFrontendImpl(ctx context.Context, barService MovieService, movieService MovieService, plotService PlotService, priceService PriceService, routeService RouteService) (Frontend, error) {
+	f := &FrontendImpl{barService: barService, movieService: movieService, plotService: plotService, priceService: priceService}
+	return f, nil
 }
 
-func (d *FrontendImpl) WriteFooBar(ctx context.Context, id string, fooText string, bars []Bar, barText string, key string, val string) (string, error) {
-	foo, err1 := d.fooService.WriteFoo(ctx, id, fooText, key, val, bars)
-	/* bar, err2 := d.barService.WriteBar(ctx, id, barText) */
-	if err1 != nil {
-		return "", err1
+func (f *FrontendImpl) ReadMoviePlot(ctx context.Context, movieID string) (Movie, Plot, error) {
+	movie, err := f.movieService.ReadMovie(ctx, movieID)
+	if err != nil {
+		return Movie{}, Plot{}, err
 	}
-	/* if err2 != nil {
-		return "", err2
-	} */
-	out := fmt.Sprintf("%s, %s", foo.Text, foo.BarItems[0].Text)
-	return out, nil
+	plot, err := f.plotService.ReadPlot(ctx, movie.PlotID)
+	if err != nil {
+		return Movie{}, Plot{}, err
+	}
+	return movie, plot, nil
 }
 
-/* func (d *FrontendImpl) ReadFooBar(ctx context.Context, id string)  (Foo, Bar, error) {
-	foo, err1 := d.fooService.ReadFoo(ctx, id)
-	bar, err2 := d.barService.ReadBar(ctx, foo.FooID)
-	if err1 != nil {
-		return Foo{}, Bar{}, err1
+func (f *FrontendImpl) ReadRoutePrice(ctx context.Context, routeID string) (Route, Price, error) {
+	route, err := f.routeService.ReadRoute(ctx, routeID)
+	if err != nil {
+		return Route{}, Price{}, err
 	}
-	if err2 != nil {
-		return Foo{}, Bar{}, err2
+	price, err := f.priceService.ReadPriceByRouteID(ctx, routeID)
+	if err != nil {
+		return Route{}, Price{}, err
 	}
-	return foo, bar, nil
-} */
+	return route, price, nil
+}

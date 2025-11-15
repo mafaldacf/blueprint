@@ -21,22 +21,43 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	var containers []string
 	var allServices []string
 
-	foo_db := mongodb.Container(spec, "foo_db")
 	bar_db := mongodb.Container(spec, "bar_db")
-	allServices = append(allServices, foo_db)
+	movie_db := mongodb.Container(spec, "movie_db")
+	plot_db := mongodb.Container(spec, "plot_db")
+	price_db := mongodb.Container(spec, "price_db")
+	route_db := mongodb.Container(spec, "route_db")
 	allServices = append(allServices, bar_db)
+	allServices = append(allServices, movie_db)
+	allServices = append(allServices, plot_db)
+	allServices = append(allServices, price_db)
+	allServices = append(allServices, route_db)
 
-	bar_service := workflow.Service[foobar.BarService](spec, "bar_service", bar_db)
+	bar_service := workflow.Service[foobar.MovieService](spec, "bar_service", bar_db)
 	bar_service_ctr := applyDockerDefaults(spec, bar_service, "bar_service_proc", "bar_service_container")
 	containers = append(containers, bar_service_ctr)
 	allServices = append(allServices, "bar_service")
 
-	foo_service := workflow.Service[foobar.FooService](spec, "foo_service", bar_service, foo_db)
-	foo_service_ctr := applyDockerDefaults(spec, foo_service, "foo_service_proc", "foo_service_container")
-	containers = append(containers, foo_service_ctr)
-	allServices = append(allServices, "foo_service")
+	movie_service := workflow.Service[foobar.MovieService](spec, "movie_service", movie_db)
+	movie_service_ctr := applyDockerDefaults(spec, movie_service, "movie_service_proc", "movie_service_container")
+	containers = append(containers, movie_service_ctr)
+	allServices = append(allServices, "movie_service")
 
-	frontend_service := workflow.Service[foobar.Frontend](spec, "frontend_service", foo_service, bar_service)
+	plot_service := workflow.Service[foobar.PlotService](spec, "plot_service", plot_db)
+	plot_service_ctr := applyDockerDefaults(spec, plot_service, "plot_service_proc", "plot_service_container")
+	containers = append(containers, plot_service_ctr)
+	allServices = append(allServices, "plot_service")
+
+	price_service := workflow.Service[foobar.PriceService](spec, "price_service", price_db)
+	price_service_ctr := applyDockerDefaults(spec, price_service, "price_service_proc", "price_service_container")
+	containers = append(containers, price_service_ctr)
+	allServices = append(allServices, "price_service")
+
+	route_service := workflow.Service[foobar.RouteService](spec, "route_service", route_db)
+	route_service_ctr := applyDockerDefaults(spec, route_service, "route_service_proc", "route_service_container")
+	containers = append(containers, route_service_ctr)
+	allServices = append(allServices, "route_service")
+
+	frontend_service := workflow.Service[foobar.Frontend](spec, "frontend_service", bar_service, movie_service, plot_service, price_service, route_service)
 	frontend_service_ctr := applyHTTPDefaults(spec, frontend_service, "frontend_service_proc", "frontend_service_container")
 	containers = append(containers, frontend_service_ctr)
 	allServices = append(allServices, "frontend_service")
