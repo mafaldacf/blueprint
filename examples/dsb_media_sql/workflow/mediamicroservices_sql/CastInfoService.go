@@ -15,7 +15,7 @@ type CastInfo struct {
 
 type CastInfoService interface {
 	WriteCastInfo(ctx context.Context, reqID int64, castInfoID string, name string, gender string, intro string) (CastInfo, error)
-	ReadCastInfo(ctx context.Context, reqID int64, movieID string) (CastInfo, error)
+	ReadCastInfo(ctx context.Context, reqID int64, castInfoID string) (CastInfo, error)
 }
 
 type CastInfoServiceImpl struct {

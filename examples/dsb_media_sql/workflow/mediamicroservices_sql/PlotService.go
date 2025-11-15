@@ -13,7 +13,7 @@ type Plot struct {
 
 type PlotService interface {
 	WritePlot(ctx context.Context, reqID int64, plotID string, plotText string) (Plot, error)
-	ReadPlot(ctx context.Context, reqID int64, movieID string) (Plot, error)
+	ReadPlot(ctx context.Context, reqID int64, plotID string) (Plot, error)
 }
 
 type PlotServiceImpl struct {
@@ -34,8 +34,8 @@ func (m *PlotServiceImpl) WritePlot(ctx context.Context, reqID int64, plotID str
 	return plot, err
 }
 
-func (m *PlotServiceImpl) ReadPlot(ctx context.Context, reqID int64, PlotID string) (Plot, error) {
+func (m *PlotServiceImpl) ReadPlot(ctx context.Context, reqID int64, plotID string) (Plot, error) {
 	var Plot Plot
-	err := m.PlotDB.Select(ctx, &Plot, "SELECT * FROM plot WHERE plotid = ?", PlotID)
+	err := m.PlotDB.Select(ctx, &Plot, "SELECT * FROM plot WHERE plotid = ?", plotID)
 	return Plot, err
 }
