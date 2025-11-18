@@ -10,7 +10,7 @@ import (
 	"text/template"
 )
 
-const NUM_SERVICES = 500
+const NUM_SERVICES = 100
 
 //go:embed templates/wiring.go.template
 var wiringTemplate string

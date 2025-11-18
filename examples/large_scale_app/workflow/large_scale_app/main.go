@@ -9,11 +9,10 @@ import (
 func main() {
 	ctx := context.Background()
 
-	var service100DB backend.NoSQLDatabase
-	service100, _ := NewService500Impl(ctx, service100DB)
+	var db backend.NoSQLDatabase
+	service, _ := NewService100Impl(ctx, db)
 
 	var id string
 	var data string
-	var datatwo string
-	service100.Method500(ctx, id, data, datatwo)
+	service.Method100(ctx, id, data, "")
 }
