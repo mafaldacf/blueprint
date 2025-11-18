@@ -1,0 +1,8 @@
+{
+  "$jsonSchema": {
+    "database": "plot_db",
+    "collection": "plot",
+    "bsonType": "object",
+    "uniqueItems": []
+  }
+}

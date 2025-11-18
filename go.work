@@ -22,6 +22,8 @@ use (
 	./examples/dsb_media/workflow
 	//./examples/dsb_media_sql/wiring
 	//./examples/dsb_media_sql/workflow
+	//./examples/dsb_media_nosql/wiring
+	//./examples/dsb_media_nosql/workflow
 	./examples/dsb_sn/tests
 	./examples/dsb_sn/wiring
 	./examples/dsb_sn/workflow

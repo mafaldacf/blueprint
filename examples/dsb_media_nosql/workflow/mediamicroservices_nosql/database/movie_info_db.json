@@ -1,0 +1,8 @@
+{
+  "$jsonSchema": {
+    "database": "movie_info_db",
+    "collection": "movie_info",
+    "bsonType": "object",
+    "uniqueItems": []
+  }
+}

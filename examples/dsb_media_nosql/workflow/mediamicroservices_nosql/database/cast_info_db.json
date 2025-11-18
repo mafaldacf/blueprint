@@ -1,0 +1,8 @@
+{
+  "$jsonSchema": {
+    "database": "cast_info_db",
+    "collection": "cast",
+    "bsonType": "object",
+    "uniqueItems": []
+  }
+}
