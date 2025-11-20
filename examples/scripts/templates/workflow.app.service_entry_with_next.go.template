@@ -1,4 +1,4 @@
-package large_scale_app
+package {{.PkgName}}
 
 import (
 	"context"

@@ -9,37 +9,80 @@ import (
 	"path/filepath"
 	"sort"
 	"text/template"
+
+	"gopkg.in/yaml.v2"
 )
 
-const (
-	CALL_DEPTH = 4
-	OUT_DEGREE = 4 // aka fanout
-)
+type AppConfig struct {
+	AppName   string `yaml:"app"`
+	CallDepth int    `yaml:"call_depth"`
+	OutDegree int    `yaml:"out_degree"`
+}
 
-// Example:
-// CALL_DEPTH = 4, OUT_DEGREE = 3 => NUM_SERVICES = 1 + 3 + 9 + 27 + 81 = 121
-// CALL_DEPTH = 4, OUT_DEGREE = 4 => NUM_SERVICES = 1 + 4 + 16 + 64 + 256 = 341
-var NUM_SERVICES int
+var cfgs []AppConfig
 
-//go:embed templates/main.go.template
-var mainTemplate string
+var APPNAME, APP_BASE_DIR, WORKFLOW_DIR, SERVICES_PKG_IMPORT string
+var CALL_DEPTH, OUT_DEGREE, NUM_SERVICES int
 
-//go:embed templates/wiring.go.template
+//go:embed templates/.gitignore.template
+var gitIgnoreTemplate string
+
+//go:embed templates/wiring.specs.docker.go.template
 var wiringTemplate string
 
-//go:embed templates/service_entry_with_next.go.template
+//go:embed templates/wiring.go.mod.template
+var wiringGoModTemplate string
+
+//go:embed templates/workflow.go.mod.template
+var workflowGoModTemplate string
+
+//go:embed templates/workflow.app.main.go.template
+var workflowMainTemplate string
+
+//go:embed templates/workflow.app.service_entry_with_next.go.template
 var worflowServiceEntryWithNextTemplate string
 
-//go:embed templates/service_with_next.go.template
+//go:embed templates/workflow.app.service_with_next.go.template
 var worflowServiceWithNextTemplate string
 
-//go:embed templates/service_terminal.go.template
+//go:embed templates/workflow.app.service_terminal.go.template
 var workflowServiceTerminalTemplate string
 
+func loadConfigs(path string) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	err = yaml.Unmarshal(data, &cfgs)
+	if err != nil {
+		panic(err)
+	}
+
+}
+
 func main() {
-	NUM_SERVICES = computeNumberOfServices()
-	GenWorkflowV1()
-	GenWiringV1()
+	loadConfigs("config.yaml")
+	for _, cfg := range cfgs {
+		fmt.Printf("==== Generating app: %s (depth=%d, out_degree=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.OutDegree)
+		APPNAME = cfg.AppName
+		CALL_DEPTH = cfg.CallDepth
+		OUT_DEGREE = cfg.OutDegree
+		APP_BASE_DIR = fmt.Sprintf("../%s", APPNAME)
+		WORKFLOW_DIR = filepath.Join(APP_BASE_DIR, fmt.Sprintf("workflow/%s", APPNAME))
+		SERVICES_PKG_IMPORT = fmt.Sprintf("github.com/blueprint-uservices/blueprint/examples/%s/workflow/%s", APPNAME, APPNAME)
+
+		NUM_SERVICES = computeNumberOfServices()
+		if err := os.RemoveAll(APP_BASE_DIR); err != nil {
+			panic(err)
+		}
+		if err := os.MkdirAll(APP_BASE_DIR, 0o755); err != nil {
+			panic(err)
+		}
+		GenBaseDirFiles()
+		GenWorkflow()
+		GenWiring()
+	}
 }
 
 func computeNumberOfServices() int {
@@ -137,6 +180,20 @@ func generateCallGraph() []GraphService {
 	return res
 }
 
+func GenBaseDirFiles() {
+	// generate .gitignore
+	tmpl := template.Must(template.New("gitignore").Parse(gitIgnoreTemplate))
+	var buf bytes.Buffer
+	if err := tmpl.Execute(&buf, nil); err != nil {
+		panic(err)
+	}
+	path := filepath.Join(APP_BASE_DIR, ".gitignore")
+	if err := os.WriteFile(path, buf.Bytes(), 0o644); err != nil {
+		panic(err)
+	}
+	fmt.Printf("Generated %s\n", path)
+}
+
 // -------------------------------------------------------------------
 // Wiring generation
 // -------------------------------------------------------------------
@@ -147,20 +204,21 @@ type ServiceSpec struct {
 	HasNext bool
 	HTTP    bool
 	Comment string
+	PkgName string
 }
 
 type DockerSpecData struct {
 	ServiceCount      int
 	ServicesPkgImport string
 	Services          []ServiceSpec
+	PkgName           string
 }
 
-func GenWiringV1() {
-	outputDir := "../../wiring/specs"
-	outputFile := "docker.go"
-	servicesPkgImport := "github.com/blueprint-uservices/blueprint/examples/large_scale_app/workflow/large_scale_app"
-
-	if err := os.MkdirAll(outputDir, 0o755); err != nil {
+func GenWiring() {
+	if err := os.MkdirAll(filepath.Join(APP_BASE_DIR, "wiring"), 0o755); err != nil {
+		panic(err)
+	}
+	if err := os.MkdirAll(filepath.Join(APP_BASE_DIR, "wiring/specs"), 0o755); err != nil {
 		panic(err)
 	}
 
@@ -179,6 +237,7 @@ func GenWiringV1() {
 			Next:    g.Next,
 			HasNext: len(g.Next) > 0,
 			HTTP:    g.ID == 1, // service 1 is entry / HTTP
+			PkgName: APPNAME,
 		}
 
 		if len(g.Next) == 0 {
@@ -194,28 +253,38 @@ func GenWiringV1() {
 
 	data := DockerSpecData{
 		ServiceCount:      len(services),
-		ServicesPkgImport: servicesPkgImport,
+		ServicesPkgImport: SERVICES_PKG_IMPORT,
 		Services:          services,
+		PkgName:           APPNAME,
 	}
 
+	// generate wiring.go
 	tmpl := template.Must(template.New("docker").Parse(wiringTemplate))
-
 	var buf bytes.Buffer
 	if err := tmpl.Execute(&buf, data); err != nil {
 		panic(err)
 	}
-
 	formatted, err := format.Source(buf.Bytes())
 	if err != nil {
 		panic(err)
 	}
-
-	path := filepath.Join(outputDir, outputFile)
+	path := filepath.Join(APP_BASE_DIR, "wiring/specs/docker.go")
 	if err := os.WriteFile(path, formatted, 0o644); err != nil {
 		panic(err)
 	}
-
 	fmt.Printf("Generated %s\n", path)
+
+	// generate go.mod
+	tmpl2 := template.Must(template.New("gomod").Parse(wiringGoModTemplate))
+	var buf2 bytes.Buffer
+	if err := tmpl2.Execute(&buf2, data); err != nil {
+		panic(err)
+	}
+	path2 := filepath.Join(APP_BASE_DIR, "wiring/go.mod")
+	if err := os.WriteFile(path2, buf2.Bytes(), 0o644); err != nil {
+		panic(err)
+	}
+	fmt.Printf("Generated %s\n", path2)
 }
 
 // -------------------------------------------------------------------
@@ -223,29 +292,29 @@ func GenWiringV1() {
 // -------------------------------------------------------------------
 
 type serviceData struct {
-	N    int
-	Next []int
+	N       int
+	Next    []int
+	PkgName string
 }
 
 type mainData struct {
-	N    int
+	N       int
+	PkgName string
 }
 
-func GenWorkflowV1() {
-	outputDir := "../../workflow/large_scale_app"
-
-	if err := os.MkdirAll(outputDir, os.ModePerm); err != nil {
-		panic(fmt.Errorf("failed to create directory %s: %w", outputDir, err))
+func GenWorkflow() {
+	if err := os.MkdirAll(WORKFLOW_DIR, os.ModePerm); err != nil {
+		panic(fmt.Errorf("failed to create directory %s: %w", WORKFLOW_DIR, err))
 	}
 
 	graph := generateCallGraph()
-	filename_main := filepath.Join(outputDir, "main.go")
+	filename_main := filepath.Join(WORKFLOW_DIR, "main.go")
 
 	for _, g := range graph {
-		filename := filepath.Join(outputDir, fmt.Sprintf("service%d.go", g.ID))
-		data := serviceData{N: g.ID, Next: g.Next}
+		filename := filepath.Join(WORKFLOW_DIR, fmt.Sprintf("service%d.go", g.ID))
+		data := serviceData{N: g.ID, Next: g.Next, PkgName: APPNAME}
 
-		code, err := GenWorkflowHelperV1(data)
+		code, err := GenWorkflowServices(data)
 		if err != nil {
 			panic(err)
 		}
@@ -255,8 +324,8 @@ func GenWorkflowV1() {
 	}
 
 	g := graph[len(graph)-1]
-	data := mainData{N: g.ID}
-	code, err := GenMain(data)
+	data := mainData{N: g.ID, PkgName: APPNAME}
+	code, err := GenWorkflowMain(data)
 	if err != nil {
 		panic(err)
 	}
@@ -265,9 +334,21 @@ func GenWorkflowV1() {
 	}
 
 	fmt.Printf("Generated %d files: service1.go ... service%d.go\n", len(graph), NUM_SERVICES)
+
+	// generate go.mod
+	tmpl2 := template.Must(template.New("gomod").Parse(workflowGoModTemplate))
+	var buf2 bytes.Buffer
+	if err := tmpl2.Execute(&buf2, data); err != nil {
+		panic(err)
+	}
+	path2 := filepath.Join(APP_BASE_DIR, "workflow/go.mod")
+	if err := os.WriteFile(path2, buf2.Bytes(), 0o644); err != nil {
+		panic(err)
+	}
+	fmt.Printf("Generated %s\n", path2)
 }
 
-func GenWorkflowHelperV1(data serviceData) (string, error) {
+func GenWorkflowServices(data serviceData) (string, error) {
 	serviceEntryWithNext := template.Must(template.New("entry_with_next").Parse(worflowServiceEntryWithNextTemplate))
 	serviceWithNext := template.Must(template.New("with_next").Parse(worflowServiceWithNextTemplate))
 	serviceTerminal := template.Must(template.New("terminal").Parse(workflowServiceTerminalTemplate))
@@ -290,8 +371,8 @@ func GenWorkflowHelperV1(data serviceData) (string, error) {
 	return buf.String(), nil
 }
 
-func GenMain(data mainData) (string, error) {
-	main := template.Must(template.New("main").Parse(mainTemplate))
+func GenWorkflowMain(data mainData) (string, error) {
+	main := template.Must(template.New("main").Parse(workflowMainTemplate))
 	buf := &bytes.Buffer{}
 	err := main.Execute(buf, data)
 

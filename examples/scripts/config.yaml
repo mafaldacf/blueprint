@@ -1,0 +1,29 @@
+# num_services = 1 + 3 + 9 + 27 + 81 = 121
+- app: large_scale_app
+  call_depth: 4
+  out_degree: 3
+
+# num_services = 1 + 1 + 1 ... = 121
+- app: large_scale_app_A
+  call_depth: 120
+  out_degree: 1
+
+# num_services = 1 + 120 = 121
+- app: large_scale_app_B
+  call_depth: 1
+  out_degree: 120
+
+# num_services = 1 + 3 + 9 + 27 + 81 = 121
+- app: large_scale_app_C
+  call_depth: 4
+  out_degree: 3
+
+# num_services = 1 + 4 + 16 + 64 + 256 = 341
+- app: large_scale_app_D
+  call_depth: 4
+  out_degree: 4
+
+# num_services = 1 + 5 + 25 + 125 + 625 = 781
+- app: large_scale_app_E
+  call_depth: 4
+  out_degree: 5

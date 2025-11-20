@@ -2,10 +2,14 @@ package specs
 
 import (
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/wiring"
-	large_scale_app "{{.ServicesPkgImport}}"
+	{{.PkgName}} "{{.ServicesPkgImport}}"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
+	"github.com/blueprint-uservices/blueprint/plugins/goproc"
 	"github.com/blueprint-uservices/blueprint/plugins/gotests"
+	"github.com/blueprint-uservices/blueprint/plugins/http"
+	"github.com/blueprint-uservices/blueprint/plugins/linuxcontainer"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
+	"github.com/blueprint-uservices/blueprint/plugins/thrift"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
 )
 
@@ -13,6 +17,23 @@ var Docker = cmdbuilder.SpecOption{
 	Name:        "docker",
 	Description: "Deploys each service in a separate container with http, and uses mongodb as NoSQL database backends (generated)",
 	Build:       makeDockerSpec,
+}
+
+func applyDockerQueueHandlerDefaults(spec wiring.WiringSpec, serviceName, procName, ctrName string) string {
+	goproc.CreateProcess(spec, procName, serviceName)
+	return linuxcontainer.CreateContainer(spec, ctrName, procName)
+}
+
+func applyDockerDefaults(spec wiring.WiringSpec, serviceName, procName, ctrName string) string {
+	thrift.Deploy(spec, serviceName)
+	goproc.CreateProcess(spec, procName, serviceName)
+	return linuxcontainer.CreateContainer(spec, ctrName, procName)
+}
+
+func applyHTTPDefaults(spec wiring.WiringSpec, serviceName, procName, ctrName string) string {
+	http.Deploy(spec, serviceName)
+	goproc.CreateProcess(spec, procName, serviceName)
+	return linuxcontainer.CreateContainer(spec, ctrName, procName)
 }
 
 func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
@@ -25,7 +46,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
     service{{.N}}_db := mongodb.Container(spec, "service{{.N}}_db")
     allServices = append(allServices, service{{.N}}_db)
     {{- if .HasNext }}
-    service{{.N}} := workflow.Service[large_scale_app.Service{{.N}}](
+    service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](
         spec,
         "service{{.N}}",
         service{{.N}}_db,
@@ -34,7 +55,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
         {{- end }}
     )
     {{- else }}
-    service{{.N}} := workflow.Service[large_scale_app.Service{{.N}}](spec, "service{{.N}}", service{{.N}}_db)
+    service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](spec, "service{{.N}}", service{{.N}}_db)
     {{- end }}
 
 	{{- if .HTTP }}
