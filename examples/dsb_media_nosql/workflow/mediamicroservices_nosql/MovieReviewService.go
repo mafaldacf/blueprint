@@ -83,13 +83,13 @@ func (s *MovieReviewServiceImpl) UploadMovieReview(ctx context.Context, reqID in
 		}
 	}
 
-	var reviews []Review
+	var reviews []MovieReviewData
 	// Ignore error check for Get!
 	_, err = s.cache.Get(ctx, movieID, &reviews)
 	if err != nil {
 		return err
 	}
-	reviews = append(reviews, Review{ReviewID: reviewID, Timestamp: timestamp})
+	reviews = append(reviews, MovieReviewData{ReviewID: reviewID, Timestamp: timestamp})
 	return s.cache.Put(ctx, movieID, reviews)
 }
 
@@ -98,7 +98,7 @@ func (s *MovieReviewServiceImpl) ReadMovieReviews(ctx context.Context, reqID int
 		return nil, nil
 	}
 
-	var reviews []Review
+	var reviews []MovieReviewData
 	exists, err := s.cache.Get(ctx, movieID, &reviews)
 	if err != nil {
 		return nil, err
@@ -135,32 +135,30 @@ func (s *MovieReviewServiceImpl) ReadMovieReviews(ctx context.Context, reqID int
 		if err != nil {
 			return nil, err
 		}
-		if !exists {
-			return nil, errors.New("Failed to find posts in database")
-		}
-		for _, review := range movieReview.Reviews {
-			// Avoid duplicated reviews
-			if _, ok := seen_reviews_ids[review.ReviewID]; ok {
-				continue
+		if exists {
+			for _, review := range movieReview.Reviews {
+				// Avoid duplicated reviews
+				if _, ok := seen_reviews_ids[review.ReviewID]; ok {
+					continue
+				}
+				new_reviews_ids = append(new_reviews_ids, review.ReviewID)
+				reviews = append(reviews, review)
+
 			}
-			new_reviews_ids = append(new_reviews_ids, review.ReviewID)
+			err := s.cache.Put(ctx, movieID, reviews)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	reviewIds = append(new_reviews_ids, reviewIds...)
 
 	// update reviews []Review
-	reviews, err = s.reviewStorageService.ReadReviews(ctx, reqID, reviewIds)
+	ret_reviews, err := s.reviewStorageService.ReadReviews(ctx, reqID, reviewIds)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(new_reviews_ids) > 0 {
-		err := s.cache.Put(ctx, movieID, reviews)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return reviews, nil
+	return ret_reviews, nil
 }
