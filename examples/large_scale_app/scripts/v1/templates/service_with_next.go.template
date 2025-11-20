@@ -43,7 +43,7 @@ func (s *Service{{.N}}Impl) Method{{.N}}(ctx context.Context, id{{.N}} string, d
 		return Service{{.N}}Data{}, err
 	}
 	query := bson.D{
-		{Key: "id", Value: id{{.N}}},
+		{Key: "ID", Value: id{{.N}}},
 	}
 	res, err := coll.FindOne(ctx, query)
 	if err != nil {
@@ -99,7 +99,7 @@ func (s *Service{{.N}}Impl) MethodOther{{.N}}(ctx context.Context, id{{.N}} stri
 		return Service{{.N}}Data{}, err
 	}
 	query := bson.D{
-		{Key: "id", Value: id{{.N}}},
+		{Key: "ID", Value: id{{.N}}},
 	}
 	res, err := coll.FindOne(ctx, query)
 	if err != nil {
@@ -155,7 +155,7 @@ func (s *Service{{.N}}Impl) MethodOtherOther{{.N}}(ctx context.Context, id{{.N}}
 		return Service{{.N}}Data{}, err
 	}
 	query := bson.D{
-		{Key: "id", Value: id{{.N}}},
+		{Key: "ID", Value: id{{.N}}},
 	}
 	res, err := coll.FindOne(ctx, query)
 	if err != nil {

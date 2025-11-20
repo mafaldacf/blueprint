@@ -10,9 +10,9 @@ func main() {
 	ctx := context.Background()
 
 	var db backend.NoSQLDatabase
-	service, _ := NewService341Impl(ctx, db)
+	service, _ := NewService{{.N}}Impl(ctx, db)
 
 	var id string
 	var data string
-	service.Method341(ctx, id, data)
+	service.Method{{.N}}(ctx, id, data)
 }

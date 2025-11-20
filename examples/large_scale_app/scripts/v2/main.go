@@ -12,11 +12,17 @@ import (
 )
 
 const (
-	// Depth = 3, fanout = 3 → total = 1 + 3 + 9 = 27
-	MaxDepth    = 3
-	Fanout      = 3
-	NUM_SERVICES = 1 + 3 + 9 + 27
+	CALL_DEPTH = 4
+	OUT_DEGREE = 4 // aka fanout
 )
+
+// Example:
+// CALL_DEPTH = 4, OUT_DEGREE = 3 => NUM_SERVICES = 1 + 3 + 9 + 27 + 81 = 121
+// CALL_DEPTH = 4, OUT_DEGREE = 4 => NUM_SERVICES = 1 + 4 + 16 + 64 + 256 = 341
+var NUM_SERVICES int
+
+//go:embed templates/main.go.template
+var mainTemplate string
 
 //go:embed templates/wiring.go.template
 var wiringTemplate string
@@ -31,8 +37,19 @@ var worflowServiceWithNextTemplate string
 var workflowServiceTerminalTemplate string
 
 func main() {
+	NUM_SERVICES = computeNumberOfServices()
 	GenWorkflowV1()
 	GenWiringV1()
+}
+
+func computeNumberOfServices() int {
+	total := 0
+	pow := 1
+	for i := 0; i <= CALL_DEPTH; i++ {
+		total += pow
+		pow *= OUT_DEGREE
+	}
+	return total
 }
 
 // -------------------------------------------------------------------
@@ -53,16 +70,9 @@ func intPow(a, b int) int {
 	return res
 }
 
-// generateCallGraph builds a 5-ary tree of depth 4.
-//
-// Depth 0: 1 node (ID 1)
-// Depth 1: 5 nodes
-// Depth 2: 25 nodes
-// Depth 3: 125 nodes
-// Depth 4: 625 nodes (leaves; Next = nil)
 func generateCallGraph() []GraphService {
 	// levels[d] = list of IDs at depth d
-	levels := make([][]int, MaxDepth+1)
+	levels := make([][]int, CALL_DEPTH+1)
 
 	nextID := 1
 	// root
@@ -70,8 +80,8 @@ func generateCallGraph() []GraphService {
 	nextID++
 
 	// allocate IDs for each subsequent level
-	for d := 1; d <= MaxDepth; d++ {
-		levelSize := intPow(Fanout, d)
+	for d := 1; d <= CALL_DEPTH; d++ {
+		levelSize := intPow(OUT_DEGREE, d)
 		level := make([]int, levelSize)
 		for i := 0; i < levelSize; i++ {
 			level[i] = nextID
@@ -94,14 +104,14 @@ func generateCallGraph() []GraphService {
 	}
 
 	// assign Next for all nodes except leaves (depth = MaxDepth)
-	for d := 0; d < MaxDepth; d++ {
+	for d := 0; d < CALL_DEPTH; d++ {
 		parents := levels[d]
 		children := levels[d+1]
 		childIdx := 0
 
 		for _, p := range parents {
-			nexts := make([]int, 0, Fanout)
-			for i := 0; i < Fanout; i++ {
+			nexts := make([]int, 0, OUT_DEGREE)
+			for i := 0; i < OUT_DEGREE; i++ {
 				if childIdx >= len(children) {
 					panic("not enough children allocated for given fanout")
 				}
@@ -212,9 +222,13 @@ func GenWiringV1() {
 // Workflow/service files generation
 // -------------------------------------------------------------------
 
-type svcData struct {
+type serviceData struct {
 	N    int
 	Next []int
+}
+
+type mainData struct {
+	N    int
 }
 
 func GenWorkflowV1() {
@@ -225,10 +239,11 @@ func GenWorkflowV1() {
 	}
 
 	graph := generateCallGraph()
+	filename_main := filepath.Join(outputDir, "main.go")
 
 	for _, g := range graph {
 		filename := filepath.Join(outputDir, fmt.Sprintf("service%d.go", g.ID))
-		data := svcData{N: g.ID, Next: g.Next}
+		data := serviceData{N: g.ID, Next: g.Next}
 
 		code, err := GenWorkflowHelperV1(data)
 		if err != nil {
@@ -239,10 +254,20 @@ func GenWorkflowV1() {
 		}
 	}
 
+	g := graph[len(graph)-1]
+	data := mainData{N: g.ID}
+	code, err := GenMain(data)
+	if err != nil {
+		panic(err)
+	}
+	if err := os.WriteFile(filename_main, []byte(code), 0o644); err != nil {
+		panic(err)
+	}
+
 	fmt.Printf("Generated %d files: service1.go ... service%d.go\n", len(graph), NUM_SERVICES)
 }
 
-func GenWorkflowHelperV1(data svcData) (string, error) {
+func GenWorkflowHelperV1(data serviceData) (string, error) {
 	serviceEntryWithNext := template.Must(template.New("entry_with_next").Parse(worflowServiceEntryWithNextTemplate))
 	serviceWithNext := template.Must(template.New("with_next").Parse(worflowServiceWithNextTemplate))
 	serviceTerminal := template.Must(template.New("terminal").Parse(workflowServiceTerminalTemplate))
@@ -258,6 +283,17 @@ func GenWorkflowHelperV1(data svcData) (string, error) {
 	default:
 		err = serviceTerminal.Execute(buf, data)
 	}
+
+	if err != nil {
+		return "", err
+	}
+	return buf.String(), nil
+}
+
+func GenMain(data mainData) (string, error) {
+	main := template.Must(template.New("main").Parse(mainTemplate))
+	buf := &bytes.Buffer{}
+	err := main.Execute(buf, data)
 
 	if err != nil {
 		return "", err
