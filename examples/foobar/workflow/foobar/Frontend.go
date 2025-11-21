@@ -5,43 +5,32 @@ import (
 )
 
 type Frontend interface {
-	ReadMoviePlot(ctx context.Context, movieID string) (Movie, Plot, error)
-	ReadRoutePrice(ctx context.Context, routeID string) (Route, Price, error)
+	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error)
+	//ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, error)
 }
 
 type FrontendImpl struct {
-	barService   MovieService
-	movieService MovieService
-	plotService  PlotService
-	priceService PriceService
-	routeService RouteService
+	fooService FooService
+	barService BarService
 }
 
-func NewFrontendImpl(ctx context.Context, barService MovieService, movieService MovieService, plotService PlotService, priceService PriceService, routeService RouteService) (Frontend, error) {
-	f := &FrontendImpl{barService: barService, movieService: movieService, plotService: plotService, priceService: priceService}
+func NewFrontendImpl(ctx context.Context, fooService FooService, barService BarService) (Frontend, error) {
+	f := &FrontendImpl{fooService: fooService, barService: barService}
 	return f, nil
 }
 
-func (f *FrontendImpl) ReadMoviePlot(ctx context.Context, movieID string) (Movie, Plot, error) {
-	movie, err := f.movieService.ReadMovie(ctx, movieID)
-	if err != nil {
-		return Movie{}, Plot{}, err
-	}
-	plot, err := f.plotService.ReadPlot(ctx, movie.PlotID)
-	if err != nil {
-		return Movie{}, Plot{}, err
-	}
-	return movie, plot, nil
+func (s *FrontendImpl) WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error) {
+	return s.fooService.WriteFoo(ctx, id, text, barID)
 }
 
-func (f *FrontendImpl) ReadRoutePrice(ctx context.Context, routeID string) (Route, Price, error) {
-	route, err := f.routeService.ReadRoute(ctx, routeID)
+func (s *FrontendImpl) ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, error) {
+	bar, err := s.barService.ReadBar(ctx, barID)
 	if err != nil {
-		return Route{}, Price{}, err
+		return Bar{}, Foo{}, err
 	}
-	price, err := f.priceService.ReadPriceByRouteID(ctx, routeID)
+	foo, err := s.fooService.ReadFoo(ctx, bar.FooID)
 	if err != nil {
-		return Route{}, Price{}, err
+		return Bar{}, Foo{}, err
 	}
-	return route, price, nil
+	return bar, foo, nil
 }

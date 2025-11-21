@@ -9,11 +9,12 @@ import (
 
 type Bar struct {
 	BarID string
+	FooID string
 	Text  string
 }
 
 type BarService interface {
-	WriteBar(ctx context.Context, id string, text string) (Bar, error)
+	WriteBar(ctx context.Context, id string, text string, fooID string) (Bar, error)
 	ReadBar(ctx context.Context, id string) (Bar, error)
 }
 
@@ -26,9 +27,10 @@ func NewBarServiceImpl(ctx context.Context, barDb backend.NoSQLDatabase) (BarSer
 	return d, nil
 }
 
-func (s *BarServiceImpl) WriteBar(ctx context.Context, id string, text string) (Bar, error) {
+func (s *BarServiceImpl) WriteBar(ctx context.Context, id string, text string, fooID string) (Bar, error) {
 	bar := Bar{
 		BarID: id,
+		FooID: fooID,
 		Text:  text,
 	}
 

@@ -1,4 +1,4 @@
-package foobar
+package foobar2
 
 import (
 	"context"

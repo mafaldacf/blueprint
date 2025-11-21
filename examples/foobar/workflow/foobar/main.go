@@ -12,6 +12,6 @@ func main() {
 	var barDB backend.NoSQLDatabase
 	barService, _ := NewBarServiceImpl(ctx, barDB)
 
-	var id, text string
-	barService.WriteBar(ctx, id, text)
+	var id, text, barID string
+	barService.WriteBar(ctx, id, text, barID)
 }
