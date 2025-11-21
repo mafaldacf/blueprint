@@ -150,12 +150,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 
 	// Calculate total and authorize payment.
 	// 1. calculate total
-	amount := float32(0)
-	shipping := float32(4.99)
-	for _, item := range items {
-		amount += float32(item.Quantity) * item.UnitPrice
-	}
-	amount += shipping
+	amount := calculateTotal(items)
 	// 2. authorise
 	auth, err := s.payments.Authorise(ctx, amount)
 	if err != nil {
@@ -198,4 +193,23 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 	// Delete the cart
 	return order, nil
 	//return order, s.carts.DeleteCart(ctx, customerID)
+}
+
+func calculateTotal(items []Item) float32 {
+	amount := float32(0)
+	shipping := float32(4.99)
+	for _, item := range items {
+		amount += float32(item.Quantity) * item.UnitPrice
+	}
+	amount += shipping
+	return amount
+}
+
+func any(errs ...error) error {
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -80,19 +80,9 @@ func (s *CatalogueServiceImpl) List(ctx context.Context, tags []string, order st
 		socks[i].Tags = strings.Split(s.TagString, ",")
 	}
 
-	// cut
-	if pageNum == 0 || pageSize == 0 {
-		return nil, nil
-	}
-	start := (pageNum * pageSize) - pageSize
-	if start > len(socks) {
-		return nil, nil
-	}
-	end := (pageNum * pageSize)
-	if end > len(socks) {
-		end = len(socks)
-	}
-	return socks[start:end], nil
+	socks = cut(socks, pageNum, pageSize)
+
+	return socks, nil
 }
 
 func (s *CatalogueServiceImpl) Count(ctx context.Context, tags []string) (int, error) {
@@ -167,35 +157,8 @@ func (s *CatalogueServiceImpl) Tags(ctx context.Context) ([]string, error) {
 
 // AddTags implements CatalogueService.
 func (s *CatalogueServiceImpl) AddTags(ctx context.Context, tags []string) error {
-	var currentTags []tag
-	if err := s.catalogue_db.Select(ctx, &currentTags, "SELECT * FROM tag;"); err != nil {
-		return err
-	}
-
-	tagLookup := make(map[string]int)
-	for _, tag := range currentTags {
-		tagLookup[tag.Name] = tag.ID
-	}
-
-	tagIds := []int{}
-	for _, tagName := range tags {
-		if _, tagAlreadyExists := tagLookup[tagName]; !tagAlreadyExists {
-			// Insert the tag
-			res, err := s.catalogue_db.Exec(ctx, "INSERT INTO tag (name) VALUES (?);", tagName)
-			if err != nil {
-				return err
-			}
-			id, err := res.LastInsertId()
-			if err != nil {
-				return err
-			}
-			tagLookup[tagName] = int(id)
-		}
-
-		tagIds = append(tagIds, tagLookup[tagName])
-	}
-
-	return nil
+	_, err := s.addTags(ctx, tags...)
+	return err
 }
 
 func (s *CatalogueServiceImpl) AddSock(ctx context.Context, sock Sock) (string, error) {
@@ -225,33 +188,9 @@ func (s *CatalogueServiceImpl) AddSock(ctx context.Context, sock Sock) (string, 
 	}
 
 	// Make sure the tags are in the DB
-	// addTags()
-	var currentTags []tag
-	if err := s.catalogue_db.Select(ctx, &currentTags, "SELECT * FROM tag;"); err != nil {
+	tagIds, err := s.addTags(ctx, sock.Tags...)
+	if err != nil {
 		return "", err
-	}
-
-	tagLookup := make(map[string]int)
-	for _, tag := range currentTags {
-		tagLookup[tag.Name] = tag.ID
-	}
-
-	tagIds := []int{}
-	for _, tagName := range sock.Tags {
-		if _, tagAlreadyExists := tagLookup[tagName]; !tagAlreadyExists {
-			// Insert the tag
-			res, err := s.catalogue_db.Exec(ctx, "INSERT INTO tag (name) VALUES (?);", tagName)
-			if err != nil {
-				return "", err
-			}
-			id, err := res.LastInsertId()
-			if err != nil {
-				return "", err
-			}
-			tagLookup[tagName] = int(id)
-		}
-
-		tagIds = append(tagIds, tagLookup[tagName])
 	}
 
 	// Add the tags to the sock
@@ -284,4 +223,51 @@ func (s *CatalogueServiceImpl) DeleteSock(ctx context.Context, id string) error 
 	}
 
 	return nil
+}
+
+ func cut(socks []Sock, pageNum, pageSize int) []Sock {
+	if pageNum == 0 || pageSize == 0 {
+		return []Sock{} // pageNum is 1-indexed
+	}
+	start := (pageNum * pageSize) - pageSize
+	if start > len(socks) {
+		return []Sock{}
+	}
+	end := (pageNum * pageSize)
+	if end > len(socks) {
+		end = len(socks)
+	}
+	return socks[start:end]
+}
+
+func (s *CatalogueServiceImpl) addTags(ctx context.Context, tags ...string) ([]int, error) {
+	var currentTags []tag
+	if err := s.catalogue_db.Select(ctx, &currentTags, "SELECT * FROM tag;"); err != nil {
+		return nil, err
+	}
+
+	tagLookup := make(map[string]int)
+	for _, tag := range currentTags {
+		tagLookup[tag.Name] = tag.ID
+	}
+
+	tagIds := []int{}
+	for _, tagName := range tags {
+		if _, tagAlreadyExists := tagLookup[tagName]; !tagAlreadyExists {
+			// Insert the tag
+			res, err := s.catalogue_db.Exec(ctx, "INSERT INTO tag (name) VALUES (?);", tagName)
+			if err != nil {
+				return nil, err
+			}
+			id, err := res.LastInsertId()
+			if err != nil {
+				return nil, err
+			}
+			tagLookup[tagName] = int(id)
+		}
+
+		tagIds = append(tagIds, tagLookup[tagName])
+	}
+
+	return tagIds, nil
 }
