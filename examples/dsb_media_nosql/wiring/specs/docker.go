@@ -35,8 +35,12 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	user_db := mongodb.Container(spec, "user_db")
 	user_cache := memcached.Container(spec, "user_cache")
 	movieinfo_db := mongodb.Container(spec, "movie_info_db")
+	movieinfo_cache := memcached.Container(spec, "movie_info_cache")
+	socialgraph_db := mongodb.Container(spec, "social_graph_db")
 	castinfo_db := mongodb.Container(spec, "cast_info_db")
+	castinfo_cache := mongodb.Container(spec, "cast_info_cache")
 	plot_db := mongodb.Container(spec, "plot_db")
+	plot_cache := memcached.Container(spec, "plot_cache")
 	rating_cache := redis.Container(spec, "rating_cache")
 
 	review_storage_service := workflow.Service[mediamicroservices_nosql.ReviewStorageService](spec, "review_storage_service", review_storage_db, review_storage_cache)
@@ -75,15 +79,15 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	movieid_ctr := applyDockerDefaults(spec, movieid_service, "movieid_proc", "movieid_container")
 	containers = append(containers, movieid_ctr)
 
-	movieinfo_service := workflow.Service[mediamicroservices_nosql.MovieInfoService](spec, "movieinfo_service", movieinfo_db)
+	movieinfo_service := workflow.Service[mediamicroservices_nosql.MovieInfoService](spec, "movieinfo_service", movieinfo_db, movieinfo_cache, socialgraph_db)
 	movieinfo_ctr := applyDockerDefaults(spec, movieinfo_service, "movieinfo_proc", "movieinfo_container")
 	containers = append(containers, movieinfo_ctr)
 
-	castinfo_service := workflow.Service[mediamicroservices_nosql.CastInfoService](spec, "castinfo_service", castinfo_db)
+	castinfo_service := workflow.Service[mediamicroservices_nosql.CastInfoService](spec, "castinfo_service", castinfo_db, castinfo_cache)
 	castinfo_ctr := applyDockerDefaults(spec, castinfo_service, "castinfo_proc", "castinfo_container")
 	containers = append(containers, castinfo_ctr)
 
-	plot_service := workflow.Service[mediamicroservices_nosql.PlotService](spec, "plot_service", plot_db)
+	plot_service := workflow.Service[mediamicroservices_nosql.PlotService](spec, "plot_service", plot_db, plot_cache)
 	plot_ctr := applyDockerDefaults(spec, plot_service, "plot_ctr", "plot_container")
 	containers = append(containers, plot_ctr)
 

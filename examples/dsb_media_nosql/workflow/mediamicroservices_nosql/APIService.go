@@ -5,13 +5,13 @@ import (
 )
 
 type APIService interface {
-	RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castRequest []CastRequest, plotID string, plotText string) (MovieId, MovieInfo, Plot, error)
+	RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castRequest []CastRequest, plotID int64, plotText string, thumbnailIDs []string, photoIDs []string, videoIDs []string, avgRating string, numRating int) (MovieId, MovieInfo, Plot, error)
 	ReadPage(ctx context.Context, reqID int64, title string, reviewStart int, reviewStop int) (MovieId, MovieInfo, []Review, []CastInfo, Plot, error)
 
 	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
-	WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts []Cast, plotID string) (MovieInfo, error)
+	WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts []Cast, plotID int64, thumbnailIDs []string, photoIDs []string, videoIDs []string, avgRating string, numRating int) (MovieInfo, error)
 	WriteCastInfo(ctx context.Context, reqID int64, castInfoID string, name string, gender string, intro string) (CastInfo, error)
-	WritePlot(ctx context.Context, reqID int64, plotID string, plotText string) (Plot, error)
+	WritePlot(ctx context.Context, reqID int64, plotID int64, plotText string) (Plot, error)
 
 	RegisterUser(ctx context.Context, reqID string, firstName string, lastName string, username string, password string) (User, error)
 	Login(ctx context.Context, reqID int64, username string, password string) error
@@ -48,7 +48,7 @@ type CastRequest struct {
 	Intro  string
 }
 
-func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castRequest []CastRequest, plotID string, plotText string) (MovieId, MovieInfo, Plot, error) {
+func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castRequest []CastRequest, plotID int64, plotText string, thumbnailIDs []string, photoIDs []string, videoIDs []string, avgRating string, numRating int) (MovieId, MovieInfo, Plot, error) {
 	movie, err := api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, Plot{}, err
@@ -63,7 +63,7 @@ func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movie
 		})
 	}
 
-	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, reqID, movie.MovieID, title, casts, plotID)
+	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, reqID, movie.MovieID, title, casts, plotID, thumbnailIDs, photoIDs, videoIDs, avgRating, numRating)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, Plot{}, err
 	}
@@ -101,15 +101,15 @@ func (api *APIServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, mov
 	return api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
 }
 
-func (api *APIServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts []Cast, plotID string) (MovieInfo, error) {
-	return api.movieInfoService.WriteMovieInfo(ctx, reqID, movieID, title, casts, plotID)
+func (api *APIServiceImpl) WriteMovieInfo(ctx context.Context, reqID int64, movieID string, title string, casts []Cast, plotID int64, thumbnailIDs []string, photoIDs []string, videoIDs []string, avgRating string, numRating int) (MovieInfo, error) {
+	return api.movieInfoService.WriteMovieInfo(ctx, reqID, movieID, title, casts, plotID, thumbnailIDs, photoIDs, videoIDs, avgRating, numRating)
 }
 
 func (api *APIServiceImpl) WriteCastInfo(ctx context.Context, reqID int64, castInfoID string, name string, gender string, intro string) (CastInfo, error) {
 	return api.castInfoService.WriteCastInfo(ctx, reqID, castInfoID, name, gender, intro)
 }
 
-func (api *APIServiceImpl) WritePlot(ctx context.Context, reqID int64, plotID string, plotText string) (Plot, error) {
+func (api *APIServiceImpl) WritePlot(ctx context.Context, reqID int64, plotID int64, plotText string) (Plot, error) {
 	return api.plotService.WritePlot(ctx, reqID, plotID, plotText)
 }
 

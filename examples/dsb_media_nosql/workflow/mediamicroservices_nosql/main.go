@@ -8,10 +8,11 @@ import (
 
 func main() {
 	ctx := context.Background()
-	var db backend.NoSQLDatabase
-	service, _ := NewPlotServiceImpl(ctx, db)
+	var database backend.NoSQLDatabase
+	var cache backend.Cache
+	service, _ := NewPlotServiceImpl(ctx, database, cache)
 	var reqID int64
-	var plotID string
+	var plotID int64
 	var text string
 	service.WritePlot(ctx, reqID, plotID, text)
 }

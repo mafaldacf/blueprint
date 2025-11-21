@@ -26,11 +26,20 @@ func (s *RatingServiceImpl) UploadRating(ctx context.Context, reqID int64, movie
 		return err
 	}
 
-	// TODO: should be IncrBy(rating)
-	// e.g.,
-	// redis_client->incrby(movie_id + ":uncommit_sum", rating);
-	// redis_client->incr(movie_id + ":uncommit_num");
-	// redis_client->sync_commit();
-	_, err = s.cache.Incr(ctx, movieID)
+	var cachedUncommitSum int
+	_, err = s.cache.Get(ctx, movieID+":uncommit_sum", &cachedUncommitSum)
+	if err != nil {
+		return err
+	}
+	err = s.cache.Put(ctx, movieID+":uncommit_sum", cachedUncommitSum+rating)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.cache.Incr(ctx, movieID+":uncommit_num")
+	if err != nil {
+		return err
+	}
+
 	return err
 }

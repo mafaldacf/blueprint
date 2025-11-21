@@ -135,20 +135,15 @@ func (s *MovieReviewServiceImpl) ReadMovieReviews(ctx context.Context, reqID int
 		if err != nil {
 			return nil, err
 		}
-		if exists {
-			for _, review := range movieReview.Reviews {
-				// Avoid duplicated reviews
-				if _, ok := seen_reviews_ids[review.ReviewID]; ok {
-					continue
-				}
-				new_reviews_ids = append(new_reviews_ids, review.ReviewID)
-				reviews = append(reviews, review)
-
+		if !exists {
+			return nil, errors.New("failed to find movie reviews in database")
+		}
+		for _, review := range movieReview.Reviews {
+			// Avoid duplicated reviews
+			if _, ok := seen_reviews_ids[review.ReviewID]; ok {
+				continue
 			}
-			err := s.cache.Put(ctx, movieID, reviews)
-			if err != nil {
-				return nil, err
-			}
+			new_reviews_ids = append(new_reviews_ids, review.ReviewID)
 		}
 	}
 
@@ -158,6 +153,13 @@ func (s *MovieReviewServiceImpl) ReadMovieReviews(ctx context.Context, reqID int
 	ret_reviews, err := s.reviewStorageService.ReadReviews(ctx, reqID, reviewIds)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(new_reviews_ids) > 0 {
+		err = s.cache.Put(ctx, movieID, reviews)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return ret_reviews, nil

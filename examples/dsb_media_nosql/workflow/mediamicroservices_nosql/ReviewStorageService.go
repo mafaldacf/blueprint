@@ -52,11 +52,11 @@ func (s *ReviewStorageServiceImpl) ReadReviews(ctx context.Context, reqID int64,
 		return nil, nil
 	}
 
-	unique_review_ids := make(map[int64]bool)
+	reviewIDsNotCached := make(map[int64]bool)
 	for _, pid := range reviewIDs {
-		unique_review_ids[pid] = true
+		reviewIDsNotCached[pid] = true
 	}
-	if len(unique_review_ids) != len(reviewIDs) {
+	if len(reviewIDsNotCached) != len(reviewIDs) {
 		return nil, errors.New("review_ids are duplicated")
 	}
 
@@ -64,25 +64,30 @@ func (s *ReviewStorageServiceImpl) ReadReviews(ctx context.Context, reqID int64,
 	for _, rid := range reviewIDs {
 		keys = append(keys, strconv.FormatInt(rid, 10))
 	}
-	values := make([]Review, len(keys))
-	var retvals []interface{}
-	for idx := range values {
-		retvals = append(retvals, &values[idx])
+
+	cachedReviews := make([]Review, len(keys))
+	var cachedValues []interface{}
+	for idx := range cachedReviews {
+		cachedValues = append(cachedValues, &cachedReviews[idx])
 	}
 
-	s.cache.Mget(ctx, keys, retvals)
-	var retreviews []Review
-	for _, review := range values {
+	err := s.cache.Mget(ctx, keys, cachedValues)
+	if err != nil {
+		return nil, err
+	}
+
+	var returnReviews []Review
+	for _, review := range cachedReviews {
 		if review.ReviewID != 0 {
-			delete(unique_review_ids, review.ReviewID)
-			retreviews = append(retreviews, review)
+			delete(reviewIDsNotCached, review.ReviewID)
+			returnReviews = append(returnReviews, review)
 		}
 	}
 
-	if len(unique_review_ids) != 0 {
-		var review []Review
+	if len(reviewIDsNotCached) != 0 {
+		var reviews []Review
 		var unique_pids []int64
-		for k := range unique_review_ids {
+		for k := range reviewIDsNotCached {
 			unique_pids = append(unique_pids, k)
 		}
 		collection, err := s.database.GetCollection(ctx, "review_storage_db", "review")
@@ -96,18 +101,18 @@ func (s *ReviewStorageServiceImpl) ReadReviews(ctx context.Context, reqID int64,
 			}},
 		}
 
-		vals, err := collection.FindMany(ctx, query)
+		cursor, err := collection.FindMany(ctx, query)
 		if err != nil {
 			return []Review{}, err
 		}
-		err = vals.All(ctx, &review)
+		err = cursor.All(ctx, &reviews)
 		if err != nil {
 			return []Review{}, err
 		}
-		retreviews = append(retreviews, review...)
-		for _, review := range review {
+		returnReviews = append(returnReviews, reviews...)
+		for _, review := range reviews {
 			s.cache.Put(ctx, strconv.FormatInt(review.ReviewID, 10), review)
 		}
 	}
-	return retreviews, nil
+	return returnReviews, nil
 }

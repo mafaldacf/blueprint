@@ -2,6 +2,7 @@ package mediamicroservices_nosql
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
@@ -49,6 +50,7 @@ func (s *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, m
 }
 
 func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, title string, rating int) error {
+	return nil
 	var movieID string
 
 	ok, err := s.cache.Get(ctx, title, &movieID)
@@ -56,6 +58,7 @@ func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, tit
 		return err
 	}
 	if !ok {
+		// if not cached in memcached
 		var movie MovieId
 		collection, err := s.database.GetCollection(ctx, "movie_id_db", "movie")
 		if err != nil {
@@ -66,11 +69,19 @@ func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, tit
 		if err != nil {
 			return err
 		}
-		res, err := result.One(ctx, &movie)
-		if !res || err != nil {
+		found, err := result.One(ctx, &movie)
+		if err != nil {
 			return err
 		}
+		if !found {
+			return fmt.Errorf("movie %s not found in MongoDB", title)
+		}
 		movieID = movie.MovieID
+	}
+
+	err = s.cache.Put(ctx, title, movieID)
+	if err != nil {
+		return err
 	}
 
 	err = s.composeReviewService.UploadMovieId(ctx, reqID, movieID)
@@ -87,19 +98,40 @@ func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, tit
 }
 
 func (s *MovieIdServiceImpl) ReadMovieId(ctx context.Context, reqID int64, title string) (MovieId, error) {
+	var movieID string
 	var movie MovieId
-	collection, err := s.database.GetCollection(ctx, "movie_id_db", "movie")
+
+	ok, err := s.cache.Get(ctx, title, &movieID)
 	if err != nil {
-		return movie, err
-	}
-	query := bson.D{{Key: "Title", Value: title}}
-	result, err := collection.FindOne(ctx, query)
-	if err != nil {
-		return movie, err
-	}
-	res, err := result.One(ctx, &movie)
-	if !res || err != nil {
 		return MovieId{}, err
 	}
-	return movie, err
+	if ok {
+		movie = MovieId{MovieID: movieID, Title: title}
+	} else {
+		// if not cached in memcached
+		collection, err := s.database.GetCollection(ctx, "movie_id_db", "movie")
+		if err != nil {
+			return MovieId{}, err
+		}
+		query := bson.D{{Key: "Title", Value: title}}
+		result, err := collection.FindOne(ctx, query)
+		if err != nil {
+			return MovieId{}, err
+		}
+		found, err := result.One(ctx, &movie)
+		if err != nil {
+			return MovieId{}, err
+		}
+		if !found {
+			return MovieId{}, fmt.Errorf("movie %s not found in MongoDB", title)
+		}
+		movieID = movie.MovieID
+	}
+
+	err = s.cache.Put(ctx, title, movieID)
+	if err != nil {
+		return MovieId{}, err
+	}
+
+	return movie, nil
 }
