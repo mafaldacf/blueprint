@@ -38,9 +38,6 @@ func (c *ComposePostServiceImpl) ComposePost(ctx context.Context, reqID int64, u
 	var urls []URL
 	var usermentions []UserMention
 
-	// service calls: 
-	// - urlShortenService.ComposeUrls() w/ database write only (multi)
-	// - userMentionService.ComposeUserMentions() w/ database and cache writes (multi)
 	up_text, usermentions, urls, err1 = c.textService.ComposeText(ctx, reqID, text)
 
 	// no database writes
@@ -75,11 +72,8 @@ func (c *ComposePostServiceImpl) ComposePost(ctx context.Context, reqID int64, u
 		usermentionIds = append(usermentionIds, um.UserID)
 	}
 
-	// database write only
 	err1 = c.postStorageService.StorePost(ctx, reqID, post)
-	// database + cache writes 
 	err2 = c.userTimelineService.WriteUserTimeline(ctx, reqID, uniqueID, userID, timestamp)
-	// cache write only
 	err3 = c.homeTimelineService.WriteHomeTimeline(ctx, reqID, uniqueID, userID, timestamp, usermentionIds)
 
 	if err1 != nil {

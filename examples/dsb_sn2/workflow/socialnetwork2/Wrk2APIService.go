@@ -20,15 +20,15 @@ type Wrk2APIService interface {
 	// Creates a Follow-Link between users `userId`-`followeeID`.
 	// If the user ids are not provided, then it creates a follow-link between users `username`-`followeeName`.
 	// Returns an error if no pairs are provided.
-	//Follow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error
+	Follow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error
 
 	// Removes a Follow-Link between users `userId`-`followeeID`.
 	// If the user ids are not provided, then it creates a follow-link between users `username`-`followeeName`.
 	// Returns an error if no pairs are provided.
-	//Unfollow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error
+	Unfollow(ctx context.Context, username string, followeeName string, userId int64, followeeID int64) error
 
 	// Registers a new user with the given `userId`.
-	//Register(ctx context.Context, firstName string, lastName string, username string, password string, userId int64) error
+	Register(ctx context.Context, firstName string, lastName string, username string, password string, userId int64) error
 
 	// Composes a new post give the provided arguments.
 	// Returns the created post's ID and the ids of the mentioned users.

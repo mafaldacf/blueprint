@@ -160,7 +160,6 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 			err1 = err_internal
 			return
 		}
-		//query := `{"$and": [{"UserID":` + userIDstr + `}, {"followees.userid" : {"$ne":` + followeeIDstr + `}}] }`
 		query := `{"UserID": ` + userIDstr + `}`
 		update := `{"$push": {"followees": {"UserID": ` + followeeIDstr + `,"Timestamp": ` + timestamp + `}}}`
 		query_d, err_internal := parseNoSQLDBQuery(query)
@@ -182,7 +181,6 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 			err1 = err_internal
 			return
 		}
-		//query := `{"$and": [{"UserID":` + followeeIDstr + `}, {"followers.userid" : {"$ne":` + userIDstr + `}}] }`
 		query := `{"UserID": ` + followeeIDstr + `}`
 		update := `{"$push": {"followers": {"UserID": ` + userIDstr + `,"Timestamp": ` + timestamp + `}}}`
 		query_d, err_internal := parseNoSQLDBQuery(query)

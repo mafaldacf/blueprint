@@ -117,29 +117,11 @@ func (p *PostStorageServiceImpl) ReadPosts(ctx context.Context, reqID int64, pos
 			return []Post{}, err
 		} */
 
-		// ------
-		// TEST 3
-		// ------
-
 		query_d := bson.D{
 			{Key: "PostID", Value: bson.D{
 				{Key: "$in", Value: unique_pids},
 			}},
 		}
-
-		// ------
-		// TEST 2
-		// ------
-		/* query_d := bson.D{
-			{Key: "PostID", Value: bson.D{
-				{Key: "$in", Value: postIDs},
-			}},
-		} */
-		// ------
-		// TEST 1
-		// ------
-		/* postID := postIDs[0]
-		query_d := bson.D{{Key: "PostID", Value: postID}} */
 
 		vals, err := collection.FindMany(ctx, query_d)
 		if err != nil {
