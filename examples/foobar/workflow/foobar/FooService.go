@@ -95,6 +95,12 @@ func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 		return Foo{}, err
 	}
 
+	/* query := bson.D{{Key: "FooID", Value: id}}
+	query2 := &query
+	fmt.Print(query2)
+	query = append(query, bson.E{Key: "AT", Value: 1})
+	cursor, err := collection.FindOne(ctx, *query2) */
+
 	query := bson.D{{Key: "FooID", Value: id}}
 	cursor, err := collection.FindOne(ctx, query)
 	if err != nil {

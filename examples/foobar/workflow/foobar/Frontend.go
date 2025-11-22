@@ -6,7 +6,7 @@ import (
 
 type Frontend interface {
 	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error)
-	//ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, error)
+	ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, error)
 }
 
 type FrontendImpl struct {
