@@ -9,9 +9,12 @@ import (
 )
 
 type ConsignService interface {
+	// TODO:
+	// - UpdateConsign
+	// - FindByAccountId
+	// - FindByConsignee
 	InsertConsign(ctx context.Context, consignRequest ConsignRequest) (ConsignRecord, error)
-	// extra
-	FindConsign(ctx context.Context, orderID string) (ConsignRecord, error)
+	FindByOrderId(ctx context.Context, orderID string) (ConsignRecord, error)
 }
 
 type ConsignServiceImpl struct {
@@ -54,7 +57,7 @@ func (c *ConsignServiceImpl) InsertConsign(ctx context.Context, consignRequest C
 	return consignRecord, nil
 }
 
-func (c *ConsignServiceImpl) FindConsign(ctx context.Context, orderID string) (ConsignRecord, error) {
+func (c *ConsignServiceImpl) FindByOrderId(ctx context.Context, orderID string) (ConsignRecord, error) {
 	collection, err := c.consignDB.GetCollection(ctx, "consign_db", "consign_record")
 	if err != nil {
 		return ConsignRecord{}, err

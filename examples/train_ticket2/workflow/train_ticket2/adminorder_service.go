@@ -19,13 +19,13 @@ func NewAdminOrderServiceImpl(ctx context.Context, orderService OrderService) (A
 }
 
 func (a *AdminOrderServiceImpl) GetAllOrders(ctx context.Context) ([]Order, error) {
-	return a.orderService.FindAll(ctx)
+	return a.orderService.FindAllOrder(ctx)
 }
 
 func (a *AdminOrderServiceImpl) AddOrder(ctx context.Context, order Order) (Order, error) {
-	return a.orderService.Create(ctx, order)
+	return a.orderService.CreateNewOrder(ctx, order)
 }
 
 func (a *AdminOrderServiceImpl) DeleteOrder(ctx context.Context, id string) error {
-	return a.orderService.Delete(ctx, id)
+	return a.orderService.DeleteOrder(ctx, id)
 }

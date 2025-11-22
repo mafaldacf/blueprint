@@ -8,8 +8,12 @@ import (
 )
 
 type BasicService interface {
+	// TODO:
+	// - QueryForTravels
+	// - QueryForStationId
 	QueryForTravel(ctx context.Context, info Travel) (TravelResult, error)
-	// extra
+
+	// REMOVE
 	QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error)
 }
 
@@ -116,11 +120,11 @@ func (b *BasicServiceImpl) QueryForTravel(ctx context.Context, info Travel) (Tra
 }
 
 func (b *BasicServiceImpl) QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error) {
-	order, err := b.orderService.Find(ctx, orderID)
+	order, err := b.orderService.GetOrderById(ctx, orderID)
 	if err != nil {
 		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
 	}
-	foodOrder, err := b.foodService.FindFoodOrder(ctx, order.ID)
+	foodOrder, err := b.foodService.FindFoodOrderByOrderId(ctx, order.ID)
 	if err != nil {
 		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
 	}
@@ -130,7 +134,7 @@ func (b *BasicServiceImpl) QueryOrderWithAllInfo(ctx context.Context, orderID st
 		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
 	}
 
-	consign, err := b.consignService.FindConsign(ctx, order.ID)
+	consign, err := b.consignService.FindByOrderId(ctx, order.ID)
 	if err != nil {
 		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
 	}

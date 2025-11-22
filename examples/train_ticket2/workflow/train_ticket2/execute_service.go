@@ -20,7 +20,7 @@ func NewExecuteServiceImpl(ctx context.Context, orderService OrderService) (Exec
 
 func (e *ExecuteServiceImpl) TicketCollect(ctx context.Context, orderID string) error {
 	// 1. get order information
-	order, err := e.orderService.Find(ctx, orderID)
+	order, err := e.orderService.GetOrderById(ctx, orderID)
 	if err != nil {
 		return err
 	}
@@ -34,7 +34,7 @@ func (e *ExecuteServiceImpl) TicketCollect(ctx context.Context, orderID string) 
 
 func (e *ExecuteServiceImpl) TicketExecute(ctx context.Context, orderID string) error {
 	// 1. get order information
-	order, err := e.orderService.Find(ctx, orderID)
+	order, err := e.orderService.GetOrderById(ctx, orderID)
 	if err != nil {
 		return err
 	}

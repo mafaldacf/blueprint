@@ -5,6 +5,9 @@ import (
 )
 
 type AdminUserService interface {
+	// TODO:
+	// - GetAllUsers
+	// - UpdateUser
 	AddUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, userID string) error
 }

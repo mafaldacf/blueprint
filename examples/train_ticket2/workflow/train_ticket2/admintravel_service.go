@@ -5,6 +5,9 @@ import (
 )
 
 type AdminTravelService interface {
+	// TODO:
+	// - GetAllTravels
+	// - UpdateTravel
 	AddTravel(ctx context.Context, travelInfo TravelInfo) (Trip, error)
 	DeleteTravel(ctx context.Context, tripID string) error
 }

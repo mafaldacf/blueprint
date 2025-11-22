@@ -9,11 +9,21 @@ import (
 )
 
 type OrderService interface {
-	Create(ctx context.Context, order Order) (Order, error)
+	// TODO:
+	// - CreateNewOrder
+	// - AddCreateNewOrder
+	// - QueryOrders
+	// - CalculateSoldTicket
+	// - GetOrderPrice
+	// - PayOrder
+	// - SecurityInfoCheck
+	// - SaveOrderInfo
+	// - UpdateOrder
+	CreateNewOrder(ctx context.Context, order Order) (Order, error)
 	UpdateStatus(ctx context.Context, order Order) (Order, error)
-	Find(ctx context.Context, orderID string) (Order, error)
-	FindAll(ctx context.Context) ([]Order, error)
-	Delete(ctx context.Context, id string) error
+	GetOrderById(ctx context.Context, orderID string) (Order, error)
+	FindAllOrder(ctx context.Context) ([]Order, error)
+	DeleteOrder(ctx context.Context, id string) error
 	ModifyOrder(ctx context.Context, id string, status int) error
 	GetTicketListByDateAndTripID(ctx context.Context, seatRequest SeatRequest) (LeftTicketInfo, error)
 }
@@ -26,7 +36,7 @@ func NewOrderServiceImpl(ctx context.Context, orderDB backend.NoSQLDatabase) (Or
 	return &OrderServiceImpl{orderDB: orderDB}, nil
 }
 
-func (o *OrderServiceImpl) Create(ctx context.Context, order Order) (Order, error) {
+func (o *OrderServiceImpl) CreateNewOrder(ctx context.Context, order Order) (Order, error) {
 	collection, err := o.orderDB.GetCollection(ctx, "order_db", "order")
 	if err != nil {
 		return Order{}, err
@@ -84,7 +94,7 @@ func (o *OrderServiceImpl) UpdateStatus(ctx context.Context, order Order) (Order
 	return order, nil
 }
 
-func (o *OrderServiceImpl) Find(ctx context.Context, orderID string) (Order, error) {
+func (o *OrderServiceImpl) GetOrderById(ctx context.Context, orderID string) (Order, error) {
 	collection, err := o.orderDB.GetCollection(ctx, "order_db", "order")
 	if err != nil {
 		return Order{}, err
@@ -107,7 +117,7 @@ func (o *OrderServiceImpl) Find(ctx context.Context, orderID string) (Order, err
 	return order, nil
 }
 
-func (o *OrderServiceImpl) FindAll(ctx context.Context) ([]Order, error) {
+func (o *OrderServiceImpl) FindAllOrder(ctx context.Context) ([]Order, error) {
 	collection, err := o.orderDB.GetCollection(ctx, "order_db", "order")
 	if err != nil {
 		return nil, err
@@ -126,7 +136,7 @@ func (o *OrderServiceImpl) FindAll(ctx context.Context) ([]Order, error) {
 	return orders, nil
 }
 
-func (o *OrderServiceImpl) Delete(ctx context.Context, id string) error {
+func (o *OrderServiceImpl) DeleteOrder(ctx context.Context, id string) error {
 	collection, err := o.orderDB.GetCollection(ctx, "order_db", "order")
 	if err != nil {
 		return err

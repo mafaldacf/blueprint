@@ -9,9 +9,13 @@ import (
 )
 
 type FoodService interface {
+	// TODO:
+	// - CreateFoodBatches
+	// - UpdateFoodOrder
+	// - DeleteFoodOrder
+	// - GetAllFood
 	CreateFoodOrder(ctx context.Context, addFoodOrder FoodOrder) (FoodOrder, error)
-	// extra
-	FindFoodOrder(ctx context.Context, orderID string) (FoodOrder, error)
+	FindFoodOrderByOrderId(ctx context.Context, orderID string) (FoodOrder, error)
 }
 
 type FoodServiceImpl struct {
@@ -57,7 +61,7 @@ func (c *FoodServiceImpl) CreateFoodOrder(ctx context.Context, addFoodOrder Food
 	return foodOrder, nil
 }
 
-func (c *FoodServiceImpl) FindFoodOrder(ctx context.Context, orderID string) (FoodOrder, error) {
+func (c *FoodServiceImpl) FindFoodOrderByOrderId(ctx context.Context, orderID string) (FoodOrder, error) {
 	collection, err := c.foodDB.GetCollection(ctx, "food_db", "food_order")
 	if err != nil {
 		return FoodOrder{}, err

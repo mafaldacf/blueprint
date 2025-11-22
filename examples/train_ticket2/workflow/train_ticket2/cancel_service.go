@@ -26,7 +26,7 @@ func NewCancelServiceImpl(ctx context.Context, orderService OrderService, userSe
 }
 
 func (c *CancelServiceImpl) CalculateRefund(ctx context.Context, orderID string) (string, error) {
-	order, err := c.orderService.Find(ctx, orderID)
+	order, err := c.orderService.GetOrderById(ctx, orderID)
 	if err != nil {
 		return "", err
 	}
@@ -41,7 +41,7 @@ func (c *CancelServiceImpl) CalculateRefund(ctx context.Context, orderID string)
 }
 
 func (c *CancelServiceImpl) CancelOrder(ctx context.Context, orderID string, loginID string) error {
-	order, err := c.orderService.Find(ctx, orderID)
+	order, err := c.orderService.GetOrderById(ctx, orderID)
 	if err != nil {
 		return err
 	}

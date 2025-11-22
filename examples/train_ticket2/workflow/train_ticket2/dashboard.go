@@ -69,7 +69,7 @@ func (d *DashboardImpl) GetAllContacts(ctx context.Context) ([]Contact, error) {
 }
 
 func (d *DashboardImpl) GetAllOrders(ctx context.Context) ([]Order, error) {
-	return d.orderService.FindAll(ctx)
+	return d.orderService.FindAllOrder(ctx)
 }
 
 func (d *DashboardImpl) Pay(ctx context.Context, payment Payment) error {

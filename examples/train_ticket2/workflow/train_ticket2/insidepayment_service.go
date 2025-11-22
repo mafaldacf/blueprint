@@ -8,6 +8,15 @@ import (
 )
 
 type InsidePaymentService interface {
+	// TODO:
+	// - Pay
+	// - CreateAccount
+	// - AddMoney
+	// - QueryPayment
+	// - QueryAccount
+	// - DrawBack
+	// - PayDifference
+	// - QueryAddMoney
 	Drawback(ctx context.Context, userID string, money string) error
 }
 

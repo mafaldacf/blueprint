@@ -131,7 +131,7 @@ func (p *PreserveServiceImpl) Preserve(ctx context.Context, oti OrderTicketsInfo
 		TravelDate:             oti.Date,
 	}
 
-	cor, err := p.orderService.Create(ctx, order)
+	cor, err := p.orderService.CreateNewOrder(ctx, order)
 	if err != nil {
 		return Order{}, err
 	}
