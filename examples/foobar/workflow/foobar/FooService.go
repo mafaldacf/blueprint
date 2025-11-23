@@ -15,6 +15,7 @@ type Foo struct {
 type FooService interface {
 	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error)
 	ReadFoo(ctx context.Context, id string) (Foo, error)
+	//UpdateFoo(ctx context.Context, id string, timestamp string) error
 }
 
 type FooServiceImpl struct {
@@ -101,6 +102,14 @@ func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 	query = append(query, bson.E{Key: "AT", Value: 1})
 	cursor, err := collection.FindOne(ctx, *query2) */
 
+	/* query_d := bson.D{
+		{Key: "Username", Value: bson.D{
+			{Key: "$in", Value: id},
+		}},
+	}
+
+	query_d = append(query_d, bson.E{Key: "Age", Value: bson.D{{Key: "$gt", Value: 18}}}) */
+
 	query := bson.D{{Key: "FooID", Value: id}}
 	cursor, err := collection.FindOne(ctx, query)
 	if err != nil {
@@ -114,3 +123,28 @@ func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 
 	return bar, nil
 }
+
+/* func (s *FooServiceImpl) UpdateFoo(ctx context.Context, id string, timestamp string) error {
+	collection, err := s.database.GetCollection(ctx, "foo_db", "foo")
+	if err != nil {
+		return err
+	}
+
+	query := bson.D{{Key: "FooID", Value: id}}
+	update := bson.D{
+		{Key: "$push", Value: bson.D{
+			{Key: "Reviews", Value: bson.D{
+				{Key: "$each", Value: bson.A{
+					bson.D{
+						{Key: "ID", Value: id},
+						{Key: "Timestamp", Value: timestamp},
+					},
+				}},
+				{Key: "$position", Value: 0},
+			}},
+		}},
+	}
+	_, err = collection.UpdateMany(ctx, query, update)
+	return err
+}
+ */

@@ -7,6 +7,7 @@ import (
 type Frontend interface {
 	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error)
 	ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, error)
+	//UpdateFoo(ctx context.Context, id string, timestamp string) error
 }
 
 type FrontendImpl struct {
@@ -34,3 +35,7 @@ func (s *FrontendImpl) ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, 
 	}
 	return bar, foo, nil
 }
+
+/* func (s *FrontendImpl) UpdateFoo(ctx context.Context, id string, timestamp string) error {
+	return s.fooService.UpdateFoo(ctx, id, timestamp)
+} */
