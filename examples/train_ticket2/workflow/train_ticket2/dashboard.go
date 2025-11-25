@@ -13,38 +13,57 @@ type Dashboard interface {
 	GetAllOrders(ctx context.Context) ([]Order, error)
 	Pay(ctx context.Context, payment Payment) error
 	PreserveTicketConfirm(ctx context.Context, oti OrderTicketsInfo) (Order, error)
+	TicketCollect(ctx context.Context, orderID string) error
+	TicketExecute(ctx context.Context, orderID string) error
 
-	// TODO:
-	// executeTicket @ /execute/collected
+	QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error)
 }
 
 type DashboardImpl struct {
+	basicService    BasicService
+	configService   ConfigService
+	contactsService ContactsService
+	paymentService  PaymentService
+	preserveService PreserveService
+	executeService  ExecuteService
+	cancelService   CancelService
+
 	assuranceService AssuranceService
-	basicService     BasicService
-	configService    ConfigService
-	contactsService  ContactsService
-	paymentService   PaymentService
-	preserveService  PreserveService
 	orderService     OrderService
+	foodService      FoodService
+	consignService   ConsignService
+	deliveryService  DeliveryService
 }
 
 func NewDashboardImpl(ctx context.Context,
-	assuranceService AssuranceService,
 	basicService BasicService,
 	configService ConfigService,
 	contactsService ContactsService,
 	paymentService PaymentService,
 	preserveService PreserveService,
+	executeService ExecuteService,
+	cancelService CancelService,
+
+	assuranceService AssuranceService,
 	orderService OrderService,
+	foodService FoodService,
+	consignService ConsignService,
+	deliveryService DeliveryService,
 ) (Dashboard, error) {
 	return &DashboardImpl{
+		basicService:    basicService,
+		configService:   configService,
+		contactsService: contactsService,
+		paymentService:  paymentService,
+		preserveService: preserveService,
+		executeService:  executeService,
+		cancelService:   cancelService,
+
 		assuranceService: assuranceService,
-		basicService:     basicService,
-		configService:    configService,
-		contactsService:  contactsService,
-		paymentService:   paymentService,
-		preserveService:  preserveService,
 		orderService:     orderService,
+		foodService:      foodService,
+		consignService:   consignService,
+		deliveryService:  deliveryService,
 	}, nil
 }
 
@@ -78,4 +97,48 @@ func (d *DashboardImpl) Pay(ctx context.Context, payment Payment) error {
 
 func (d *DashboardImpl) PreserveTicketConfirm(ctx context.Context, oti OrderTicketsInfo) (Order, error) {
 	return d.preserveService.Preserve(ctx, oti)
+}
+
+func (d *DashboardImpl) TicketCollect(ctx context.Context, orderID string) error {
+	return d.TicketCollect(ctx, orderID)
+}
+
+func (d *DashboardImpl) TicketExecute(ctx context.Context, orderID string) error {
+	return d.TicketCollect(ctx, orderID)
+}
+
+func (d *DashboardImpl) CalculateRefund(ctx context.Context, orderID string) (string, error) {
+	return d.cancelService.CalculateRefund(ctx, orderID)
+}
+
+func (d *DashboardImpl) CancelOrder(ctx context.Context, orderID string, loginID string) error {
+	return d.cancelService.CancelOrder(ctx, orderID, loginID)
+}
+
+func (d *DashboardImpl) QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error) {
+	order, err := d.orderService.GetOrderById(ctx, orderID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+	foodOrder, err := d.foodService.FindFoodOrderByOrderId(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	assurance, err := d.assuranceService.FindAssuranceByOrderId(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	consign, err := d.consignService.FindByOrderId(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	delivery, err := d.deliveryService.FindDelivery(ctx, order.ID)
+	if err != nil {
+		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
+	}
+
+	return order, foodOrder, assurance, consign, delivery, nil
 }

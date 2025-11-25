@@ -5,10 +5,9 @@ import (
 )
 
 type AdminUserService interface {
-	// TODO:
-	// - GetAllUsers
-	// - UpdateUser
+	GetAllUsers(ctx context.Context) ([]User, error)
 	AddUser(ctx context.Context, user User) error
+	UpdateUser(ctx context.Context, user User) (bool, error)
 	DeleteUser(ctx context.Context, userID string) error
 }
 
@@ -20,8 +19,16 @@ func NewAdminUserServiceImpl(ctx context.Context, userService UserService) (Admi
 	return &AdminUserServiceImpl{userService: userService}, nil
 }
 
+func (a *AdminUserServiceImpl) GetAllUsers(ctx context.Context) ([]User, error) {
+	return a.userService.GetAllUsers(ctx)
+}
+
 func (a *AdminUserServiceImpl) AddUser(ctx context.Context, user User) error {
 	return a.userService.SaveUser(ctx, user)
+}
+
+func (a *AdminUserServiceImpl) UpdateUser(ctx context.Context, user User) (bool, error) {
+	return a.userService.UpdateUser(ctx, user)
 }
 
 func (a *AdminUserServiceImpl) DeleteUser(ctx context.Context, userID string) error {

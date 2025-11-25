@@ -8,13 +8,9 @@ import (
 )
 
 type BasicService interface {
-	// TODO:
-	// - QueryForTravels
-	// - QueryForStationId
 	QueryForTravel(ctx context.Context, info Travel) (TravelResult, error)
-
-	// REMOVE
-	QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error)
+	QueryForTravels(ctx context.Context, infos []Travel) (map[string]TravelResult, error)
+	QueryForStationId(ctx context.Context, stationName string) (Station, error)
 }
 
 type BasicServiceImpl struct {
@@ -22,12 +18,6 @@ type BasicServiceImpl struct {
 	trainService   TrainService
 	routeService   RouteService
 	priceService   PriceService
-	// extra
-	orderService     OrderService
-	foodService      FoodService
-	assuranceService AssuranceService
-	consignService   ConsignService
-	deliveryService  DeliveryService
 }
 
 func NewBasicServiceImpl(ctx context.Context,
@@ -35,22 +25,12 @@ func NewBasicServiceImpl(ctx context.Context,
 	trainService TrainService,
 	routeService RouteService,
 	priceService PriceService,
-	orderService OrderService,
-	foodService FoodService,
-	assuranceService AssuranceService,
-	consignService ConsignService,
-	deliveryService DeliveryService,
 ) (BasicService, error) {
 	return &BasicServiceImpl{
 		stationService:   stationService,
 		trainService:     trainService,
 		routeService:     routeService,
 		priceService:     priceService,
-		orderService:     orderService,
-		foodService:      foodService,
-		assuranceService: assuranceService,
-		consignService:   consignService,
-		deliveryService:  deliveryService,
 	}, nil
 }
 
@@ -119,30 +99,151 @@ func (b *BasicServiceImpl) QueryForTravel(ctx context.Context, info Travel) (Tra
 	return result, nil
 }
 
-func (b *BasicServiceImpl) QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error) {
-	order, err := b.orderService.GetOrderById(ctx, orderID)
-	if err != nil {
-		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
-	}
-	foodOrder, err := b.foodService.FindFoodOrderByOrderId(ctx, order.ID)
-	if err != nil {
-		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
-	}
+func (b *BasicServiceImpl) QueryForTravels(ctx context.Context, infos []Travel) (map[string]TravelResult, error) {
+	var tripInfos = make(map[string]Travel)
+	var startTrips = make(map[string][]string)
+	var endTrips = make(map[string][]string)
+	var routeTrips = make(map[string][]string)
+	var typeTrips = make(map[string][]string)
+	var stationNames []string
+	var trainTypeNames []string
+	var routeIds []string
+	var avaTrips []string
+	for _, info := range infos {
+		stationNames = append(stationNames, info.StartPlace)
+		stationNames = append(stationNames, info.EndPlace)
+		trainTypeNames = append(trainTypeNames, info.Trip.TrainTypeName)
+		routeIds = append(routeIds, info.Trip.RouteID)
 
-	assurance, err := b.assuranceService.FindAssuranceByOrderId(ctx, order.ID)
-	if err != nil {
-		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
-	}
+		tripNumber := info.Trip.TripID
+		avaTrips = append(avaTrips, tripNumber)
+		tripInfos[tripNumber] = info
 
-	consign, err := b.consignService.FindByOrderId(ctx, order.ID)
-	if err != nil {
-		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
-	}
+		start := info.StartPlace
+		var trips []string = startTrips[start]
+		trips = append(trips, tripNumber)
+		startTrips[start] = trips
+		
+		end := info.EndPlace
+		trips = endTrips[end]
+		trips = append(trips, tripNumber)
+		endTrips[end] = trips
 
-	delivery, err := b.deliveryService.FindDelivery(ctx, order.ID)
-	if err != nil {
-		return Order{}, FoodOrder{}, Assurance{}, ConsignRecord{}, Delivery{}, nil
-	}
+		routeId := info.Trip.RouteID
+		trips = routeTrips[routeId]
+		trips = append(trips, tripNumber)
+		routeTrips[routeId] = trips
 
-	return order, foodOrder, assurance, consign, delivery, nil
+		trainTypeName := info.Trip.TrainTypeName
+		trips = typeTrips[trainTypeName]
+		trips = append(trips, tripNumber)
+		typeTrips[trainTypeName] = trips
+
+		/* stations, err := b.stationService.FindByIDs(ctx, stationNames)
+		if err != nil {
+			return nil, err
+		} */
+
+		/* for _, station := range stations {
+			if value == "" { // equivalent to null check for string pointers in Java
+				// station not exist
+				if trips, ok := startTrips[key]; ok {
+					avaTrips = removeAll(avaTrips, trips)
+				}
+				if trips, ok := endTrips[key]; ok {
+					avaTrips = removeAll(avaTrips, trips)
+				}
+			}
+		} */
+
+		if len(avaTrips) == 0 {
+			return nil, fmt.Errorf("no travel info available")
+		}
+
+		tts, err := b.trainService.RetrieveByNames(ctx, trainTypeNames)
+		if err != nil {
+			return nil, err
+		}
+
+		var trainTypeMap = make(map[string]TrainType)
+		for _, t := range tts {
+			trainTypeMap[t.Name] = t
+		}
+
+		for typeTripsKey, typeTripsLst := range typeTrips {
+			if _, ok := trainTypeMap[typeTripsKey]; !ok {
+				removeAll(avaTrips, typeTripsLst)
+			}
+		}
+
+		if len(avaTrips) == 0 {
+			return nil, fmt.Errorf("no travel info available")
+		}
+
+		routes, err := b.routeService.GetRouteByIds(ctx, routeIds)
+		if err != nil {
+			return nil, err
+		}
+		var routeMap = make(map[string]Route)
+		for _, r := range routes {
+			routeMap[r.ID] = r
+		}
+
+		for routeTripsKey, routeTripsLst := range routeTrips {
+			routeId := routeTripsKey
+			if _, ok := routeMap[routeId]; !ok {
+				removeAll(avaTrips, routeTripsLst)
+			} else {
+				route := routeMap[routeId]
+				trips := routeTripsLst
+				for _, t := range trips {
+					start := tripInfos[t].StartPlace
+					end := tripInfos[t].EndPlace
+					if !slices.Contains(route.Stations, start) || !slices.Contains(route.Stations, end) ||
+						indexOf(route.Stations, start) >= indexOf(route.Stations, end) {
+							avaTrips = remove(avaTrips, t)
+						}
+				}
+			}
+		}
+
+		if len(avaTrips) == 0 {
+			return nil, fmt.Errorf("no travel info available")
+		}
+
+		// TODO: FINALIZE
+	}
+	return nil, nil
+}
+
+func (b *BasicServiceImpl) QueryForStationId(ctx context.Context, stationName string) (Station, error) {
+	station, err := b.stationService.FindByID(ctx, stationName)
+	if err != nil {
+		return Station{}, err
+	}
+	return station, nil
+}
+
+func removeAll(src []string, toRemove []string) []string {
+    removeSet := make(map[string]struct{})
+    for _, v := range toRemove {
+        removeSet[v] = struct{}{}
+    }
+
+    var result []string
+    for _, v := range src {
+        if _, found := removeSet[v]; !found {
+            result = append(result, v)
+        }
+    }
+    return result
+}
+
+func remove(list []string, target string) []string {
+    for i, v := range list {
+        if v == target {
+            return append(list[:i], list[i+1:]...)
+        }
+    }
+    return list // if not found
 }

@@ -24,6 +24,10 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	var containers []string
 	var allServices []string
 
+	// ------
+	// DOCKER
+	// ------
+
 	user_db := mongodb.Container(spec, "user_db")
 	allServices = append(allServices, user_db)
 	user_service := workflow.Service[train_ticket2.UserService](spec, "user_service", user_db)
@@ -130,13 +134,6 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, consign_service_ctr)
 	allServices = append(allServices, consign_service)
 
-	food_db := mongodb.Container(spec, "food_db")
-	allServices = append(allServices, food_db)
-	food_service := workflow.Service[train_ticket2.FoodService](spec, "food_service", food_db, delivery_queue)
-	food_service_ctr := applyDockerDefaults(spec, food_service, "food_service_proc", "food_service_container")
-	containers = append(containers, food_service_ctr)
-	allServices = append(allServices, food_service)
-
 	order_db := mongodb.Container(spec, "order_db")
 	allServices = append(allServices, order_db)
 	order_service := workflow.Service[train_ticket2.OrderService](spec, "order_service", order_db)
@@ -149,21 +146,12 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, seat_service_ctr)
 	allServices = append(allServices, seat_service)
 
-	basic_service := workflow.Service[train_ticket2.BasicService](spec, "basic_service",
-		station_service, train_service, route_service, price_service,
-		// extra
-		order_service, food_service, assurance_service, consign_service, delivery_service,
-	)
-	basic_service_ctr := applyHTTPDefaults(spec, basic_service, "basic_service_proc", "basic_service_container")
-	containers = append(containers, basic_service_ctr)
-	allServices = append(allServices, basic_service)
-
-	travel_db := mongodb.Container(spec, "travel_db")
-	allServices = append(allServices, order_db)
-	travel_service := workflow.Service[train_ticket2.TravelService](spec, "travel_service", basic_service, seat_service, travel_db)
-	travel_service_ctr := applyDockerDefaults(spec, travel_service, "travel_service_proc", "travel_service_container")
-	containers = append(containers, travel_service_ctr)
-	allServices = append(allServices, travel_service)
+	food_db := mongodb.Container(spec, "food_db")
+	allServices = append(allServices, food_db)
+	food_service := workflow.Service[train_ticket2.FoodService](spec, "food_service", food_db, delivery_queue, trainfood_service, "travel_service.client", stationfood_service)
+	food_service_ctr := applyDockerDefaults(spec, food_service, "food_service_proc", "food_service_container")
+	containers = append(containers, food_service_ctr)
+	allServices = append(allServices, food_service)
 
 	inside_payment_db := mongodb.Container(spec, "inside_payment_db")
 	allServices = append(allServices, inside_payment_db)
@@ -172,24 +160,40 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, inside_payment_service_ctr)
 	allServices = append(allServices, inside_payment_service)
 
+	execute_service := workflow.Service[train_ticket2.ExecuteService](spec, "execute_service", order_service)
+	execute_service_ctr := applyDockerDefaults(spec, execute_service, "execute_service_proc", "execute_service_container")
+	containers = append(containers, execute_service_ctr)
+	allServices = append(allServices, execute_service)
+
+	basic_service := workflow.Service[train_ticket2.BasicService](spec, "basic_service", station_service, train_service, route_service, price_service)
+	basic_service_ctr := applyDockerDefaults(spec, basic_service, "basic_service_proc", "basic_service_container")
+	containers = append(containers, basic_service_ctr)
+	allServices = append(allServices, basic_service)
+
+	travel_db := mongodb.Container(spec, "travel_db")
+	allServices = append(allServices, order_db)
+	travel_service := workflow.Service[train_ticket2.TravelService](spec, "travel_service", basic_service, seat_service, route_service, train_service, travel_db)
+	travel_service_ctr := applyDockerDefaults(spec, travel_service, "travel_service_proc", "travel_service_container")
+	containers = append(containers, travel_service_ctr)
+	allServices = append(allServices, travel_service)
+
 	email_queue := rabbitmq.Container(spec, "email_queue", "email_queue")
 	allServices = append(allServices, email_queue)
 	preserve_service := workflow.Service[train_ticket2.PreserveService](spec, "preserve_service",
-		assurance_service,
-		basic_service,
-		consign_service,
-		contacts_service,
-		food_service,
-		order_service,
-		seat_service,
-		station_service,
-		travel_service,
-		user_service,
-		email_queue,
-	)
+		assurance_service, basic_service, consign_service, contacts_service, food_service, order_service,
+		seat_service, station_service, travel_service, user_service, email_queue)
 	preserve_service_ctr := applyDockerDefaults(spec, preserve_service, "preserve_service_proc", "preserve_service_container")
 	containers = append(containers, preserve_service_ctr)
 	allServices = append(allServices, preserve_service)
+
+	cancel_service := workflow.Service[train_ticket2.CancelService](spec, "cancel_service", order_service, user_service, inside_payment_service, email_queue)
+	cancel_service_ctr := applyDockerDefaults(spec, cancel_service, "cancel_service_proc", "cancel_service_container")
+	containers = append(containers, cancel_service_ctr)
+	allServices = append(allServices, cancel_service)
+
+	// ----
+	// HTTP
+	// ----
 
 	admin_basic_info_service := workflow.Service[train_ticket2.AdminBasicInfoService](spec, "admin_basic_info_service", station_service, train_service, config_service, contacts_service, price_service)
 	admin_basic_info_service_ctr := applyHTTPDefaults(spec, admin_basic_info_service, "admin_basic_info_service_proc", "admin_basic_info_service_container")
@@ -216,25 +220,9 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, admin_user_service_ctr)
 	allServices = append(allServices, admin_user_service)
 
-	execute_service := workflow.Service[train_ticket2.ExecuteService](spec, "execute_service", order_service)
-	execute_service_ctr := applyHTTPDefaults(spec, execute_service, "execute_service_proc", "execute_service_container")
-	containers = append(containers, execute_service_ctr)
-	allServices = append(allServices, execute_service)
-
-	cancel_service := workflow.Service[train_ticket2.CancelService](spec, "cancel_service", order_service, user_service, inside_payment_service, email_queue)
-	cancel_service_ctr := applyHTTPDefaults(spec, cancel_service, "cancel_service_proc", "cancel_service_container")
-	containers = append(containers, cancel_service_ctr)
-	allServices = append(allServices, cancel_service)
-
 	dashboard := workflow.Service[train_ticket2.Dashboard](spec, "dashboard",
-		assurance_service,
-		basic_service,
-		config_service,
-		contacts_service,
-		payment_service,
-		preserve_service,
-		order_service,
-	)
+		basic_service, config_service, contacts_service, payment_service, preserve_service, execute_service, cancel_service,
+		assurance_service, order_service, food_service, consign_service, delivery_service)
 	dashboard_ctr := applyHTTPDefaults(spec, dashboard, "dashboard_proc", "dashboard_container")
 	containers = append(containers, dashboard_ctr)
 	allServices = append(allServices, dashboard)

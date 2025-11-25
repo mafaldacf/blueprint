@@ -12,6 +12,12 @@ type Trip struct {
 	EndTime             string
 }
 
+type AdminTrip struct {
+	Trip      Trip
+	TrainType TrainType
+	Route     Route
+}
+
 type TripAllDetailInfo struct {
 	TripID     string
 	TravelDate string
@@ -35,4 +41,10 @@ type TripResponse struct {
 type TripAllDetail struct {
 	trip         Trip
 	tripResponse TripResponse
+}
+
+type TripInfo struct {
+	startPlace    string
+	endPlace      string
+	departureTime string
 }
