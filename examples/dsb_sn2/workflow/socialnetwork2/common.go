@@ -47,7 +47,7 @@ var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
 // Converts a json-encoded string to a bson.D document to be used as arguments for one of the other NoSQLDatabase functions
 func parseNoSQLDBQuery(query string) (bson.D, error) {
-	/* return handleFormats(query) */
+	return handleFormats(query)
 	return nil, nil
 }
 

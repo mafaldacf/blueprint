@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // The SocialGraphService interface
@@ -75,8 +76,7 @@ func (s *SocialGraphServiceImpl) GetFollowers(ctx context.Context, reqID int64, 
 		if err != nil {
 			return followers, err
 		}
-		query := `{"UserID":` + userIDstr + `}`
-		query_d, err := parseNoSQLDBQuery(query)
+		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
 		val, err := collection.FindOne(ctx, query_d)
 		if err != nil {
 			return followers, err
@@ -115,11 +115,7 @@ func (s *SocialGraphServiceImpl) GetFollowees(ctx context.Context, reqID int64, 
 		if err != nil {
 			return followees, err
 		}
-		query := `{"UserID":` + userIDstr + `}`
-		query_d, err := parseNoSQLDBQuery(query)
-		if err != nil {
-			return followees, err
-		}
+		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
 		val, err := collection.FindOne(ctx, query_d)
 		if err != nil {
 			return followees, err
@@ -160,17 +156,14 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 			err1 = err_internal
 			return
 		}
-		query := `{"UserID": ` + userIDstr + `}`
-		update := `{"$push": {"followees": {"UserID": ` + followeeIDstr + `,"Timestamp": ` + timestamp + `}}}`
-		query_d, err_internal := parseNoSQLDBQuery(query)
-		if err_internal != nil {
-			err1 = err_internal
-			return
-		}
-		update_d, err_internal := parseNoSQLDBQuery(update)
-		if err_internal != nil {
-			err1 = err_internal
-			return
+		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+		update_d := bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "followees", Value: bson.D{
+					{Key: "UserID", Value: followeeIDstr},
+					{Key: "Timestamp", Value: timestamp},
+				}},
+			}},
 		}
 		_, err1 = collection.UpdateOne(ctx, query_d, update_d)
 	}()
@@ -181,17 +174,14 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 			err1 = err_internal
 			return
 		}
-		query := `{"UserID": ` + followeeIDstr + `}`
-		update := `{"$push": {"followers": {"UserID": ` + userIDstr + `,"Timestamp": ` + timestamp + `}}}`
-		query_d, err_internal := parseNoSQLDBQuery(query)
-		if err_internal != nil {
-			err2 = err_internal
-			return
-		}
-		update_d, err_internal := parseNoSQLDBQuery(update)
-		if err_internal != nil {
-			err2 = err_internal
-			return
+		query_d := bson.D{{Key: "UserID", Value: followeeIDstr}}
+		update_d := bson.D{
+			{Key: "$push", Value: bson.D{
+				{Key: "followers", Value: bson.D{
+					{Key: "UserID", Value: userIDstr},
+					{Key: "Timestamp", Value: timestamp},
+				}},
+			}},
 		}
 		_, err2 = collection.UpdateOne(ctx, query_d, update_d)
 	}()
@@ -233,17 +223,13 @@ func (s *SocialGraphServiceImpl) Unfollow(ctx context.Context, reqID int64, user
 			err1 = err_internal
 			return
 		}
-		query := `{"UserID": ` + userIDstr + `}`
-		update := `{"$pull": {"followees": {"UserID": ` + followeeIDstr + `}}}`
-		query_d, err_internal := parseNoSQLDBQuery(query)
-		if err_internal != nil {
-			err1 = err_internal
-			return
-		}
-		update_d, err_internal := parseNoSQLDBQuery(update)
-		if err_internal != nil {
-			err1 = err_internal
-			return
+		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+		update_d := bson.D{
+			{Key: "$pull", Value: bson.D{
+				{Key: "followees", Value: bson.D{
+					{Key: "UserID", Value: followeeIDstr},
+				}},
+			}},
 		}
 		_, err1 = collection.UpdateOne(ctx, query_d, update_d)
 	}()
@@ -254,17 +240,13 @@ func (s *SocialGraphServiceImpl) Unfollow(ctx context.Context, reqID int64, user
 			err2 = err_internal
 			return
 		}
-		query := `{"UserID": ` + followeeIDstr + `}`
-		update := `{"$pull": {"followers": {"UserID": ` + userIDstr + `}}}`
-		query_d, err_internal := parseNoSQLDBQuery(query)
-		if err_internal != nil {
-			err2 = err_internal
-			return
-		}
-		update_d, err_internal := parseNoSQLDBQuery(update)
-		if err_internal != nil {
-			err2 = err_internal
-			return
+		query_d := bson.D{{Key: "UserID", Value: followeeIDstr}}
+		update_d := bson.D{
+			{Key: "$pull", Value: bson.D{
+				{Key: "followers", Value: bson.D{
+					{Key: "UserID", Value: userIDstr},
+				}},
+			}},
 		}
 		_, err2 = collection.UpdateOne(ctx, query_d, update_d)
 	}()

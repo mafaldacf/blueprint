@@ -110,19 +110,11 @@ func (p *PostStorageServiceImpl) ReadPosts(ctx context.Context, reqID int64, pos
 		if err != nil {
 			return []Post{}, err
 		}
-		/* id_str := strings.Join(strings.Fields(fmt.Sprint(unique_pids)), ",")
-		query := `{"PostID": {"$in": ` + id_str + `}}`
-		query_d, err := parseNoSQLDBQuery(query)
-		if err != nil {
-			return []Post{}, err
-		} */
-
 		query_d := bson.D{
 			{Key: "PostID", Value: bson.D{
 				{Key: "$in", Value: unique_pids},
 			}},
 		}
-
 		vals, err := collection.FindMany(ctx, query_d)
 		if err != nil {
 			log.Println(err)

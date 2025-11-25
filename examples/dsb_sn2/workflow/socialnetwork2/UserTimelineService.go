@@ -81,19 +81,7 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 		if err != nil {
 			return []int64{}, err
 		}
-		/* query := fmt.Sprintf(`{"UserID": %[1]d}`, userID)
-		query_d, err := parseNoSQLDBQuery(query)
-		if err != nil {
-			return []int64{}, err
-		} */
 		query_d := bson.D{{Key: "UserID", Value: userID}}
-
-		/* projection := fmt.Sprintf(`{"posts": {"$slice": [0, %[1]d]}}`, stop)
-		projection_d, err := parseNoSQLDBQuery(projection)
-		if err != nil {
-			return []int64{}, err
-		} */
-
 		projection_d := bson.D{
 		{Key: "posts", Value: bson.D{
 			{Key: "$slice", Value: bson.A{0, stop}},
@@ -165,11 +153,6 @@ func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID i
 		fmt.Println("Adding a new post for user", userID)
 		postIDstr := strconv.FormatInt(postID, 10)
 		timestampstr := strconv.FormatInt(timestamp, 10)
-		/* update := fmt.Sprintf(`{"$push": {"Posts": {"$each": [{"PostID": %s, "Timestamp": %s}], "$position": 0}}}`, postIDstr, timestampstr)
-		update_d, err := parseNoSQLDBQuery(update)
-		if err != nil {
-			return err
-		} */
 		update_d := bson.D{
 			{Key: "$push", Value: bson.D{
 				{Key: "Posts", Value: bson.D{
