@@ -36,9 +36,6 @@ var wiringGoModTemplate string
 //go:embed templates/workflow.go.mod.template
 var workflowGoModTemplate string
 
-//go:embed templates/workflow.app.main.go.template
-var workflowMainTemplate string
-
 //go:embed templates/workflow.app.service_entry_with_next.go.template
 var worflowServiceEntryWithNextTemplate string
 
@@ -308,7 +305,6 @@ func GenWorkflow() {
 	}
 
 	graph := generateCallGraph()
-	filename_main := filepath.Join(WORKFLOW_DIR, "main.go")
 
 	for _, g := range graph {
 		filename := filepath.Join(WORKFLOW_DIR, fmt.Sprintf("service%d.go", g.ID))
@@ -325,13 +321,6 @@ func GenWorkflow() {
 
 	g := graph[len(graph)-1]
 	data := mainData{N: g.ID, PkgName: APPNAME}
-	code, err := GenWorkflowMain(data)
-	if err != nil {
-		panic(err)
-	}
-	if err := os.WriteFile(filename_main, []byte(code), 0o644); err != nil {
-		panic(err)
-	}
 
 	fmt.Printf("Generated %d files: service1.go ... service%d.go\n", len(graph), NUM_SERVICES)
 
@@ -364,17 +353,6 @@ func GenWorkflowServices(data serviceData) (string, error) {
 	default:
 		err = serviceTerminal.Execute(buf, data)
 	}
-
-	if err != nil {
-		return "", err
-	}
-	return buf.String(), nil
-}
-
-func GenWorkflowMain(data mainData) (string, error) {
-	main := template.Must(template.New("main").Parse(workflowMainTemplate))
-	buf := &bytes.Buffer{}
-	err := main.Execute(buf, data)
 
 	if err != nil {
 		return "", err
