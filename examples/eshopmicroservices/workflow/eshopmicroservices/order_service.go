@@ -2,14 +2,20 @@ package eshopmicroservices
 
 import (
 	"context"
+	"fmt"
+	"sort"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"github.com/google/uuid"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type OrderService interface {
 	Run(ctx context.Context) error
 	CreateNewOrder(ctx context.Context, command CreateOrderCommand) (CreateOrderResult, error)
+	UpdateOrder(ctx context.Context, command UpdateOrderCommand) (UpdateOrderResult, error)
+	DeleteOrder(ctx context.Context, command DeleteOrderCommand) (DeleteOrderResult, error)
+	GetOrdersByCustomer(ctx context.Context, query GetOrdersByCustomerQuery) (GetOrdersByCustomerResult, error)
 }
 
 type OrderServiceImpl struct {
@@ -68,10 +74,123 @@ func (s *OrderServiceImpl) CreateNewOrder(ctx context.Context, command CreateOrd
 	return CreateOrderResult{Id: command.OrderDto.Id}, nil
 }
 
+func (s *OrderServiceImpl) UpdateOrder(ctx context.Context, command UpdateOrderCommand) (UpdateOrderResult, error) {
+	orderId := command.OrderDto.Id
+	_, err := s.find(ctx, orderId)
+	if err != nil {
+		return UpdateOrderResult{false}, err
+	}
+
+	var newOrder OrderDto
+	updateOrderWithNewValues(&newOrder, &command.OrderDto)
+	s.update(ctx, newOrder)
+	return UpdateOrderResult{true}, nil
+}
+
+func (s *OrderServiceImpl) DeleteOrder(ctx context.Context, command DeleteOrderCommand) (DeleteOrderResult, error) {
+	orderId := command.Id
+	_, err := s.find(ctx, orderId)
+	if err != nil {
+		return DeleteOrderResult{false}, err
+	}
+	s.remove(ctx, orderId)
+	return DeleteOrderResult{true}, nil
+}
+
+func (s *OrderServiceImpl) GetOrdersByCustomer(ctx context.Context, query GetOrdersByCustomerQuery) (GetOrdersByCustomerResult, error) {
+	customerId := query.CustomerId
+	orders, err := s.findByCustomer(ctx, customerId)
+	if err != nil {
+		return GetOrdersByCustomerResult{nil}, err
+	}
+	return GetOrdersByCustomerResult{orders}, nil
+}
+
 func (s *OrderServiceImpl) add(ctx context.Context, order OrderDto) error {
 	collection, err := s.database.GetCollection(ctx, "order_db", "order")
 	if err != nil {
 		return err
 	}
 	return collection.InsertOne(ctx, order)
+}
+
+func (s *OrderServiceImpl) remove(ctx context.Context, id uuid.UUID) error {
+	collection, err := s.database.GetCollection(ctx, "order_db", "order")
+	if err != nil {
+		return err
+	}
+	filter := bson.D{{Key: "Id", Value: id}}
+	return collection.DeleteOne(ctx, filter)
+}
+
+func (s *OrderServiceImpl) find(ctx context.Context, id uuid.UUID) (OrderDto, error) {
+	collection, err := s.database.GetCollection(ctx, "order_db", "order")
+	if err != nil {
+		return OrderDto{}, err
+	}
+	filter := bson.D{{Key: "Id", Value: id}}
+	cursor, err := collection.FindOne(ctx, filter)
+	if err != nil {
+		return OrderDto{}, err
+	}
+	var order OrderDto
+	ok, err := cursor.One(ctx, &order)
+	if err != nil {
+		return OrderDto{}, err
+	}
+	if !ok {
+		return OrderDto{}, fmt.Errorf("order not found for id (%s)", id)
+	}
+	return order, nil
+}
+
+func (s *OrderServiceImpl) findByCustomer(ctx context.Context, customerId uuid.UUID) ([]OrderDto, error) {
+	collection, err := s.database.GetCollection(ctx, "order_db", "order")
+	if err != nil {
+		return nil, err
+	}
+	filter := bson.D{{Key: "CustomerId", Value: customerId}}
+	cursor, err := collection.FindMany(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	var orders []OrderDto
+	err = cursor.All(ctx, &orders)
+	if err != nil {
+		return nil, err
+	}
+
+	// sort by OrderName
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].OrderName <= orders[j].OrderName
+	})
+	return orders, nil
+}
+
+func (s *OrderServiceImpl) update(ctx context.Context, order OrderDto) (OrderDto, error) {
+	collection, err := s.database.GetCollection(ctx, "order_db", "order")
+	if err != nil {
+		return OrderDto{}, err
+	}
+	filter := bson.D{{Key: "Id", Value: order.Id}}
+	updated, err := collection.ReplaceOne(ctx, filter, order)
+	if err != nil {
+		return OrderDto{}, err
+	}
+	if updated == 0 {
+		return OrderDto{}, fmt.Errorf("order not found for id (%s)", order.Id)
+	}
+	return order, nil
+}
+
+func updateOrderWithNewValues(order *OrderDto, orderUpdate *OrderDto) {
+	var updatedShippingAddress AddressDto = orderUpdate.ShippingAddress
+	var updatedBillingAddress AddressDto = orderUpdate.BillingAddress
+	var updatedPayment PaymentDto = orderUpdate.Payment
+
+	order.OrderName = orderUpdate.OrderName
+	order.ShippingAddress = updatedShippingAddress
+	order.BillingAddress = updatedBillingAddress
+	order.Payment = updatedPayment
+	order.Status = orderUpdate.Status
 }

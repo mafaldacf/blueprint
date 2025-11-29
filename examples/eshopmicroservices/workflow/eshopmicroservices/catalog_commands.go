@@ -25,3 +25,15 @@ type GetProductByIdQuery struct {
 type GetProductByIdResponse struct {
 	Product Product
 }
+
+type GetProductByCategoryQuery struct {
+	Category string
+}
+
+type GetProductByCategoryResponse struct {
+	Product Product
+}
+
+type GetProductsResponse struct {
+	Products []Product
+}
