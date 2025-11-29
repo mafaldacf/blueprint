@@ -2,6 +2,8 @@ go 1.24.0
 
 use (
 	./blueprint
+	./examples/eshopmicroservices/wiring
+	./examples/eshopmicroservices/workflow
 	./examples/app_constraints_referential_integrity/wiring
 	./examples/app_constraints_referential_integrity/workflow
 	./examples/coupons_app/wiring

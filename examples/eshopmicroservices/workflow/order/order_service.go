@@ -1,4 +1,4 @@
-package eshopmicroservices
+package order
 
 import (
 	"context"
@@ -8,6 +8,8 @@ import (
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/basket"
 )
 
 type OrderService interface {
@@ -33,7 +35,7 @@ func NewOrderServiceImpl(ctx context.Context, database backend.NoSQLDatabase, qu
 
 func (s *OrderServiceImpl) Run(ctx context.Context) error {
 	for {
-		var message BasketChekoutEvent
+		var message basket.BasketChekoutEvent
 		ok, err := s.queue.Pop(ctx, &message)
 		if err != nil {
 			return err

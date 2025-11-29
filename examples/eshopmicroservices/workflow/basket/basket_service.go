@@ -1,4 +1,4 @@
-package eshopmicroservices
+package basket
 
 import (
 	"context"
@@ -6,6 +6,8 @@ import (
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/discount"
 )
 
 type BasketService interface {
@@ -18,10 +20,10 @@ type BasketService interface {
 type BasketServiceImpl struct {
 	database        backend.NoSQLDatabase
 	queue           backend.Queue
-	discountService DiscountService
+	discountService discount.DiscountService
 }
 
-func NewBasketServiceImpl(ctx context.Context, database backend.NoSQLDatabase, queue backend.Queue, discountService DiscountService) (BasketService, error) {
+func NewBasketServiceImpl(ctx context.Context, database backend.NoSQLDatabase, queue backend.Queue, discountService discount.DiscountService) (BasketService, error) {
 	s := &BasketServiceImpl{
 		database:        database,
 		queue:           queue,
@@ -54,7 +56,7 @@ func (s *BasketServiceImpl) CheckoutBasket(ctx context.Context, command Checkout
 func (s *BasketServiceImpl) StoreBasket(ctx context.Context, command StoreBasketRequest) (StoreBasketResponse, error) {
 	// deduct discount
 	for _, item := range command.Cart.Items {
-		coupon, err := s.discountService.GetDiscount(ctx, GetDiscountRequest{ProductName: item.ProductName})
+		coupon, err := s.discountService.GetDiscount(ctx, discount.GetDiscountRequest{ProductName: item.ProductName})
 		if err != nil {
 			return StoreBasketResponse{}, err
 		}

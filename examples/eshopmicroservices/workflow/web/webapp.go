@@ -1,28 +1,33 @@
-package eshopmicroservices
+package web
 
 import (
 	"context"
 
 	"github.com/google/uuid"
+
+	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/basket"
+	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/catalog"
+	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/discount"
+	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/order"
 )
 
 type WebApp interface {
 	OnPostRemoveToCartAsync(ctx context.Context, productId uuid.UUID) error
 	OnPostCheckoutAsync(ctx context.Context) error
-	OnGetOrdersAsync(ctx context.Context) ([]OrderDto, error)
-	OnGetProductsAsync(ctx context.Context, categoryName string) ([]Product, []string, string, error)
+	OnGetOrdersAsync(ctx context.Context) ([]order.OrderDto, error)
+	OnGetProductsAsync(ctx context.Context, categoryName string) ([]catalog.Product, []string, string, error)
 	OnPostAddToCartAsync(ctx context.Context, productId uuid.UUID) error
 }
 
 type WebAppImpl struct {
-	basketService   BasketService
-	catalogService  CatalogService
-	discountService DiscountService
-	orderService    OrderService
+	basketService   basket.BasketService
+	catalogService  catalog.CatalogService
+	discountService discount.DiscountService
+	orderService    order.OrderService
 	customerId      uuid.UUID
 }
 
-func NewWebAppImpl(ctx context.Context, basketService BasketService, catalogService CatalogService, discountService DiscountService, orderService OrderService) (WebApp, error) {
+func NewWebAppImpl(ctx context.Context, basketService basket.BasketService, catalogService catalog.CatalogService, discountService discount.DiscountService, orderService order.OrderService) (WebApp, error) {
 	s := &WebAppImpl{
 		basketService:   basketService,
 		catalogService:  catalogService,
@@ -37,7 +42,7 @@ var quantity int
 var color string
 
 func (webapp *WebAppImpl) OnPostRemoveToCartAsync(ctx context.Context, productId uuid.UUID) error {
-	basketResponse, err := webapp.basketService.GetBasket(ctx, GetBasketQuery{UserName: "swn"})
+	basketResponse, err := webapp.basketService.GetBasket(ctx, basket.GetBasketQuery{UserName: "swn"})
 	if err != nil {
 		return err
 	}
@@ -45,7 +50,7 @@ func (webapp *WebAppImpl) OnPostRemoveToCartAsync(ctx context.Context, productId
 
 	removeAll(&cart, productId)
 
-	_, err = webapp.basketService.StoreBasket(ctx, StoreBasketRequest{Cart: cart})
+	_, err = webapp.basketService.StoreBasket(ctx, basket.StoreBasketRequest{Cart: cart})
 	if err != nil {
 		return err
 	}
@@ -53,7 +58,7 @@ func (webapp *WebAppImpl) OnPostRemoveToCartAsync(ctx context.Context, productId
 	return nil
 }
 
-func removeAll(cart *ShoppingCart, productId uuid.UUID) []ShoppingCartItem {
+func removeAll(cart *basket.ShoppingCart, productId uuid.UUID) []basket.ShoppingCartItem {
 	remainingItems := cart.Items[:0]
 	for _, item := range cart.Items {
 		if item.ProductId != productId {
@@ -64,34 +69,34 @@ func removeAll(cart *ShoppingCart, productId uuid.UUID) []ShoppingCartItem {
 }
 
 func (webapp *WebAppImpl) OnPostCheckoutAsync(ctx context.Context) error {
-	basketResponse, err := webapp.basketService.GetBasket(ctx, GetBasketQuery{UserName: "swn"})
+	basketResponse, err := webapp.basketService.GetBasket(ctx, basket.GetBasketQuery{UserName: "swn"})
 	if err != nil {
 		return err
 	}
 	cart := basketResponse.Cart
 
 	// assumption customerId is passed in from the UI authenticated user swn
-	var order BasketCheckoutDto
+	var order basket.BasketCheckoutDto
 	order.CustomerId = webapp.customerId
 	order.UserName = cart.UserName
 	order.TotalPrice = cart.TotalPrice
 
-	webapp.basketService.CheckoutBasket(ctx, CheckoutBasketCommand{order})
+	webapp.basketService.CheckoutBasket(ctx, basket.CheckoutBasketCommand{order})
 
 	return nil
 }
 
-func (webapp *WebAppImpl) OnGetOrdersAsync(ctx context.Context) ([]OrderDto, error) {
+func (webapp *WebAppImpl) OnGetOrdersAsync(ctx context.Context) ([]order.OrderDto, error) {
 	// assumption customerId is passed in from the UI authenticated user swn
 	customerId := webapp.customerId
-	response, err := webapp.orderService.GetOrdersByCustomer(ctx, GetOrdersByCustomerQuery{customerId})
+	response, err := webapp.orderService.GetOrdersByCustomer(ctx, order.GetOrdersByCustomerQuery{customerId})
 	if err != nil {
 		return nil, err
 	}
 	return response.Orders, nil
 }
 
-func (webapp *WebAppImpl) OnGetProductsAsync(ctx context.Context, categoryName string) ([]Product, []string, string, error) {
+func (webapp *WebAppImpl) OnGetProductsAsync(ctx context.Context, categoryName string) ([]catalog.Product, []string, string, error) {
 	response, err := webapp.catalogService.GetProducts(ctx)
 	if err != nil {
 		return nil, nil, "", err
@@ -108,7 +113,7 @@ func (webapp *WebAppImpl) OnGetProductsAsync(ctx context.Context, categoryName s
 		categoryList = append(categoryList, c)
 	}
 
-	var productList []Product
+	var productList []catalog.Product
 	var selectedCategory string
 
 	if categoryName != "" {
@@ -129,17 +134,17 @@ func (webapp *WebAppImpl) OnGetProductsAsync(ctx context.Context, categoryName s
 }
 
 func (webapp *WebAppImpl) OnPostAddToCartAsync(ctx context.Context, productId uuid.UUID) error {
-	productResponse, err := webapp.catalogService.GetProductById(ctx, GetProductByIdQuery{Id: productId})
+	productResponse, err := webapp.catalogService.GetProductById(ctx, catalog.GetProductByIdQuery{Id: productId})
 	if err != nil {
 		return err
 	}
 
-	basketResponse, err := webapp.basketService.GetBasket(ctx, GetBasketQuery{UserName: "swn"})
+	basketResponse, err := webapp.basketService.GetBasket(ctx, basket.GetBasketQuery{UserName: "swn"})
 	if err != nil {
 		return err
 	}
-	basket := basketResponse.Cart
-	basket.Items = append(basket.Items, ShoppingCartItem{
+	retBasket := basketResponse.Cart
+	retBasket.Items = append(retBasket.Items, basket.ShoppingCartItem{
 		ProductId:   productId,
 		ProductName: productResponse.Product.Name,
 		Price:       productResponse.Product.Price,
@@ -147,7 +152,7 @@ func (webapp *WebAppImpl) OnPostAddToCartAsync(ctx context.Context, productId uu
 		Color:       color,
 	})
 
-	_, err = webapp.basketService.StoreBasket(ctx, StoreBasketRequest{Cart: basket})
+	_, err = webapp.basketService.StoreBasket(ctx, basket.StoreBasketRequest{Cart: retBasket})
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package eshopmicroservices
+package discount
 
 type Coupon struct {
 	Id          int

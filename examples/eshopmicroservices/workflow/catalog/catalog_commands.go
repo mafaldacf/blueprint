@@ -1,4 +1,4 @@
-package eshopmicroservices
+package catalog
 
 import "github.com/google/uuid"
 

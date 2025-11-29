@@ -1,4 +1,4 @@
-package eshopmicroservices
+package basket
 
 type CheckoutBasketCommand struct {
 	BasketCheckoutDto BasketCheckoutDto

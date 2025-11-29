@@ -1,4 +1,4 @@
-package eshopmicroservices
+package discount
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package eshopmicroservices
+package basket
 
 import "github.com/google/uuid"
 
