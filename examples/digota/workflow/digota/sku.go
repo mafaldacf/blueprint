@@ -28,12 +28,12 @@ type Inventory struct {
 	Type     int32
 }
 
-/* type Inventory_Type int32
+type Inventory_Type int32
 
 const (
 	Inventory_Infinite Inventory_Type = 0
 	Inventory_Finite   Inventory_Type = 1
-) */
+)
 
 var Inventory_Type_name = map[int32]string{
 	0: "Infinite",

@@ -19,7 +19,6 @@ const (
 )
 
 type OrderService interface {
-	//Run(ctx context.Context) error
 	New(ctx context.Context, currency int32, items []*OrderItem, metadata map[string]string, email string, shipping *Shipping) (*Order, error)
 	Get(ctx context.Context, id string) (*Order, error)
 	List(ctx context.Context, page int64, limit int64, sort int32) (*OrderList, error)
@@ -28,13 +27,13 @@ type OrderService interface {
 }
 
 type OrderServiceImpl struct {
-	skuService SkuService
-	db         backend.NoSQLDatabase
-	/* queue      backend.Queue */
+	skuService     SkuService
+	paymentService PaymentService
+	db             backend.NoSQLDatabase
 }
 
-func NewOrderServiceImpl(ctx context.Context, skuService SkuService, db backend.NoSQLDatabase /* , queue backend.Queue */) (OrderService, error) {
-	s := &OrderServiceImpl{skuService: skuService, db: db /* , queue: queue */}
+func NewOrderServiceImpl(ctx context.Context, skuService SkuService, paymentService PaymentService, db backend.NoSQLDatabase) (OrderService, error) {
+	s := &OrderServiceImpl{skuService: skuService, paymentService: paymentService, db: db}
 	return s, nil
 }
 
@@ -47,76 +46,12 @@ func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*Ord
 		Shipping: shipping,
 	}
 
-	// 1. get updated order items
-	//var reqItems = items
-	//var skuMap = make(map[string]*OrderItem)
 	var orderItems []*OrderItem
 
-	// 1.1. merge duplicated items
-	/* for _, v := range reqItems {
-		if v.IsTypeSku() {
-			if skuItem, ok := skuMap[v.Parent]; ok {
-				skuItem.Quantity += v.Quantity
-				continue
-			} else {
-				skuMap[v.Parent] = v
-			}
-		} else if v.IsTypeDiscount() {
-			if v.Quantity <= 0 {
-				v.Quantity = 1
-			}
-		} else if v.IsTypeShipping() {
-			if v.Quantity <= 0 {
-				v.Quantity = 1
-			}
-		} else if v.IsTypeTax() {
-			if v.Quantity <= 0 {
-				v.Quantity = 1
-			}
-			orderItems = append(orderItems, v)
-		}
-	} */
-
-	// 1.2. update order item data
-	for _, myitem1 := range items {
-		if myitem1.IsTypeTax() {
-			if myitem1.Quantity <= 0 {
-				myitem1.Quantity = 1
-			}
-			orderItems = append(orderItems, myitem1)
-		}
+	orderItems, err := s.getUpdatedOrderItems(ctx, items)
+	if err != nil {
+		return nil, err
 	}
-	for _, v := range orderItems {
-		if v.IsTypeSku() {
-			orderItem := v
-			item, err := s.skuService.Get(ctx, v.Parent)
-			if err != nil {
-				return nil, err
-			} else {
-				orderItem.Amount = int64(item.Price)
-				orderItem.Currency = item.Currency
-				orderItem.Description = item.Name
-			}
-		} else if v.IsTypeDiscount() {
-			// nothing to fetch yet
-			if v.Description == "" {
-				v.Description = defaultDiscountDescription
-			}
-		} else if v.IsTypeShipping() {
-			// nothing to fetch yet
-			if v.Description == "" {
-				v.Description = defaultShippingDescription
-			}
-		} else if v.IsTypeTax() {
-			// nothing to fetch yet
-			if v.Description == "" {
-				v.Description = defaultTaxDescription
-			}
-		}
-	}
-
-	// 2. calculate total and write to database
-
 	order.Items = orderItems
 
 	amount, err := calculateTotal(order.Currency, order.Items)
@@ -183,13 +118,152 @@ func (s *OrderServiceImpl) List(ctx context.Context, page int64, limit int64, so
 }
 
 func (s *OrderServiceImpl) Pay(ctx context.Context, id string, card *Card, paymentProviderID int32) (*Order, error) {
-	// TODO
-	return nil, nil
+	order := &Order{
+		Id: id,
+	}
+	// get order
+	if err := s.storageGetOne(ctx, order); err != nil {
+		return nil, err
+	}
+	// check if order is payable
+	if err := order.IsPayable(); err != nil {
+		return nil, err
+	}
+	// lock all inventory order items (inventory objects)
+	lockedItems := s.getLockedOrderItems(ctx, order)
+	// Free all locks at func return
+	defer func() {
+		for _, v1 := range lockedItems {
+			v1.Unlock()
+		}
+	}()
+	// Check for errors and oversell
+	for _, item := range lockedItems {
+		if item.Err != nil {
+			return nil, item.Err
+		}
+		// check for oversell
+		if item.Sku.Inventory.Type == int32(Inventory_Finite) && item.Sku.Inventory.Quantity < item.OrderItem.Quantity {
+			return nil, fmt.Errorf("Oversell %s", item.Sku.Id)
+		}
+	}
+	// charge full amount for the order order
+	c, err := s.paymentService.NewCharge(ctx, order.Currency, uint64(order.Amount), card, order.Email, fmt.Sprintf("Order %s", order.Id), paymentProviderID, nil)
+	if err != nil {
+		return nil, err
+	}
+	order.ChargeId = c.Id
+	order.Status = int32(Order_Paid)
+	updateErr := s.storageUpdate(ctx, order)
+	if updateErr != nil {
+		r, err := s.paymentService.RefundCharge(ctx, c.Id, uint64(order.Amount), 0)
+		if err != nil {
+			return nil, fmt.Errorf("could not update order {%s} object and could not refund the charge {%s}!", order.Id, order.ChargeId)
+		}
+		return nil, fmt.Errorf("could not update order {%s} object, order has been refunded {%s}!", order.Id, r.Id)
+	}
+	// update all inventories
+	for _, item := range lockedItems {
+		if item.Sku.Inventory.Type == int32(Inventory_Finite) {
+			// update inventory Quantity
+			item.Sku.Inventory.Quantity -= item.OrderItem.Quantity
+			item.Update()
+		}
+	}
+	return order, nil
 }
 
 func (s *OrderServiceImpl) Return(ctx context.Context, id string) (*Order, error) {
-	// TODO
-	return nil, nil
+	order := &Order{
+		Id: id,
+	}
+
+	// get order
+	if err := s.storageGetOne(ctx, order); err != nil {
+		return nil, err
+	}
+
+	// calculate returns amount
+	amount, err := calculateTotal(order.GetCurrency(), order.GetItems())
+	if err != nil {
+		return nil, err
+	}
+
+	// check if order can be refunded
+	if err = order.IsReturnable(amount); err != nil {
+		return nil, err
+	}
+	// lock all inventory order items (inventory objects)
+	lockedItems := s.getLockedOrderItems(ctx, order)
+	// Free all locks at func return
+	defer func() {
+		for _, item := range lockedItems {
+			item.Unlock()
+		}
+	}()
+	// refund the order
+	if _, err := s.paymentService.RefundCharge(ctx, order.GetChargeId(), uint64(amount), 0); err != nil {
+		return nil, err
+	}
+	// update order status
+	switch order.Status {
+	case int32(Order_Paid):
+		order.Status = int32(Order_Canceled)
+		for _, item := range lockedItems {
+			if item.Sku.Inventory.Type == int32(Inventory_Finite) {
+				item.Sku.Inventory.Quantity += item.OrderItem.Quantity
+				item.Update()
+			}
+		}
+	case int32(Order_Fulfilled):
+		order.Status = int32(Order_Returned)
+	}
+
+	updateErr := s.storageUpdate(ctx, order)
+	if updateErr != nil {
+		return nil, updateErr
+	}
+	return order, nil
+}
+
+func (s *OrderServiceImpl) storageGetOne(ctx context.Context, order *Order) error {
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
+	if err != nil {
+		return err
+	}
+
+	query := bson.D{{Key: "Id", Value: order.Id}}
+	result, err := collection.FindOne(ctx, query)
+	if err != nil {
+		return err
+	}
+
+	found, err := result.One(ctx, order)
+	if err != nil {
+		return err
+	}
+	if !found {
+		return fmt.Errorf("order not found for id (%s)", order.Id)
+	}
+
+	return nil
+}
+
+func (s *OrderServiceImpl) storageUpdate(ctx context.Context, order *Order) error {
+	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
+	if err != nil {
+		return err
+	}
+
+	query := bson.D{{Key: "Id", Value: order.Id}}
+	updated, err := collection.ReplaceOne(ctx, query, order)
+	if err != nil {
+		return err
+	}
+	if updated == 0 {
+		return fmt.Errorf("order not found for id (%s)", order.Id)
+	}
+	return nil
 }
 
 func calculateTotal(currency int32, orderItems []*OrderItem) (int64, error) {
@@ -209,21 +283,90 @@ func calculateTotal(currency int32, orderItems []*OrderItem) (int64, error) {
 	return m.Amount(), nil
 }
 
-/* type QueueMessage struct {
-	id string
-}
+func (s *OrderServiceImpl) getUpdatedOrderItems(ctx context.Context, reqItems []*OrderItem) (orderItems []*OrderItem, err error) {
+	var skuMap = make(map[string]*OrderItem)
+	var errs []error
 
-func (s *OrderServiceImpl) Run(ctx context.Context) error {
-	var message QueueMessage
-	s.queue.Pop(ctx, &message)
-
-	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
-	if err != nil {
-		return err
+	// merge duplicated items
+	for _, v := range reqItems {
+		if v.IsTypeSku() {
+			if skuItem, ok := skuMap[v.Parent]; ok {
+				skuItem.Quantity += v.Quantity
+				continue
+			} else {
+				skuMap[v.Parent] = v
+			}
+		} else if v.IsTypeDiscount() {
+			if v.Quantity <= 0 {
+				v.Quantity = 1
+			}
+		} else if v.IsTypeShipping() {
+			if v.Quantity <= 0 {
+				v.Quantity = 1
+			}
+		} else if v.IsTypeTax() {
+			if v.Quantity <= 0 {
+				v.Quantity = 1
+			}
+		}
+		orderItems = append(orderItems, v)
 	}
 
-	filter := bson.D{{Key: "Id", Value: message.id}}
-	err = collection.DeleteOne(ctx, filter)
-	return err
-	return nil
-} */
+	// update order item data
+	for _, v := range orderItems {
+		if v.IsTypeSku() {
+			orderItem := v
+			item, err := s.skuService.Get(ctx, v.Parent)
+			if err != nil {
+				return nil, err
+			} else {
+				orderItem.Amount = int64(item.Price)
+				orderItem.Currency = item.Currency
+				orderItem.Description = item.Name
+			}
+		} else if v.IsTypeDiscount() {
+			// nothing to fetch yet
+			if v.Description == "" {
+				v.Description = defaultDiscountDescription
+			}
+		} else if v.IsTypeShipping() {
+			// nothing to fetch yet
+			if v.Description == "" {
+				v.Description = defaultShippingDescription
+			}
+		} else if v.IsTypeTax() {
+			// nothing to fetch yet
+			if v.Description == "" {
+				v.Description = defaultTaxDescription
+			}
+		}
+	}
+
+	// return the first error
+	if errs != nil {
+		return nil, errs[0]
+	}
+
+	return
+}
+
+type lockedOrderItem struct {
+	OrderItem *OrderItem
+	Sku       *Sku
+	Unlock    func() error
+	Update    func() error
+	Err       error
+}
+
+func (s *OrderServiceImpl) getLockedOrderItems(ctx context.Context, order *Order) (items []*lockedOrderItem) {
+	for _, orderItem := range order.GetItems() {
+		if orderItem.IsTypeSku() {
+			item, _ := s.skuService.Get(ctx, orderItem.Parent)
+			items = append(items, &lockedOrderItem{
+				OrderItem: orderItem,
+				Sku:       item,
+			})
+		}
+	}
+	return
+}

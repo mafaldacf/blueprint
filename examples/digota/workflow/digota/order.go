@@ -1,5 +1,10 @@
 package digota
 
+import (
+	"fmt"
+	"time"
+)
+
 type Order struct {
 	Id        string            `json:"id,omitempty" bson:"_id"`
 	Amount    int64             `json:"amount,omitempty"`
@@ -35,6 +40,47 @@ func (item *OrderItem) GetType() int32 {
 	return item.Type
 }
 
+func (order *Order) GetCurrency() int32 {
+	return order.Currency
+}
+
+func (order *Order) GetChargeId() string {
+	return order.ChargeId
+}
+
+func (order *Order) GetItems() []*OrderItem {
+	return order.Items
+}
+
+func (order *Order) GetAmount() int64 {
+	return order.Amount
+}
+
+
+func (o *Order) IsReturnable(amount int64) error {
+	if o.Status != int32(Order_Paid) && o.Status != int32(Order_Fulfilled) && o.Status != int32(Order_Canceled) {
+		return fmt.Errorf("Order is not paid or fulfilled.")
+	}
+	// if refund amount is bigger than the order amount return err
+	if amount > o.GetAmount() {
+		return fmt.Errorf("Refund amount is greater then order amount.")
+	}
+	return nil
+}
+
+func (o *Order) IsPayable() error {
+	if o.Status != int32(Order_Created) {
+		return fmt.Errorf("Order is not in created status.")
+	}
+	if time.Since(time.Unix(o.Created, 0)) > orderTTL {
+		return fmt.Errorf("Order is too old for paying.")
+	}
+	if o.GetAmount() <= 0 {
+		return fmt.Errorf("Order amount is Zero.")
+	}
+	return nil
+}
+
 /* type OrderItem_Type int32
 
 const (
@@ -60,7 +106,7 @@ var OrderItem_Type_value = map[string]int32{
 	"shipping": 4,
 }
 
-/* type OrderStatus int32
+type OrderStatus int32
 
 const (
 	Order_Created   OrderStatus = 0
@@ -68,7 +114,7 @@ const (
 	Order_Canceled  OrderStatus = 2
 	Order_Fulfilled OrderStatus = 3
 	Order_Returned  OrderStatus = 4
-) */
+)
 
 /* var OrderStatus_name = map[int32]string{
 	0: "Created",
