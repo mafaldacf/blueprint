@@ -155,7 +155,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 
 	inside_payment_db := mongodb.Container(spec, "inside_payment_db")
 	allServices = append(allServices, inside_payment_db)
-	inside_payment_service := workflow.Service[train_ticket2.InsidePaymentService](spec, "inside_payment_service", inside_payment_db)
+	inside_payment_service := workflow.Service[train_ticket2.InsidePaymentService](spec, "inside_payment_service", inside_payment_db, payment_service, order_service)
 	inside_payment_service_ctr := applyDockerDefaults(spec, inside_payment_service, "inside_payment_service_proc", "inside_payment_service_container")
 	containers = append(containers, inside_payment_service_ctr)
 	allServices = append(allServices, inside_payment_service)
@@ -191,6 +191,11 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, cancel_service_ctr)
 	allServices = append(allServices, cancel_service)
 
+	rebook_service := workflow.Service[train_ticket2.RebookService](spec, "rebook_service", seat_service, travel_service, order_service, train_service, route_service, inside_payment_service)
+	rebook_service_ctr := applyDockerDefaults(spec, rebook_service, "rebook_service_proc", "rebook_service_container")
+	containers = append(containers, rebook_service_ctr)
+	allServices = append(allServices, rebook_service)
+
 	// ----
 	// HTTP
 	// ----
@@ -221,7 +226,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	allServices = append(allServices, admin_user_service)
 
 	dashboard := workflow.Service[train_ticket2.Dashboard](spec, "dashboard",
-		basic_service, config_service, contacts_service, payment_service, preserve_service, execute_service, cancel_service,
+		basic_service, config_service, contacts_service, payment_service, preserve_service, execute_service, cancel_service, rebook_service,
 		assurance_service, order_service, food_service, consign_service, delivery_service)
 	dashboard_ctr := applyHTTPDefaults(spec, dashboard, "dashboard_proc", "dashboard_container")
 	containers = append(containers, dashboard_ctr)

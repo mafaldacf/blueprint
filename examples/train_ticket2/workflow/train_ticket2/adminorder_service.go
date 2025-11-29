@@ -7,6 +7,7 @@ import (
 type AdminOrderService interface {
 	GetAllOrders(ctx context.Context) ([]Order, error)
 	AddOrder(ctx context.Context, order Order) (Order, error)
+	UpdateOrder(ctx context.Context, order Order) error
 	DeleteOrder(ctx context.Context, id string) error
 }
 
@@ -24,6 +25,10 @@ func (a *AdminOrderServiceImpl) GetAllOrders(ctx context.Context) ([]Order, erro
 
 func (a *AdminOrderServiceImpl) AddOrder(ctx context.Context, order Order) (Order, error) {
 	return a.orderService.CreateNewOrder(ctx, order)
+}
+
+func (a *AdminOrderServiceImpl) UpdateOrder(ctx context.Context, order Order) error {
+	return a.orderService.UpdateOrder(ctx, order)
 }
 
 func (a *AdminOrderServiceImpl) DeleteOrder(ctx context.Context, id string) error {

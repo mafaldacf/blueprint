@@ -48,7 +48,7 @@ func (c *CancelServiceImpl) CancelOrder(ctx context.Context, orderID string, log
 
 	if order.Status == ORDER_STATUS_NOT_PAID || order.Status == ORDER_STATUS_PAID || order.Status == ORDER_STATUS_CHANGE {
 		order.Status = ORDER_STATUS_CANCELED
-		_, err := c.orderService.UpdateStatus(ctx, order)
+		_, err := c.orderService.SaveOrderInfo(ctx, order)
 		if err != nil {
 			return err
 		}

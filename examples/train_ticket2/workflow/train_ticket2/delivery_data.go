@@ -7,3 +7,11 @@ type Delivery struct {
 	StoreName   string
 	StationName string
 }
+
+func (d *Delivery) getId() string {
+	return d.ID
+}
+
+func (d *Delivery) setId(id string) {
+	d.ID = id
+}

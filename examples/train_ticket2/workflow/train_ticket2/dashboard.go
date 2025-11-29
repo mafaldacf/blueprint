@@ -16,6 +16,9 @@ type Dashboard interface {
 	TicketCollect(ctx context.Context, orderID string) error
 	TicketExecute(ctx context.Context, orderID string) error
 
+	PayDifference(ctx context.Context, info RebookInfo) error
+	Rebook(ctx context.Context, info RebookInfo) error
+
 	QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error)
 }
 
@@ -27,6 +30,7 @@ type DashboardImpl struct {
 	preserveService PreserveService
 	executeService  ExecuteService
 	cancelService   CancelService
+	rebookService   RebookService
 
 	assuranceService AssuranceService
 	orderService     OrderService
@@ -43,6 +47,7 @@ func NewDashboardImpl(ctx context.Context,
 	preserveService PreserveService,
 	executeService ExecuteService,
 	cancelService CancelService,
+	rebookService RebookService,
 
 	assuranceService AssuranceService,
 	orderService OrderService,
@@ -58,6 +63,7 @@ func NewDashboardImpl(ctx context.Context,
 		preserveService: preserveService,
 		executeService:  executeService,
 		cancelService:   cancelService,
+		rebookService:   rebookService,
 
 		assuranceService: assuranceService,
 		orderService:     orderService,
@@ -113,6 +119,13 @@ func (d *DashboardImpl) CalculateRefund(ctx context.Context, orderID string) (st
 
 func (d *DashboardImpl) CancelOrder(ctx context.Context, orderID string, loginID string) error {
 	return d.cancelService.CancelOrder(ctx, orderID, loginID)
+}
+
+func (d *DashboardImpl) PayDifference(ctx context.Context, info RebookInfo) error {
+	return d.rebookService.PayDifference(ctx, info)
+}
+func (d *DashboardImpl) Rebook(ctx context.Context, info RebookInfo) error {
+	return d.rebookService.Rebook(ctx, info)
 }
 
 func (d *DashboardImpl) QueryOrderWithAllInfo(ctx context.Context, orderID string) (Order, FoodOrder, Assurance, ConsignRecord, Delivery, error) {

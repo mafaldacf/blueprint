@@ -5,17 +5,30 @@ import (
 )
 
 type AdminBasicInfoService interface {
-	AddStation(ctx context.Context, station Station) error
-	AddTrain(ctx context.Context, trainType TrainType) error
-	AddConfig(ctx context.Context, config Config) error
-	AddContact(ctx context.Context, contact Contact) error
-	AddPrice(ctx context.Context, config PriceConfig) error
-
-	DeleteStation(ctx context.Context, id string) error
-	DeleteTrain(ctx context.Context, id string) error
-	DeleteConfig(ctx context.Context, name string) error
+	ModifyContact(ctx context.Context, contact Contact) (bool, error)
+	GetAllContacts(ctx context.Context) ([]Contact, error)
 	DeleteContact(ctx context.Context, id string) error
+	AddContact(ctx context.Context, contact Contact) error
+
+	// Get all stations
+	// Mofidy station
+	DeleteStation(ctx context.Context, id string) error
+	AddStation(ctx context.Context, station Station) error
+	
+	// Get all trains
+	// Modify train
+	DeleteTrain(ctx context.Context, id string) error
+	AddTrain(ctx context.Context, trainType TrainType) error
+
+	// Get all configs
+	// Modify config
+	DeleteConfig(ctx context.Context, name string) error
+	AddConfig(ctx context.Context, config Config) error
+	
+	// Get all prices
+	// Modify price
 	DeletePrice(ctx context.Context, id string) error
+	AddPrice(ctx context.Context, config PriceConfig) error
 }
 
 type AdminBasicInfoServiceImpl struct {
@@ -40,6 +53,14 @@ func NewAdminBasicInfoServiceImpl(ctx context.Context,
 		contactsService: contactsService,
 		priceService:    priceService,
 	}, nil
+}
+
+func (a *AdminBasicInfoServiceImpl) ModifyContact(ctx context.Context, contact Contact) (bool, error) {
+	return a.contactsService.Modify(ctx, contact)
+}
+
+func (a *AdminBasicInfoServiceImpl) GetAllContacts(ctx context.Context) ([]Contact, error) {
+	return a.contactsService.GetAllContacts(ctx)
 }
 
 func (a *AdminBasicInfoServiceImpl) AddStation(ctx context.Context, station Station) error {

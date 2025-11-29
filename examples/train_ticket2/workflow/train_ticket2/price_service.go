@@ -12,11 +12,10 @@ import (
 )
 
 type PriceService interface {
-	FindByID(ctx context.Context, id string) (PriceConfig, error)
-	CreateNewPriceConfig(ctx context.Context, config PriceConfig) error
 	FindByRouteIDAndTrainType(ctx context.Context, routeID string, trainType string) (PriceConfig, error)
 	FindByRouteIDsAndTrainTypes(ctx context.Context, rtsAndTypes []string) (map[string]PriceConfig, error)
 	GetAllPriceConfig(ctx context.Context) ([]PriceConfig, error)
+	CreateNewPriceConfig(ctx context.Context, config PriceConfig) error
 	DeletePriceConfig(ctx context.Context, id string) error
 	UpdatePriceConfig(ctx context.Context, config PriceConfig) (bool, error)
 }
@@ -27,27 +26,6 @@ type PriceServiceImpl struct {
 
 func NewPriceServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (PriceService, error) {
 	return &PriceServiceImpl{priceDB: db}, nil
-}
-
-func (p *PriceServiceImpl) FindByID(ctx context.Context, id string) (PriceConfig, error) {
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
-	if err != nil {
-		return PriceConfig{}, err
-	}
-	query := bson.D{{Key: "ID", Value: id}}
-	res, err := coll.FindOne(ctx, query)
-	if err != nil {
-		return PriceConfig{}, err
-	}
-	var pc PriceConfig
-	exists, err := res.One(ctx, &pc)
-	if err != nil {
-		return PriceConfig{}, err
-	}
-	if !exists {
-		return PriceConfig{}, errors.New("PriceConfig with ID " + id + " does not exist")
-	}
-	return pc, nil
 }
 
 func (p *PriceServiceImpl) GetAllPriceConfig(ctx context.Context) ([]PriceConfig, error) {
@@ -91,7 +69,7 @@ func (p *PriceServiceImpl) CreateNewPriceConfig(ctx context.Context, pc PriceCon
 	if err != nil {
 		return err
 	}
-	_, err = p.FindByID(ctx, pc.ID)
+	_, err = p.findByID(ctx, pc.ID)
 	if err != nil {
 		return coll.InsertOne(ctx, pc)
 	} else {
@@ -147,4 +125,25 @@ func (p *PriceServiceImpl) FindByRouteIDsAndTrainTypes(ctx context.Context, rtsA
 	}
 	
 	return res, nil
+}
+
+func (p *PriceServiceImpl) findByID(ctx context.Context, id string) (PriceConfig, error) {
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	if err != nil {
+		return PriceConfig{}, err
+	}
+	query := bson.D{{Key: "ID", Value: id}}
+	res, err := coll.FindOne(ctx, query)
+	if err != nil {
+		return PriceConfig{}, err
+	}
+	var pc PriceConfig
+	exists, err := res.One(ctx, &pc)
+	if err != nil {
+		return PriceConfig{}, err
+	}
+	if !exists {
+		return PriceConfig{}, errors.New("PriceConfig with ID " + id + " does not exist")
+	}
+	return pc, nil
 }

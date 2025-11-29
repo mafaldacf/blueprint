@@ -87,7 +87,7 @@ func (p *PaymentServiceImpl) Pay(ctx context.Context, payment Payment) error {
 func (p *PaymentServiceImpl) AddMoney(ctx context.Context, payment Payment) error {
 	m := Money{}
 	m.UserID = payment.UserID
-	m.Price = payment.Price
+	m.Money = payment.Price
 	m.ID = uuid.New().String()
 
 	coll, err := p.moneyDB.GetCollection(ctx, "payment_db", "money")

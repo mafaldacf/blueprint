@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"golang.org/x/exp/slog"
 )
@@ -34,15 +35,18 @@ func (d *DeliveryServiceImpl) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		default:
-			var delivery Delivery
-			didpop, err := d.delQ.Pop(ctx, &delivery)
+			var delivery *Delivery
+			ok, err := d.delQ.Pop(ctx, delivery)
 			if err != nil {
 				slog.Error(fmt.Sprintf("DeliveryService unable to pull delivery info from deliver queue due to %v", err))
 			}
-			if didpop {
+			if ok {
 				coll, err := d.db.GetCollection(ctx, "delivery_db", "delivery")
 				if err != nil {
 					slog.Error(fmt.Sprintf("DeliveryService unable to obtain a collection to delivery database due to %v", err))
+				}
+				if delivery.getId() == "" {
+					delivery.setId(uuid.NewString())
 				}
 				err = coll.InsertOne(ctx, delivery)
 				if err != nil {

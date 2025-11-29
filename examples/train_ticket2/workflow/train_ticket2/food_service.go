@@ -10,6 +10,7 @@ import (
 )
 
 type FoodService interface {
+	// Find all food order
 	CreateFoodOrder(ctx context.Context, addFoodOrder FoodOrder) (FoodOrder, error)
 	CreateFoodBatches(ctx context.Context, foodOrderList []FoodOrder) error
 	UpdateFoodOrder(ctx context.Context, updateFoodOrder FoodOrder) error

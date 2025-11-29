@@ -6,8 +6,8 @@ import (
 
 type AdminUserService interface {
 	GetAllUsers(ctx context.Context) ([]User, error)
-	AddUser(ctx context.Context, user User) error
 	UpdateUser(ctx context.Context, user User) (bool, error)
+	AddUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, userID string) error
 }
 
