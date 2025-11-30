@@ -5,7 +5,7 @@ import (
 )
 
 type APIService interface {
-	RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castRequest []CastRequest, plotID int64, plotText string, thumbnailIDs []string, photoIDs []string, videoIDs []string, avgRating string, numRating int) (MovieId, MovieInfo, Plot, error)
+	RegisterMovie(ctx context.Context, req RegisterMovieRequest) (MovieId, MovieInfo, Plot, error)
 	ReadPage(ctx context.Context, reqID int64, title string, reviewStart int, reviewStop int) (MovieId, MovieInfo, []Review, []CastInfo, Plot, error)
 
 	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
@@ -38,7 +38,7 @@ func NewAPIServiceImpl(ctx context.Context, userService UserService, textService
 	return &APIServiceImpl{userService: userService, textService: textService, movieIdService: movieIdService, uniqueIdService: uniqueIdService, movieInfoService: movieInfoService, castInfoService: castInfoService, plotService: plotService, pageService: pageService}, nil
 }
 
-type CastRequest struct {
+type RegisterMovieRequestCast struct {
 	CastID     string
 	CastInfoID string
 	Character  string
@@ -48,14 +48,36 @@ type CastRequest struct {
 	Intro  string
 }
 
-func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movieID string, title string, castRequest []CastRequest, plotID int64, plotText string, thumbnailIDs []string, photoIDs []string, videoIDs []string, avgRating string, numRating int) (MovieId, MovieInfo, Plot, error) {
-	movie, err := api.movieIdService.RegisterMovieId(ctx, reqID, movieID, title)
+type RegisterMovieRequest struct {
+	reqID int64
+
+	// movieid
+	movieID string
+	title   string
+
+	// movieinfo
+	thumbnailIDs []string
+	photoIDs     []string
+	videoIDs     []string
+	avgRating    string
+	numRating    int
+
+	// castinfo
+	casts []RegisterMovieRequestCast
+
+	// plot
+	plotID   int64
+	plotText string
+}
+
+func (api *APIServiceImpl) RegisterMovie(ctx context.Context, req RegisterMovieRequest) (MovieId, MovieInfo, Plot, error) {
+	movie, err := api.movieIdService.RegisterMovieId(ctx, req.reqID, req.movieID, req.title)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, Plot{}, err
 	}
 
 	var casts []Cast
-	for _, cast := range castRequest {
+	for _, cast := range req.casts {
 		casts = append(casts, Cast{
 			CastID:     cast.CastID,
 			CastInfoID: cast.CastInfoID,
@@ -63,19 +85,20 @@ func (api *APIServiceImpl) RegisterMovie(ctx context.Context, reqID int64, movie
 		})
 	}
 
-	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, reqID, movie.MovieID, title, casts, plotID, thumbnailIDs, photoIDs, videoIDs, avgRating, numRating)
+	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, req.reqID, movie.MovieID, req.title, casts, req.plotID, 
+		req.thumbnailIDs, req.photoIDs, req.videoIDs, req.avgRating, req.numRating)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, Plot{}, err
 	}
 
-	for _, cast := range castRequest {
-		_, err := api.castInfoService.WriteCastInfo(ctx, reqID, cast.CastInfoID, cast.Name, cast.Gender, cast.Intro)
+	for _, cast := range req.casts {
+		_, err := api.castInfoService.WriteCastInfo(ctx, req.reqID, cast.CastInfoID, cast.Name, cast.Gender, cast.Intro)
 		if err != nil {
 			return MovieId{}, MovieInfo{}, Plot{}, err
 		}
 	}
 
-	plot, err := api.plotService.WritePlot(ctx, reqID, plotID, plotText)
+	plot, err := api.plotService.WritePlot(ctx, req.reqID, req.plotID, req.plotText)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, Plot{}, err
 	}
