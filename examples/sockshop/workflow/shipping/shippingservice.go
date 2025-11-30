@@ -7,85 +7,82 @@ package shipping
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 // ShippingService implements the SockShop shipping microservice
 type ShippingService interface {
-	// Submit a shipment to be shipped.  The actual handling of the
-	// shipment will happen asynchronously by the queue-master service.
-	//
-	// Returns the submitted shipment or an error
 	PostShipping(ctx context.Context, shipment Shipment) (Shipment, error)
-
-	// Get a shipment's status
 	GetShipment(ctx context.Context, id string) (Shipment, error)
-
-	// Update a shipment's status; called by the queue master
 	UpdateStatus(ctx context.Context, id, status string) error
 }
 
-// Represents a shipment for an order
-type Shipment struct {
-	ID     string
-	Name   string
-	Status string
-}
-
-// Instantiates a shipping service that submits all shipments to a queue for asynchronous background processing
-func NewShippingService(ctx context.Context, queue backend.Queue, db backend.NoSQLDatabase) (ShippingService, error) {
-	c, err := db.GetCollection(ctx, "shipping_service", "shipments")
-	return &shippingImpl{
+func NewShippingServiceImpl(ctx context.Context, queue backend.Queue, db backend.NoSQLDatabase) (ShippingService, error) {
+	return &ShippingServiceImpl{
 		q:  queue,
-		db: c,
-	}, err
+		db: db,
+	}, nil
 }
 
-type shippingImpl struct {
+type ShippingServiceImpl struct {
 	q  backend.Queue
-	db backend.NoSQLCollection
+	db backend.NoSQLDatabase
 }
 
-// PostShipping implements ShippingService.
-func (service *shippingImpl) PostShipping(ctx context.Context, shipment Shipment) (Shipment, error) {
+func (service *ShippingServiceImpl) PostShipping(ctx context.Context, shipment Shipment) (Shipment, error) {
 	// Push to the queue to be shipped
 	shipped, err := service.q.Push(ctx, shipment)
 	if err != nil {
 		return shipment, err
 	} else if !shipped {
-		return shipment, fmt.Errorf("Unable to submit shipment %v %v to the shipping queue", shipment.ID, shipment.Name)
+		return shipment, errors.Errorf("Unable to submit shipment %v %v to the shipping queue", shipment.ID, shipment.Name)
 	}
 
-	// Insert into the shipment DB
-	return shipment, service.db.InsertOne(ctx, shipment)
-}
-
-// GetShipment implements ShippingService.
-func (s *shippingImpl) GetShipment(ctx context.Context, id string) (Shipment, error) {
-	cursor, err := s.db.FindOne(ctx, bson.D{{"id", id}})
+	collection, err := service.db.GetCollection(ctx, "ship_db", "shipments")
 	if err != nil {
 		return Shipment{}, err
 	}
+	return shipment, collection.InsertOne(ctx, shipment)
+}
+
+// GetShipment implements ShippingService.
+func (s *ShippingServiceImpl) GetShipment(ctx context.Context, id string) (Shipment, error) {
+	collection, err := s.db.GetCollection(ctx, "ship_db", "shipments")
+	if err != nil {
+		return Shipment{}, err
+	}
+
+	cursor, err := collection.FindOne(ctx, bson.D{{Key: "ID", Value: id}})
+	if err != nil {
+		return Shipment{}, err
+	}
+
 	var shipment Shipment
 	shipmentExists, err := cursor.One(ctx, &shipment)
 	if err != nil {
 		return Shipment{}, err
 	} else if !shipmentExists {
-		return Shipment{}, fmt.Errorf("unknown shipment %v", id)
+		return Shipment{}, errors.Errorf("unknown shipment %v", id)
 	}
 	return shipment, nil
 }
 
 // UpdateStatus implements ShippingService.
-func (s *shippingImpl) UpdateStatus(ctx context.Context, id string, status string) error {
-	updated, err := s.db.UpdateOne(ctx, bson.D{{"id", id}}, bson.D{{"$set", bson.D{{"status", status}}}})
+func (s *ShippingServiceImpl) UpdateStatus(ctx context.Context, id string, status string) error {
+	collection, err := s.db.GetCollection(ctx, "ship_db", "shipments")
+	if err != nil {
+		return err
+	}
+
+	updated, err := collection.UpdateOne(ctx, bson.D{{Key: "ID", Value: id}}, bson.D{{Key: "$set", Value: bson.D{{Key: "status", Value: status}}}})
 	if err != nil {
 		return err
 	} else if updated == 0 {
-		return fmt.Errorf("unknown shipment %v", id)
+		return errors.Errorf("unknown shipment %v", id)
 	}
+	
 	return nil
 }

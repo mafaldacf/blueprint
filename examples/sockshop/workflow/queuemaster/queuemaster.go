@@ -5,42 +5,29 @@ package queuemaster
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sync/atomic"
 	"time"
 
-	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/shipping"
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
-	"golang.org/x/exp/slog"
+
+	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/shipping"
 )
 
-// QueueMaster implements the SockShop queue-master microservice.
-//
-// It is not a service that can be called; instead it pulls shipments from
-// the shipments queue
 type QueueMaster interface {
-	// Runs the background goroutine that continually pulls elements from
-	// the queue.  Does not return until ctx is cancelled or an error is
-	// encountered
 	Run(ctx context.Context) error
 }
 
-// Creates a new QueueMaster service.
-//
-// New: once an order is shipped, it will update the order status in the orderservice.
-func NewQueueMaster(ctx context.Context, queue backend.Queue, shipping shipping.ShippingService) (QueueMaster, error) {
-	return newQueueMasterImpl(queue, shipping, false), nil
-}
-
-func newQueueMasterImpl(queue backend.Queue, shipping shipping.ShippingService, exitOnError bool) *queueMasterImpl {
-	return &queueMasterImpl{
+func NewQueueMasterImpl(ctx context.Context, queue backend.Queue, shipping shipping.ShippingService) (QueueMaster, error) {
+	return &QueueMasterImpl{
 		q:           queue,
 		shipping:    shipping,
-		exitOnError: exitOnError,
+		exitOnError: false,
 		processed:   0,
-	}
+	}, nil
 }
 
-type queueMasterImpl struct {
+type QueueMasterImpl struct {
 	q           backend.Queue
 	shipping    shipping.ShippingService
 	exitOnError bool
@@ -49,7 +36,7 @@ type queueMasterImpl struct {
 
 // Starts a processing loop that continually pulls elements from the queue.
 // Does not exit when an error is encountered; only when ctx is cancelled
-func (q *queueMasterImpl) Run(ctx context.Context) error {
+func (q *QueueMasterImpl) Run(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():

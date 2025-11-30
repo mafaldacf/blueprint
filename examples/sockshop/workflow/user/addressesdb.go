@@ -4,36 +4,30 @@ import (
 	"context"
 	"errors"
 
-	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type addressStore struct {
-	c backend.NoSQLCollection
-}
-
-// The format of an Address stored in the database
 type dbAddress struct {
 	Address `bson:",inline"`
 	ID      primitive.ObjectID `bson:"_id"`
 }
 
-func newAddressStore(ctx context.Context, db backend.NoSQLDatabase) (*addressStore, error) {
-	c, err := db.GetCollection(ctx, "userservice", "addresses")
-	return &addressStore{c: c}, err
-}
-
 // Gets an address by object Id
-func (s *addressStore) getAddress(ctx context.Context, addressid string) (Address, error) {
+func (s *UserServiceImpl) addressdb_GetAddress(ctx context.Context, addressid string) (Address, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "address")
+	if err != nil {
+		return Address{}, err
+	}
+
 	// Convert the address ID
 	id, err := primitive.ObjectIDFromHex(addressid)
 	if err != nil {
-		return Address{}, errors.New("Invalid ID Hex")
+		return Address{}, errors.New("invalid ID Hex")
 	}
 
 	// Run the query
-	cursor, err := s.c.FindOne(ctx, bson.D{{"_id", id}})
+	cursor, err := collection.FindOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		return Address{}, err
 	}
@@ -46,7 +40,12 @@ func (s *addressStore) getAddress(ctx context.Context, addressid string) (Addres
 }
 
 // Gets addresses from the address store
-func (s *addressStore) getAddresses(ctx context.Context, addressIds []string) ([]Address, error) {
+func (s *UserServiceImpl) addressdb_GetAddresses(ctx context.Context, addressIds []string) ([]Address, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "address")
+	if err != nil {
+		return nil, err
+	}
+
 	if len(addressIds) == 0 {
 		return nil, nil
 	}
@@ -58,7 +57,7 @@ func (s *addressStore) getAddresses(ctx context.Context, addressIds []string) ([
 	}
 
 	// Run the query
-	cursor, err := s.c.FindMany(ctx, bson.D{{"_id", bson.D{{"$in", ids}}}})
+	cursor, err := collection.FindMany(ctx, bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}})
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +74,14 @@ func (s *addressStore) getAddresses(ctx context.Context, addressIds []string) ([
 	return addresses, err
 }
 
-func (s *addressStore) getAllAddresses(ctx context.Context) ([]Address, error) {
+func (s *UserServiceImpl) addressdb_GetAllAddresses(ctx context.Context) ([]Address, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "address")
+	if err != nil {
+		return nil, err
+	}
+
 	// Run the query
-	cursor, err := s.c.FindMany(ctx, bson.D{})
+	cursor, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
@@ -95,10 +99,15 @@ func (s *addressStore) getAllAddresses(ctx context.Context) ([]Address, error) {
 }
 
 // Adds an address to the address DB
-func (s *addressStore) createAddress(ctx context.Context, address *Address) (primitive.ObjectID, error) {
+func (s *UserServiceImpl) addressdb_CreateAddress(ctx context.Context, address *Address) (primitive.ObjectID, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "address")
+	if err != nil {
+		return primitive.ObjectID{}, err
+	}
+
 	// Create and insert to DB
 	dbaddress := dbAddress{Address: *address, ID: primitive.NewObjectID()}
-	if _, err := s.c.UpsertID(ctx, dbaddress.ID, dbaddress); err != nil {
+	if _, err := collection.UpsertID(ctx, dbaddress.ID, dbaddress); err != nil {
 		return dbaddress.ID, err
 	}
 
@@ -109,7 +118,12 @@ func (s *addressStore) createAddress(ctx context.Context, address *Address) (pri
 }
 
 // Creates or updates the provided addresses in the addressStore.
-func (s *addressStore) createAddresses(ctx context.Context, addresses []Address) ([]primitive.ObjectID, error) {
+func (s *UserServiceImpl) addressdb_CreateAddresses(ctx context.Context, addresses []Address) ([]primitive.ObjectID, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "address")
+	if err != nil {
+		return nil, err
+	}
+
 	if len(addresses) == 0 {
 		return []primitive.ObjectID{}, nil
 	}
@@ -119,7 +133,7 @@ func (s *addressStore) createAddresses(ctx context.Context, addresses []Address)
 			Address: address,
 			ID:      primitive.NewObjectID(),
 		}
-		_, err := s.c.UpsertID(ctx, toInsert.ID, toInsert)
+		_, err := collection.UpsertID(ctx, toInsert.ID, toInsert)
 		if err != nil {
 			return createdIds, err
 		}
@@ -129,20 +143,19 @@ func (s *addressStore) createAddresses(ctx context.Context, addresses []Address)
 	return createdIds, nil
 }
 
-func (s *addressStore) removeAddress(ctx context.Context, addressid string) error {
+func (s *UserServiceImpl) addressdb_RemoveAddress(ctx context.Context, addressid string) error {
 	// Convert the address ID
 	id, err := primitive.ObjectIDFromHex(addressid)
 	if err != nil {
-		return errors.New("Invalid ID Hex")
+		return errors.New("invalid ID Hex")
 	}
-	return s.removeAddresses(ctx, []primitive.ObjectID{id})
+	return s.addressdb_RemoveAddresses(ctx, []primitive.ObjectID{id})
 }
 
-func (s *addressStore) removeAddresses(ctx context.Context, ids []primitive.ObjectID) error {
-	return s.c.DeleteMany(ctx, bson.D{{"_id", bson.D{{"$in", ids}}}})
-}
-
-// Set the address's ID to be the hex string of the database ObjectID
-func (a *dbAddress) addID() {
-	a.Address.ID = a.ID.Hex()
+func (s *UserServiceImpl) addressdb_RemoveAddresses(ctx context.Context, ids []primitive.ObjectID) error {
+	collection, err := s.db.GetCollection(ctx, "user_db", "address")
+	if err != nil {
+		return err
+	}
+	return collection.DeleteMany(ctx, bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}})
 }

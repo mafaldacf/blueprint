@@ -12,54 +12,28 @@ use (
 	./examples/coupons_app_cache/workflow
 	./examples/coupons_app_sql/wiring
 	./examples/coupons_app_sql/workflow
-	//./examples/digota/wiring
-	//./examples/digota/workflow
 	./examples/dsb_hotel/tests
 	./examples/dsb_hotel/wiring
 	./examples/dsb_hotel/workflow
 	./examples/dsb_hotel/workload
-	//./examples/dsb_hotel2/wiring
-	//./examples/dsb_hotel2/workflow
-	./examples/dsb_media/wiring
-	./examples/dsb_media/workflow
-	//./examples/dsb_media_sql/wiring
-	//./examples/dsb_media_sql/workflow
-	//./examples/dsb_media_nosql/wiring
-	//./examples/dsb_media_nosql/workflow
-	./examples/dsb_sn/tests
-	./examples/dsb_sn/wiring
-	./examples/dsb_sn/workflow
-	//./examples/dsb_sn2/wiring
-	//./examples/dsb_sn2/workflow
+	./examples/dsb_mediamicroservices/wiring
+	./examples/dsb_mediamicroservices/workflow
 	./examples/employee_app/wiring
 	./examples/employee_app/workflow
 	./examples/foobar/wiring
-	//./examples/foobar/workflow
-	//./examples/leaf/wiring
 	./examples/leaf/workflow
 	./examples/postnotification/wiring
 	./examples/postnotification/workflow
-	//./examples/tcpw/wiring
-	//./examples/tcpw/workflow
+	./examples/dsb_socialnetwork/wiring
+	./examples/dsb_socialnetwork/workflow
 	./examples/shopping_app/wiring
 	./examples/shopping_app/workflow
 	./examples/shopping_simple/wiring
 	./examples/shopping_simple/workflow
-	./examples/sockshop/tests
 	./examples/sockshop/wiring
 	./examples/sockshop/workflow
-	./examples/sockshop/workload
-	./examples/sockshop2/wiring
-	./examples/sockshop2/workflow
-	./examples/sockshop3/wiring
-	./examples/sockshop3/workflow
 	./examples/threechain2/wiring
 	./examples/threechain2/workflow
-	./examples/train_ticket/tests
-	./examples/train_ticket/wiring
-	./examples/train_ticket/workflow
-	//./examples/train_ticket2/wiring
-	//./examples/train_ticket2/workflow
 	./plugins
 	./runtime
 	./test/wiring

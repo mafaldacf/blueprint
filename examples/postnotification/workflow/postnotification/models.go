@@ -1,7 +1,7 @@
 package postnotification
 
 type Creator struct {
-	Username string //`json:"username"`
+	Username string
 }
 
 type Post struct {
@@ -14,20 +14,10 @@ type Post struct {
 	Creator   Creator
 }
 
-type Media struct {
-	MediaID int64
-	Content string
-}
-
 type Message struct {
-	ReqID     string
-	PostID    string
-	Timestamp string
-}
-
-type Timeline struct {
-	ReqID  int64
-	PostID int64
+	ReqID     int64
+	PostID    int64
+	Timestamp int64
 }
 
 type Analytics struct {

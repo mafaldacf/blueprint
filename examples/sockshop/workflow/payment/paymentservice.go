@@ -9,38 +9,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 )
-
-// PaymentService provides payment services
 type PaymentService interface {
 	Authorise(ctx context.Context, amount float32) (Authorisation, error)
 }
 
-type Authorisation struct {
-	Authorised bool   `json:"authorised"`
-	Message    string `json:"message"`
-}
-
-// Returns a payment service where any transaction above the preconfigured
-// threshold will return an invalid payment amount
-func NewPaymentService(ctx context.Context, declineOverAmount string) (PaymentService, error) {
-	amount, err := strconv.ParseFloat(declineOverAmount, 32)
-	if err != nil {
-		return nil, fmt.Errorf("invalid declineOverAmount %v; expected a float32", declineOverAmount)
-	}
-	return &paymentImpl{
-		declineOverAmount: float32(amount),
+func NewPaymentServiceImpl(ctx context.Context, declineOverAmount string) (PaymentService, error) {
+	return &PaymentServiceImpl{
+		declineOverAmount: float32(50),
 	}, nil
 }
 
-type paymentImpl struct {
+type PaymentServiceImpl struct {
 	declineOverAmount float32
 }
 
 var ErrInvalidPaymentAmount = errors.New("invalid payment amount")
 
-func (s *paymentImpl) Authorise(ctx context.Context, amount float32) (Authorisation, error) {
+func (s *PaymentServiceImpl) Authorise(ctx context.Context, amount float32) (Authorisation, error) {
 	if amount == 0 {
 		return Authorisation{}, ErrInvalidPaymentAmount
 	}

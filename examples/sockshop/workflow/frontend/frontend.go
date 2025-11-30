@@ -1,98 +1,61 @@
-// Package frontend implements the SockShop frontend service, typically deployed via HTTP
+// Package Frontend implements the SockShop Frontend service, typically deployed via HTTP
 package frontend
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/cart"
-	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/catalogue"
-	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/order"
-	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/user"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
+
+	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/carts"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/catalogue"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/orders"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop/workflow/user"
 )
 
-type (
-	// The SockShop Frontend receives requests from users and proxies them to the application's other services
-	Frontend interface {
-		// List items in cart for current logged in user, or for the current session if not logged in.
-		// SessionID can be the empty string for a non-logged in user / new session
-		GetCart(ctx context.Context, sessionID string) ([]cart.Item, error)
+type Frontend interface {
+	// cart
+	GetCart(ctx context.Context, sessionID string) ([]carts.Item, error)
+	AddItem(ctx context.Context, sessionID string, itemID string) (newSessionID string, err error)
+	DeleteCart(ctx context.Context, sessionID string) error
+	RemoveItem(ctx context.Context, sessionID string, itemID string) error
+	UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (newSessionID string, err error)
 
-		// Deletes the entire cart for a user/session
-		DeleteCart(ctx context.Context, sessionID string) error
+	// items
+	ListItems(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]catalogue.Sock, error)
+	GetSock(ctx context.Context, itemID string) (catalogue.Sock, error)
 
-		// Removes an item from the user/session's cart
-		RemoveItem(ctx context.Context, sessionID string, itemID string) error
+	// tags
+	ListTags(ctx context.Context) ([]string, error)
 
-		// Adds an item to the user/session's cart.
-		// If there is no user or session, then a session is created and the sessionID is returned.
-		AddItem(ctx context.Context, sessionID string, itemID string) (newSessionID string, err error)
+	// orders
+	NewOrder(ctx context.Context, userID, addressID, cardID, cartID string) (orders.Order, error)
+	GetOrders(ctx context.Context, userID string) ([]orders.Order, error)
+	GetOrder(ctx context.Context, orderID string) (orders.Order, error)
 
-		// Update item quantity in the user/session's cart
-		// If there is no user or session, then a session is created and the sessionID is returned.
-		UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (newSessionID string, err error)
+	// users
+	Login(ctx context.Context, sessionID, username, password string) (newSessionID string, u user.User, err error)
+	Register(ctx context.Context, sessionID, username, password, email, first, last string) (newSessionID string, err error)
+	GetUser(ctx context.Context, userID string) (user.User, error)
+	GetAddress(ctx context.Context, addressID string) (user.Address, error)
+	PostAddress(ctx context.Context, userID string, address user.Address) (string, error)
+	GetCard(ctx context.Context, cardID string) (user.Card, error)
+	PostCard(ctx context.Context, userID string, card user.Card) (string, error)
 
-		// List socks that match any of the tags specified.  Sort the results by the specified database column.
-		// order can be "" in which case the default order is used.
-		// pageNum is 1-indexed
-		// then return a subset of the results.
-		ListItems(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]catalogue.Sock, error)
-
-		// Gets details about a [Sock]
-		GetSock(ctx context.Context, itemID string) (catalogue.Sock, error)
-
-		// Lists all tags
-		ListTags(ctx context.Context) ([]string, error)
-
-		// Place an order for the specified items
-		NewOrder(ctx context.Context, userID, addressID, cardID, cartID string) (order.Order, error)
-
-		// Get all orders for a customer, sorted by date
-		GetOrders(ctx context.Context, userID string) ([]order.Order, error)
-
-		// Get an order by ID
-		GetOrder(ctx context.Context, orderID string) (order.Order, error)
-
-		// Log in to an existing user account.  Returns an error if the password
-		// doesn't match the registered password
-		// Returns the new session ID, which will be the user ID of the logged in user.
-		Login(ctx context.Context, sessionID, username, password string) (newSessionID string, u user.User, err error)
-
-		// Register a new user account
-		// Returns the new session ID, which will be the user ID of the registered user.
-		Register(ctx context.Context, sessionID, username, password, email, first, last string) (newSessionID string, err error)
-
-		// Look up a user by customer ID
-		GetUser(ctx context.Context, userID string) (user.User, error)
-
-		// Look up an address by address ID
-		GetAddress(ctx context.Context, addressID string) (user.Address, error)
-
-		// Adds a new address for a customer
-		PostAddress(ctx context.Context, userID string, address user.Address) (string, error)
-
-		// Look up a card by card id.
-		GetCard(ctx context.Context, cardID string) (user.Card, error)
-
-		// Adds a new card for a customer
-		PostCard(ctx context.Context, userID string, card user.Card) (string, error)
-
-		// Loads the catalogue in the catalogue service
-		LoadCatalogue(ctx context.Context) (string, error)
-	}
-)
-
-type frontend struct {
-	user      user.UserService
-	catalogue catalogue.CatalogueService
-	cart      cart.CartService
-	order     order.OrderService
+	// extra endpoints
+	// catalogue
+	//LoadCatalogue(ctx context.Context) (string, error)
 }
 
-// Instantiates the Frontend service, which makes calls to the user, catalogue, cart, and order services
-func NewFrontend(ctx context.Context, user user.UserService, catalogue catalogue.CatalogueService, cart cart.CartService, order order.OrderService) (Frontend, error) {
-	f := &frontend{
+type FrontendImpl struct {
+	user      user.UserService
+	catalogue catalogue.CatalogueService
+	cart      carts.CartService
+	order     orders.OrderService
+}
+
+func NewFrontendImpl(ctx context.Context, user user.UserService, catalogue catalogue.CatalogueService, cart carts.CartService, order orders.OrderService) (Frontend, error) {
+	f := &FrontendImpl{
 		user:      user,
 		catalogue: catalogue,
 		cart:      cart,
@@ -101,8 +64,7 @@ func NewFrontend(ctx context.Context, user user.UserService, catalogue catalogue
 	return f, nil
 }
 
-// AddItem implements Frontend.
-func (f *frontend) AddItem(ctx context.Context, sessionID string, itemID string) (string, error) {
+func (f *FrontendImpl) AddItem(ctx context.Context, sessionID string, itemID string) (string, error) {
 	if sessionID == "" {
 		sessionID = uuid.NewString()
 	}
@@ -112,12 +74,11 @@ func (f *frontend) AddItem(ctx context.Context, sessionID string, itemID string)
 		return sessionID, err
 	}
 
-	_, err = f.cart.AddItem(ctx, sessionID, cart.Item{ID: sock.ID, Quantity: 1, UnitPrice: sock.Price})
+	_, err = f.cart.AddItem(ctx, sessionID, carts.Item{ID: sock.SockID, Quantity: 1, UnitPrice: sock.Price})
 	return sessionID, err
 }
 
-// RemoteItem implements Frontend.
-func (f *frontend) RemoveItem(ctx context.Context, sessionID string, itemID string) error {
+func (f *FrontendImpl) RemoveItem(ctx context.Context, sessionID string, itemID string) error {
 	if sessionID == "" {
 		return nil
 	}
@@ -125,8 +86,7 @@ func (f *frontend) RemoveItem(ctx context.Context, sessionID string, itemID stri
 	return f.cart.RemoveItem(ctx, sessionID, itemID)
 }
 
-// GetCart implements Frontend.
-func (f *frontend) GetCart(ctx context.Context, sessionID string) ([]cart.Item, error) {
+func (f *FrontendImpl) GetCart(ctx context.Context, sessionID string) ([]carts.Item, error) {
 	if sessionID == "" {
 		return nil, nil
 	}
@@ -134,8 +94,7 @@ func (f *frontend) GetCart(ctx context.Context, sessionID string) ([]cart.Item, 
 	return f.cart.GetCart(ctx, sessionID)
 }
 
-// DeleteCart implements Frontend.
-func (f *frontend) DeleteCart(ctx context.Context, sessionID string) error {
+func (f *FrontendImpl) DeleteCart(ctx context.Context, sessionID string) error {
 	if sessionID == "" {
 		return nil
 	}
@@ -143,82 +102,73 @@ func (f *frontend) DeleteCart(ctx context.Context, sessionID string) error {
 	return f.cart.DeleteCart(ctx, sessionID)
 }
 
-// GetUser implements Frontend.
-func (f *frontend) GetUser(ctx context.Context, userID string) (user.User, error) {
+func (f *FrontendImpl) GetUser(ctx context.Context, userID string) (user.User, error) {
 	if userID == "" {
-		return user.User{}, fmt.Errorf("no userID specified")
+		return user.User{}, errors.Errorf("no userID specified")
 	}
 
 	users, err := f.user.GetUsers(ctx, userID)
 	if err != nil {
 		return user.User{}, err
 	} else if len(users) == 0 {
-		return user.User{}, fmt.Errorf("invalid userID %v", userID)
+		return user.User{}, errors.Errorf("invalid userID %v", userID)
 	} else {
 		return users[0], nil
 	}
 }
 
-// GetAddresses implements Frontend.
-func (f *frontend) GetAddress(ctx context.Context, addressID string) (user.Address, error) {
+func (f *FrontendImpl) GetAddress(ctx context.Context, addressID string) (user.Address, error) {
 	if addressID == "" {
-		return user.Address{}, fmt.Errorf("no addressID specified")
+		return user.Address{}, errors.Errorf("no addressID specified")
 	}
 	addrs, err := f.user.GetAddresses(ctx, addressID)
 	if err != nil {
 		return user.Address{}, err
 	} else if len(addrs) == 0 {
-		return user.Address{}, fmt.Errorf("invalid addressID %v", addressID)
+		return user.Address{}, errors.Errorf("invalid addressID %v", addressID)
 	} else {
 		return addrs[0], nil
 	}
 }
 
-// GetCards implements Frontend.
-func (f *frontend) GetCard(ctx context.Context, cardID string) (user.Card, error) {
+func (f *FrontendImpl) GetCard(ctx context.Context, cardID string) (user.Card, error) {
 	if cardID == "" {
-		return user.Card{}, fmt.Errorf("no cardID specified")
+		return user.Card{}, errors.Errorf("no cardID specified")
 	}
 	cards, err := f.user.GetCards(ctx, cardID)
 	if err != nil {
 		return user.Card{}, err
 	} else if len(cards) == 0 {
-		return user.Card{}, fmt.Errorf("invalid cardID %v", cardID)
+		return user.Card{}, errors.Errorf("invalid cardID %v", cardID)
 	} else {
 		return cards[0], nil
 	}
 }
 
-// GetOrder implements Frontend.
-func (f *frontend) GetOrder(ctx context.Context, orderID string) (order.Order, error) {
+func (f *FrontendImpl) GetOrder(ctx context.Context, orderID string) (orders.Order, error) {
 	return f.order.GetOrder(ctx, orderID)
 }
 
-// GetOrders implements Frontend.
-func (f *frontend) GetOrders(ctx context.Context, userID string) ([]order.Order, error) {
+func (f *FrontendImpl) GetOrders(ctx context.Context, userID string) ([]orders.Order, error) {
 	if userID == "" {
-		return nil, fmt.Errorf("no userID specified")
+		return nil, errors.Errorf("no userID specified")
 	}
 	return f.order.GetOrders(ctx, userID)
 }
 
-// GetSock implements Frontend.
-func (f *frontend) GetSock(ctx context.Context, itemID string) (catalogue.Sock, error) {
+func (f *FrontendImpl) GetSock(ctx context.Context, itemID string) (catalogue.Sock, error) {
 	return f.catalogue.Get(ctx, itemID)
 }
 
-// ListItems implements Frontend.
-func (f *frontend) ListItems(ctx context.Context, tags []string, order string, pageNum int, pageSize int) ([]catalogue.Sock, error) {
+func (f *FrontendImpl) ListItems(ctx context.Context, tags []string, order string, pageNum int, pageSize int) ([]catalogue.Sock, error) {
 	return f.catalogue.List(ctx, tags, order, pageNum, pageSize)
 }
 
-// ListTags implements Frontend.
-func (f *frontend) ListTags(ctx context.Context) ([]string, error) {
+func (f *FrontendImpl) ListTags(ctx context.Context) ([]string, error) {
 	return f.catalogue.Tags(ctx)
 }
 
-// Login implements Frontend.  Merges the session into the user, and returns the user ID
-func (f *frontend) Login(ctx context.Context, sessionID string, username string, password string) (string, user.User, error) {
+func (f *FrontendImpl) Login(ctx context.Context, sessionID string, username string, password string) (string, user.User, error) {
 	u, err := f.user.Login(ctx, username, password)
 	if err != nil {
 		return sessionID, user.User{}, err
@@ -233,23 +183,19 @@ func (f *frontend) Login(ctx context.Context, sessionID string, username string,
 	return u.UserID, u, nil
 }
 
-// NewOrder implements Frontend.
-func (f *frontend) NewOrder(ctx context.Context, userID string, addressID string, cardID string, cartID string) (order.Order, error) {
+func (f *FrontendImpl) NewOrder(ctx context.Context, userID string, addressID string, cardID string, cartID string) (orders.Order, error) {
 	return f.order.NewOrder(ctx, userID, addressID, cardID, cartID)
 }
 
-// PostAddress implements Frontend.
-func (f *frontend) PostAddress(ctx context.Context, userID string, address user.Address) (string, error) {
+func (f *FrontendImpl) PostAddress(ctx context.Context, userID string, address user.Address) (string, error) {
 	return f.user.PostAddress(ctx, userID, address)
 }
 
-// PostCard implements Frontend.
-func (f *frontend) PostCard(ctx context.Context, userID string, card user.Card) (string, error) {
+func (f *FrontendImpl) PostCard(ctx context.Context, userID string, card user.Card) (string, error) {
 	return f.user.PostCard(ctx, userID, card)
 }
 
-// Register implements Frontend.
-func (f *frontend) Register(ctx context.Context, sessionID string, username string, password string, email string, first string, last string) (string, error) {
+func (f *FrontendImpl) Register(ctx context.Context, sessionID string, username string, password string, email string, first string, last string) (string, error) {
 	userID, err := f.user.Register(ctx, username, password, email, first, last)
 	if err != nil {
 		return sessionID, err
@@ -262,23 +208,22 @@ func (f *frontend) Register(ctx context.Context, sessionID string, username stri
 	}
 }
 
-// UpdateItem implements Frontend.
-func (f *frontend) UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (string, error) {
+func (f *FrontendImpl) UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (string, error) {
 	item, err := f.catalogue.Get(ctx, itemID)
 	if err != nil {
 		return sessionID, err
 	}
 
-	return sessionID, f.cart.UpdateItem(ctx, sessionID, cart.Item{ID: item.ID, Quantity: quantity, UnitPrice: item.Price})
+	return sessionID, f.cart.UpdateItem(ctx, sessionID, carts.Item{ID: item.SockID, Quantity: quantity, UnitPrice: item.Price})
 }
 
-func (f *frontend) LoadCatalogue(ctx context.Context) (string, error) {
+func (f *FrontendImpl) LoadCatalogue(ctx context.Context) (string, error) {
 	err_msg := "Failed to load catalogue"
 	var alltags = []string{"brown", "geek", "formal", "blue", "skin", "red", "action", "sport", "black", "magic", "green"}
 
 	sock := func(name, description string, price float32, qty int, url1, url2 string, tags ...string) catalogue.Sock {
 		return catalogue.Sock{Name: name, Description: description,
-			Price: price, Quantity: qty, ImageURL_1: url1, ImageURL_2: url2, Tags: tags}
+			Price: price, Quantity: qty, ImageURL1: url1, ImageURL2: url2, Tags: tags}
 	}
 
 	var socks = []catalogue.Sock{

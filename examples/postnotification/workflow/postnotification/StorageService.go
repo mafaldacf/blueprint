@@ -3,107 +3,79 @@ package postnotification
 import (
 	"context"
 	"math/rand"
-	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
-
-	"github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification/common"
 )
 
 type StorageService interface {
-	//StorePostCache(ctx context.Context, reqID int64, post Post) error
-	StorePostNoSQL(ctx context.Context, reqID int64, post Post) (int64, error)
-	//ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error)
-	ReadPostNoSQL(ctx context.Context, reqID int64, postID int64) (Post, Analytics, error)
-	ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error)
+	StorePost(ctx context.Context, reqID int64, text string) (int64, error)
+	ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error)
+	DeletePost(ctx context.Context, postID int64) error
 }
 
 type StorageServiceImpl struct {
-	analyticsService AnalyticsService
-	mediaService     MediaService
-	posts_cache      backend.Cache
-	postsDb          backend.NoSQLDatabase
-	analyticsQueue   backend.Queue
+	postsDb backend.NoSQLDatabase
 }
 
-func NewStorageServiceImpl(ctx context.Context, analyticsService AnalyticsService, mediaService MediaService, posts_cache backend.Cache, postsDb backend.NoSQLDatabase, analyticsQueue backend.Queue) (StorageService, error) {
-	s := &StorageServiceImpl{analyticsService: analyticsService, mediaService: mediaService, posts_cache: posts_cache, postsDb: postsDb, analyticsQueue: analyticsQueue}
+func NewStorageServiceImpl(ctx context.Context, postsDb backend.NoSQLDatabase) (StorageService, error) {
+	s := &StorageServiceImpl{postsDb: postsDb}
 	return s, nil
 }
 
-func (s *StorageServiceImpl) ReadPostMedia(ctx context.Context, reqID int64, postID int64) (Media, error) {
-	var post Post
+func (s *StorageServiceImpl) StorePost(ctx context.Context, reqID int64, text string) (int64, error) {
+	postID := rand.Int63()
+	timestamp := rand.Int63()
+	mentions := []string{"alice", "bob"}
 
-	postIDStr := strconv.FormatInt(postID, 10)
-	s.posts_cache.Get(ctx, postIDStr, &post)
-
-	var media Media
-	mediaID := post.PostID
-	media, _ = s.mediaService.ReadMedia(ctx, mediaID)
-	return media, nil
-}
-
-/* func (s *StorageServiceImpl) StorePostCache(ctx context.Context, reqID int64, post Post) error {
-	postIDStr := strconv.FormatInt(post.PostID, 10)
-	return s.posts_cache.Put(ctx, postIDStr, post)
-} */
-
-func (s *StorageServiceImpl) StorePostNoSQL(ctx context.Context, reqID int64, post Post) (int64, error) {
-	postID_STORAGE_SVC := rand.Int63()
-	post.PostID = postID_STORAGE_SVC
-
-	if reqID == 0 {
-		post.PostID = 1
-	} else {
-		post.PostID = 2
+	post := &Post{
+		ReqID:     reqID,
+		PostID:    postID,
+		Text:      text,
+		Mentions:  mentions,
+		Timestamp: timestamp,
+		Creator: Creator{
+			Username: "some username",
+		},
 	}
 
-	post.PostID += 1
-
-	post.PostID = 2 + 3
-
-	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
+	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
 	if err != nil {
-		return postID_STORAGE_SVC, err
+		return -1, err
 	}
 	err = collection.InsertOne(ctx, post)
 	if err != nil {
-		return postID_STORAGE_SVC, err
+		return -1, err
 	}
-	message := TriggerAnalyticsMessage{
-		PostID: common.Int64ToString(post.PostID),
-	}
-	_, err = s.analyticsQueue.Push(ctx, message)
-	return postID_STORAGE_SVC, err
+
+	return post.PostID, err
 }
 
-/* func (s *StorageServiceImpl) ReadPostCache(ctx context.Context, reqID int64, postID int64) (Post, error) {
+func (s *StorageServiceImpl) ReadPost(ctx context.Context, reqID int64, postID int64) (Post, error) {
 	var post Post
-	postIDStr := strconv.FormatInt(postID, 10)
-	_, err := s.posts_cache.Get(ctx, postIDStr, &post)
+	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
 	if err != nil {
 		return post, err
 	}
-	return post, nil
-} */
-
-func (s *StorageServiceImpl) ReadPostNoSQL(ctx context.Context, reqID int64, postID_STORAGE_SVC_READ int64) (Post, Analytics, error) {
-	var post Post
-	var analytics Analytics
-	collection, err := s.postsDb.GetCollection(ctx, "post", "post")
+	query := bson.D{{Key: "PostID", Value: postID}}
+	result, err := collection.FindOne(ctx, query)
 	if err != nil {
-		return post, analytics, err
-	}
-	postsQuery := bson.D{{Key: "postid", Value: postID_STORAGE_SVC_READ}}
-	result, err := collection.FindOne(ctx, postsQuery)
-	if err != nil {
-		return post, analytics, err
+		return post, err
 	}
 	res, err := result.One(ctx, &post)
 	if !res || err != nil {
-		return post, analytics, err
+		return post, err
 	}
-	analytics, err = s.analyticsService.ReadAnalytics(ctx, postID_STORAGE_SVC_READ)
-	return post, analytics, err
+
+	return post, err
+}
+
+func (s *StorageServiceImpl) DeletePost(ctx context.Context, postID int64) error {
+	collection, err := s.postsDb.GetCollection(ctx, "posts_db", "post")
+	if err != nil {
+		return err
+	}
+
+	query := bson.D{{Key: "PostID", Value: postID}}
+	return collection.DeleteOne(ctx, query)
 }

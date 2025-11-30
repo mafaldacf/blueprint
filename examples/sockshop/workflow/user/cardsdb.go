@@ -4,36 +4,30 @@ import (
 	"context"
 	"errors"
 
-	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type cardStore struct {
-	c backend.NoSQLCollection
-}
-
-// The format of a card stored in the database
 type dbCard struct {
 	Card `bson:",inline"`
 	ID   primitive.ObjectID `bson:"_id"`
 }
 
-func newCardStore(ctx context.Context, db backend.NoSQLDatabase) (*cardStore, error) {
-	c, err := db.GetCollection(ctx, "userservice", "cards")
-	return &cardStore{c: c}, err
-}
-
 // Gets card by objects Id
-func (s *cardStore) getCard(ctx context.Context, cardid string) (Card, error) {
+func (s *UserServiceImpl) carddb_GetCard(ctx context.Context, cardid string) (Card, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "card")
+	if err != nil {
+		return Card{}, err
+	}
+
 	// Convert the card ID
 	id, err := primitive.ObjectIDFromHex(cardid)
 	if err != nil {
-		return Card{}, errors.New("Invalid ID Hex")
+		return Card{}, errors.New("invalid ID Hex")
 	}
 
 	// Run the query
-	cursor, err := s.c.FindOne(ctx, bson.D{{"_id", id}})
+	cursor, err := collection.FindOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		return Card{}, err
 	}
@@ -46,7 +40,12 @@ func (s *cardStore) getCard(ctx context.Context, cardid string) (Card, error) {
 }
 
 // Gets cards from the card store
-func (s *cardStore) getCards(ctx context.Context, cardIds []string) ([]Card, error) {
+func (s *UserServiceImpl) carddb_GetCards(ctx context.Context, cardIds []string) ([]Card, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "card")
+	if err != nil {
+		return nil, err
+	}
+
 	if len(cardIds) == 0 {
 		return nil, nil
 	}
@@ -58,7 +57,7 @@ func (s *cardStore) getCards(ctx context.Context, cardIds []string) ([]Card, err
 	}
 
 	// Run the query
-	cursor, err := s.c.FindMany(ctx, bson.D{{"_id", bson.D{{"$in", ids}}}})
+	cursor, err := collection.FindMany(ctx, bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}})
 	if err != nil {
 		return nil, err
 	}
@@ -75,9 +74,14 @@ func (s *cardStore) getCards(ctx context.Context, cardIds []string) ([]Card, err
 	return cards, err
 }
 
-func (s *cardStore) getAllCards(ctx context.Context) ([]Card, error) {
+func (s *UserServiceImpl) carddb_GetAllCards(ctx context.Context) ([]Card, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "card")
+	if err != nil {
+		return nil, err
+	}
+
 	// Run the query
-	cursor, err := s.c.FindMany(ctx, bson.D{})
+	cursor, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
@@ -95,10 +99,15 @@ func (s *cardStore) getAllCards(ctx context.Context) ([]Card, error) {
 }
 
 // Adds a card to the cards DB
-func (s *cardStore) createCard(ctx context.Context, card *Card) (primitive.ObjectID, error) {
+func (s *UserServiceImpl) carddb_CreateCard(ctx context.Context, card *Card) (primitive.ObjectID, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "card")
+	if err != nil {
+		return primitive.ObjectID{}, err
+	}
+
 	// Create and insert to DB
 	dbcard := dbCard{Card: *card, ID: primitive.NewObjectID()}
-	if _, err := s.c.UpsertID(ctx, dbcard.ID, dbcard); err != nil {
+	if _, err := collection.UpsertID(ctx, dbcard.ID, dbcard); err != nil {
 		return dbcard.ID, err
 	}
 
@@ -109,7 +118,12 @@ func (s *cardStore) createCard(ctx context.Context, card *Card) (primitive.Objec
 }
 
 // Creates or updates the provided cards in the cardStore.
-func (s *cardStore) createCards(ctx context.Context, cards []Card) ([]primitive.ObjectID, error) {
+func (s *UserServiceImpl) carddb_CreateCards(ctx context.Context, cards []Card) ([]primitive.ObjectID, error) {
+	collection, err := s.db.GetCollection(ctx, "user_db", "card")
+	if err != nil {
+		return nil, err
+	}
+
 	if len(cards) == 0 {
 		return []primitive.ObjectID{}, nil
 	}
@@ -119,7 +133,7 @@ func (s *cardStore) createCards(ctx context.Context, cards []Card) ([]primitive.
 			Card: card,
 			ID:   primitive.NewObjectID(),
 		}
-		_, err := s.c.UpsertID(ctx, toInsert.ID, toInsert)
+		_, err := collection.UpsertID(ctx, toInsert.ID, toInsert)
 		if err != nil {
 			return createdIds, err
 		}
@@ -129,16 +143,20 @@ func (s *cardStore) createCards(ctx context.Context, cards []Card) ([]primitive.
 	return createdIds, nil
 }
 
-func (s *cardStore) removeCard(ctx context.Context, cardid string) error {
+func (s *UserServiceImpl) carddb_RemoveCard(ctx context.Context, cardid string) error {
 	// Convert the card ID
 	id, err := primitive.ObjectIDFromHex(cardid)
 	if err != nil {
-		return errors.New("Invalid ID Hex")
+		return errors.New("invalid ID Hex")
 	}
-	return s.removeCards(ctx, []primitive.ObjectID{id})
+	return s.carddb_RemoveCards(ctx, []primitive.ObjectID{id})
 }
 
 // Removes all specified cards from the DB
-func (s *cardStore) removeCards(ctx context.Context, ids []primitive.ObjectID) error {
-	return s.c.DeleteMany(ctx, bson.D{{"_id", bson.D{{"$in", ids}}}})
+func (s *UserServiceImpl) carddb_RemoveCards(ctx context.Context, ids []primitive.ObjectID) error {
+	collection, err := s.db.GetCollection(ctx, "user_db", "card")
+	if err != nil {
+		return nil
+	}
+	return collection.DeleteMany(ctx, bson.D{{Key: "_id", Value: bson.D{{Key: "$in", Value: ids}}}})
 }

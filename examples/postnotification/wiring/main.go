@@ -7,8 +7,9 @@
 package main
 
 import (
-	"github.com/blueprint-uservices/blueprint/examples/postnotification/wiring/specs"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
+
+	"github.com/blueprint-uservices/blueprint/examples/postnotification/wiring/specs"
 )
 
 func main() {

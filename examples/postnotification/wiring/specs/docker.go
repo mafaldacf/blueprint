@@ -7,7 +7,6 @@ import (
 	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
 	"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
-	"github.com/blueprint-uservices/blueprint/plugins/redis"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
 )
 
@@ -25,30 +24,13 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 
 	posts_db := mongodb.Container(spec, "posts_db")
 	analytics_db := mongodb.Container(spec, "analytics_db")
-	media_db := mongodb.Container(spec, "media_db")
-	posts_cache := redis.Container(spec, "posts_cache")
-	timeline_cache := redis.Container(spec, "timeline_cache")
 	notifications_queue := rabbitmq.Container(spec, "notifications_queue", "notifications_queue")
-	analytics_queue := rabbitmq.Container(spec, "analytics_queue", "analytics_queue")
 
 	allServices = append(allServices, posts_db)
 	allServices = append(allServices, analytics_db)
-	allServices = append(allServices, media_db)
-	allServices = append(allServices, posts_cache)
-	allServices = append(allServices, timeline_cache)
 	allServices = append(allServices, notifications_queue)
-	allServices = append(allServices, analytics_queue)
 
-	analytics_service := workflow.Service[postnotification.AnalyticsService](spec, "analytics_service", analytics_db, analytics_queue)
-	analytics_service_ctr := applyDockerDefaults(spec, analytics_service, "analytics_service_proc", "analytics_service_container")
-	containers = append(containers, analytics_service_ctr)
-
-	media_service := workflow.Service[postnotification.MediaService](spec, "media_service", media_db)
-	media_service_ctr := applyDockerDefaults(spec, media_service, "media_service_proc", "media_service_container")
-	containers = append(containers, media_service_ctr)
-	allServices = append(allServices, "media_service")
-
-	storage_service := workflow.Service[postnotification.StorageService](spec, "storage_service", analytics_service, media_service, posts_cache, posts_db, analytics_queue)
+	storage_service := workflow.Service[postnotification.StorageService](spec, "storage_service", posts_db)
 	storage_service_ctr := applyDockerDefaults(spec, storage_service, "storage_service_proc", "storage_service_container")
 	containers = append(containers, storage_service_ctr)
 	allServices = append(allServices, "storage_service")
@@ -57,12 +39,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	notify_service_ctr := applyDockerQueueHandlerDefaults(spec, notify_service, "notify_service_proc", "notify_service_container")
 	containers = append(containers, notify_service_ctr)
 
-	/* timeline_service := workflow.Service[postnotification.TimelineService](spec, "timeline_service", storage_service, timeline_cache)
-	timeline_service_ctr := applyHTTPDefaults(spec, timeline_service, "timeline_service_proc", "timeline_service_container")
-	containers = append(containers, timeline_service_ctr)
-	allServices = append(allServices, "timeline_service") */
-
-	upload_service := workflow.Service[postnotification.UploadService](spec, "upload_service", storage_service, media_service, notifications_queue, timeline_cache)
+	upload_service := workflow.Service[postnotification.UploadService](spec, "upload_service", storage_service, notifications_queue)
 	upload_service_ctr := applyHTTPDefaults(spec, upload_service, "upload_service_proc", "upload_service_container")
 	containers = append(containers, upload_service_ctr)
 	allServices = append(allServices, "upload_service")

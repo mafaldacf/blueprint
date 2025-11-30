@@ -10,90 +10,41 @@ import (
 	"github.com/pkg/errors"
 )
 
-type (
-	// The SockShop CatalogueService stores an inventory of Socks being sold by the shop.
-	CatalogueService interface {
-		// List socks that match any of the tags specified.  Sort the results in the specified order,
-		// then return a subset of the results.
-		List(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]Sock, error)
-
-		// Counts the number of socks that match any of the tags specified.
-		Count(ctx context.Context, tags []string) (int, error)
-
-		// Gets details about a [Sock]
-		Get(ctx context.Context, id string) (Sock, error)
-
-		// Lists all tags
-		Tags(ctx context.Context) ([]string, error)
-
-		// New for Blueprint: adds tags to the database if they do not already exist.
-		AddTags(ctx context.Context, tags []string) error
-
-		// New for Blueprint: adds a sock to the database.
-		// If sock.ID is "" then an ID is generated; otherwise the provided ID is used.
-		// If the sock has tags that aren't yet in the DB, then the tags are added to the DB.
-		// If the sock ID already exists in the database, then the sock is updated
-		// Returns the ID of the sock
-		AddSock(ctx context.Context, sock Sock) (string, error)
-
-		// New for Blueprint: deletes a sock from the database.
-		DeleteSock(ctx context.Context, id string) error
-	}
-
-	// Sock describes the things on offer in the catalogue.
-	Sock struct {
-		ID          string   `json:"id" db:"sock_id"`
-		Name        string   `json:"name" db:"name"`
-		Description string   `json:"description" db:"description"`
-		ImageURL    []string `json:"imageUrl" db:"-"`
-		ImageURL_1  string   `json:"-" db:"image_url_1"`
-		ImageURL_2  string   `json:"-" db:"image_url_2"`
-		Price       float32  `json:"price" db:"price"`
-		Quantity    int      `json:"quantity" db:"quantity"`
-		Tags        []string `json:"tag" db:"-"`
-		TagString   string   `json:"-" db:"tag_name"`
-	}
-
-	tag struct {
-		ID   int    `db:"tag_id"`
-		Name string `db:"name"`
-	}
-)
-
-// ErrNotFound is returned when there is no sock for a given ID.
-var ErrNotFound = errors.New("not found")
-
-// ErrDBConnection is returned when connection with the database fails.
-var ErrDBConnection = errors.New("database connection error")
-
-var baseQuery = `SELECT sock.sock_id, 
-						sock.name, 
-						sock.description, 
-						sock.price, 
-						sock.quantity, 
-						sock.image_url_1, 
-						sock.image_url_2, 
-						GROUP_CONCAT(DISTINCT alltags.name) AS tag_name 
-				FROM sock 
-				JOIN sock_tag allsocktags ON sock.sock_id=allsocktags.sock_id 
-				JOIN tag alltags ON allsocktags.tag_id=alltags.tag_id
-				JOIN sock_tag ON sock.sock_id=sock_tag.sock_id
-				JOIN tag ON tag.tag_id=sock_tag.tag_id`
-
-// Implementation of [CatalogueService].  Method implementations are pulled directly from the original
-// SockShop implementation, which was written in golang.
-type catalogueImpl struct {
-	db backend.RelationalDB
+type CatalogueService interface {
+	List(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]Sock, error)
+	Count(ctx context.Context, tags []string) (int, error)
+	Get(ctx context.Context, id string) (Sock, error)
+	Tags(ctx context.Context) ([]string, error)
+	// extra endpoints
+	AddTags(ctx context.Context, tags []string) error
+	AddSock(ctx context.Context, sock Sock) (string, error)
+	DeleteSock(ctx context.Context, id string) error
 }
 
-// Creates a [CatalogueService] instance that stores the item catalogue in the provided relational database
-func NewCatalogueService(ctx context.Context, db backend.RelationalDB) (CatalogueService, error) {
-	c := &catalogueImpl{db: db}
+type CatalogueServiceImpl struct {
+	catalogue_db backend.RelationalDB
+}
+
+func NewCatalogueServiceImpl(ctx context.Context, catalogue_db backend.RelationalDB) (CatalogueService, error) {
+	c := &CatalogueServiceImpl{catalogue_db: catalogue_db}
 	return c, c.createTables(ctx)
 }
 
-// List implements CatalogueService.
-func (s *catalogueImpl) List(ctx context.Context, tags []string, order string, pageNum int, pageSize int) ([]Sock, error) {
+var baseQuery = `SELECT sock.SockID, 
+						sock.Name, 
+						sock.Description, 
+						sock.Price, 
+						sock.Quantity, 
+						sock.ImageURL1, 
+						sock.ImageURL2, 
+						GROUP_CONCAT(DISTINCT alltags.Name) AS tag_name 
+				FROM sock 
+				JOIN sock_tag allsocktags ON sock.SockID=allsocktags.SockID 
+				JOIN tag alltags ON allsocktags.TagID=alltags.TagID
+				JOIN sock_tag ON sock.SockID=sock_tag.SockID
+				JOIN tag ON tag.TagID=sock_tag.TagID`
+
+func (s *CatalogueServiceImpl) List(ctx context.Context, tags []string, order string, pageNum int, pageSize int) ([]Sock, error) {
 	var socks []Sock
 	query := baseQuery
 
@@ -101,15 +52,15 @@ func (s *catalogueImpl) List(ctx context.Context, tags []string, order string, p
 
 	for i, t := range tags {
 		if i == 0 {
-			query += " WHERE tag.name=?"
+			query += " WHERE tag.Name=?"
 			args = append(args, t)
 		} else {
-			query += " OR tag.name=?"
+			query += " OR tag.Name=?"
 			args = append(args, t)
 		}
 	}
 
-	query += " GROUP BY sock.sock_id"
+	query += " GROUP BY sock.SockID"
 
 	if order != "" {
 		query += " ORDER BY ?"
@@ -118,12 +69,12 @@ func (s *catalogueImpl) List(ctx context.Context, tags []string, order string, p
 
 	query += ";"
 
-	err := s.db.Select(ctx, &socks, query, args...)
+	err := s.catalogue_db.Select(ctx, &socks, query, args...)
 	if err != nil {
-		return []Sock{}, errors.Wrap(err, "CatalogueService.List")
+		return []Sock{}, err
 	}
 	for i, s := range socks {
-		socks[i].ImageURL = []string{s.ImageURL_1, s.ImageURL_2}
+		socks[i].ImageURL = []string{s.ImageURL1, s.ImageURL2}
 		socks[i].Tags = strings.Split(s.TagString, ",")
 	}
 
@@ -132,25 +83,24 @@ func (s *catalogueImpl) List(ctx context.Context, tags []string, order string, p
 	return socks, nil
 }
 
-// Count implements CatalogueService.
-func (s *catalogueImpl) Count(ctx context.Context, tags []string) (int, error) {
-	query := "SELECT COUNT(DISTINCT sock.sock_id) FROM sock JOIN sock_tag ON sock.sock_id=sock_tag.sock_id JOIN tag ON sock_tag.tag_id=tag.tag_id"
+func (s *CatalogueServiceImpl) Count(ctx context.Context, tags []string) (int, error) {
+	query := "SELECT COUNT(DISTINCT sock.SockID) FROM sock JOIN sock_tag ON sock.SockID=sock_tag.TagID JOIN tag ON sock_tag.TagID=tag.TagID"
 
 	var args []interface{}
 
 	for i, t := range tags {
 		if i == 0 {
-			query += " WHERE tag.name=?"
+			query += " WHERE tag.Name=?"
 			args = append(args, t)
 		} else {
-			query += " OR tag.name=?"
+			query += " OR tag.Name=?"
 			args = append(args, t)
 		}
 	}
 
 	query += ";"
 
-	sel, err := s.db.Prepare(ctx, query)
+	sel, err := s.catalogue_db.Prepare(ctx, query)
 
 	if err != nil {
 		return 0, err
@@ -167,49 +117,46 @@ func (s *catalogueImpl) Count(ctx context.Context, tags []string) (int, error) {
 	return count, nil
 }
 
-// Get implements CatalogueService.
-func (s *catalogueImpl) Get(ctx context.Context, id string) (Sock, error) {
-	query := baseQuery + " WHERE sock.sock_id =? GROUP BY sock.sock_id;"
-
+func (s *CatalogueServiceImpl) Get(ctx context.Context, id string) (Sock, error) {
+	//query := baseQuery + " WHERE sock.SockID =? GROUP BY sock.SockID;"
 	var sock Sock
-	err := s.db.Get(ctx, &sock, query, id)
+	err := s.catalogue_db.Select(ctx, &sock, "SELECT * FROM sock WHERE sock.SockID =? GROUP BY sock.SockID;", id)
 	if err != nil {
 		return Sock{}, errors.Wrapf(err, "CatalogueService.Get %v", id)
 	}
 
-	sock.ImageURL = []string{sock.ImageURL_1, sock.ImageURL_2}
+	sock.ImageURL = []string{sock.ImageURL1, sock.ImageURL2}
 	sock.Tags = strings.Split(sock.TagString, ",")
 
 	return sock, nil
 }
 
 // Tags implements CatalogueService.
-func (s *catalogueImpl) Tags(ctx context.Context) ([]string, error) {
+func (s *CatalogueServiceImpl) Tags(ctx context.Context) ([]string, error) {
 	var tags []string
-	err := s.db.Select(ctx, &tags, "SELECT name FROM tag")
+	err := s.catalogue_db.Select(ctx, &tags, "SELECT Name FROM tag")
 	return tags, err
 }
 
 // AddTags implements CatalogueService.
-func (s *catalogueImpl) AddTags(ctx context.Context, tags []string) error {
+func (s *CatalogueServiceImpl) AddTags(ctx context.Context, tags []string) error {
 	_, err := s.addTags(ctx, tags...)
 	return err
 }
 
-// AddSock implements CatalogueService.
-func (s *catalogueImpl) AddSock(ctx context.Context, sock Sock) (string, error) {
+func (s *CatalogueServiceImpl) AddSock(ctx context.Context, sock Sock) (string, error) {
 	// Delete any existing sock with this ID
-	if sock.ID != "" {
-		if err := s.DeleteSock(ctx, sock.ID); err != nil {
+	if sock.SockID != "" {
+		if err := s.DeleteSock(ctx, sock.SockID); err != nil {
 			return "", err
 		}
 	} else {
-		sock.ID = uuid.NewString()
+		sock.SockID = uuid.NewString()
 	}
 
 	// Add the sock
-	_, err := s.db.Exec(ctx, "INSERT INTO sock (sock_id, name, description, price, quantity, image_url_1, image_url_2) VALUES (?, ?, ?, ?, ?, ?, ?);",
-		sock.ID, sock.Name, sock.Description, sock.Price, sock.Quantity, sock.ImageURL_1, sock.ImageURL_2)
+	_, err := s.catalogue_db.Exec(ctx, "INSERT INTO sock (SockID, Name, Description, Price, Quantity, ImageURL1, ImageURL2) VALUES (?, ?, ?, ?, ?, ?, ?);",
+		sock.SockID, sock.Name, sock.Description, sock.Price, sock.Quantity, sock.ImageURL1, sock.ImageURL2)
 	if err != nil {
 		return "", err
 	}
@@ -222,29 +169,29 @@ func (s *catalogueImpl) AddSock(ctx context.Context, sock Sock) (string, error) 
 
 	// Add the tags to the sock
 	for _, tagId := range tagIds {
-		_, err = s.db.Exec(ctx, "INSERT INTO sock_tag (sock_id, tag_id) VALUES (?, ?);", sock.ID, tagId)
+		_, err = s.catalogue_db.Exec(ctx, "INSERT INTO sock_tag (SockID, TagID) VALUES (?, ?);", sock.SockID, tagId)
 		if err != nil {
 			return "", err
 		}
 	}
 
-	return sock.ID, nil
+	return sock.SockID, nil
 }
 
 // DeleteSock implements CatalogueService.
-func (s *catalogueImpl) DeleteSock(ctx context.Context, id string) error {
+func (s *CatalogueServiceImpl) DeleteSock(ctx context.Context, id string) error {
 	if id == "" {
 		return nil
 	}
 
 	// Delete sock's tags
-	_, err := s.db.Exec(ctx, "DELETE FROM sock_tag WHERE sock_tag.sock_id=?;", id)
+	_, err := s.catalogue_db.Exec(ctx, "DELETE FROM sock_tag WHERE sock_tag.TagID=?;", id)
 	if err != nil {
 		return err
 	}
 
 	// Delete existing sock
-	_, err = s.db.Exec(ctx, "DELETE FROM sock WHERE sock.sock_id=?;", id)
+	_, err = s.catalogue_db.Exec(ctx, "DELETE FROM sock WHERE sock.SockID=?;", id)
 	if err != nil {
 		return err
 	}
@@ -267,23 +214,22 @@ func cut(socks []Sock, pageNum, pageSize int) []Sock {
 	return socks[start:end]
 }
 
-// DB query to add tags
-func (s *catalogueImpl) addTags(ctx context.Context, tags ...string) ([]int, error) {
+func (s *CatalogueServiceImpl) addTags(ctx context.Context, tags ...string) ([]int, error) {
 	var currentTags []tag
-	if err := s.db.Select(ctx, &currentTags, "SELECT * FROM tag;"); err != nil {
+	if err := s.catalogue_db.Select(ctx, &currentTags, "SELECT * FROM tag;"); err != nil {
 		return nil, err
 	}
 
 	tagLookup := make(map[string]int)
 	for _, tag := range currentTags {
-		tagLookup[tag.Name] = tag.ID
+		tagLookup[tag.Name] = tag.TagID
 	}
 
 	tagIds := []int{}
 	for _, tagName := range tags {
 		if _, tagAlreadyExists := tagLookup[tagName]; !tagAlreadyExists {
 			// Insert the tag
-			res, err := s.db.Exec(ctx, "INSERT INTO tag (name) VALUES (?);", tagName)
+			res, err := s.catalogue_db.Exec(ctx, "INSERT INTO tag (Name) VALUES (?);", tagName)
 			if err != nil {
 				return nil, err
 			}
@@ -301,48 +247,48 @@ func (s *catalogueImpl) addTags(ctx context.Context, tags ...string) ([]int, err
 }
 
 // Creates database tables if they don't already exist
-func (c *catalogueImpl) createTables(ctx context.Context) (err error) {
-	if _, err = c.db.Exec(ctx, createSockTable); err != nil {
+func (c *CatalogueServiceImpl) createTables(ctx context.Context) (err error) {
+	if _, err = c.catalogue_db.Exec(ctx, createSockTable); err != nil {
 		return errors.Wrap(err, "unable to create sock table")
 	}
-	if _, err = c.db.Exec(ctx, createTagTable); err != nil {
-		if _, err = c.db.Exec(ctx, createTagTable2); err != nil {
+	if _, err = c.catalogue_db.Exec(ctx, createTagTable); err != nil {
+		if _, err = c.catalogue_db.Exec(ctx, createTagTable2); err != nil {
 			return errors.Wrap(err, "unable to create Tag table")
 		}
 	}
-	if _, err = c.db.Exec(ctx, createSockTagTable); err != nil {
+	if _, err = c.catalogue_db.Exec(ctx, createSockTagTable); err != nil {
 		return errors.Wrap(err, "unable to create socktag table")
 	}
 	return nil
 }
 
 var createSockTable = `CREATE TABLE IF NOT EXISTS sock (
-	sock_id varchar(40) NOT NULL, 
-	name varchar(20), 
-	description varchar(200), 
-	price float, 
-	quantity int, 
-	image_url_1 varchar(40), 
-	image_url_2 varchar(40), 
-	PRIMARY KEY(sock_id)
+	SockID varchar(40) NOT NULL, 
+	Name varchar(20), 
+	Description varchar(200), 
+	Price float, 
+	Quantity int, 
+	ImageURL1 varchar(40), 
+	ImageURL2 varchar(40), 
+	PRIMARY KEY(SockID)
 );`
 
 // AUTOINCREMENT should be AUTO_INCREMENT in mysql
 var createTagTable = `CREATE TABLE IF NOT EXISTS tag (
-	tag_id INTEGER PRIMARY KEY AUTO_INCREMENT, 
-	name varchar(20)
+	TagID INTEGER PRIMARY KEY AUTO_INCREMENT, 
+	Name varchar(20)
 );`
 
 var createTagTable2 = `CREATE TABLE IF NOT EXISTS tag (
-	tag_id INTEGER PRIMARY KEY AUTOINCREMENT, 
-	name varchar(20)
+	TagID INTEGER PRIMARY KEY AUTOINCREMENT, 
+	Name varchar(20)
 );`
 
 var createSockTagTable = `CREATE TABLE IF NOT EXISTS sock_tag (
-	sock_id varchar(40), 
-	tag_id INTEGER, 
-	FOREIGN KEY (sock_id) 
-		REFERENCES sock(sock_id), 
-	FOREIGN KEY(tag_id)
-		REFERENCES tag(tag_id)
+	SockID varchar(40), 
+	TagID INTEGER, 
+	FOREIGN KEY (SockID) 
+		REFERENCES sock(SockID), 
+	FOREIGN KEY(TagID)
+		REFERENCES tag(TagID)
 );`

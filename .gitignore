@@ -8,14 +8,12 @@ examples/trainticket/build
 # new custom apps
 examples/foobar/build
 examples/postnotification/build
-examples/postnotification_simple/build
 examples/digota/build
 examples/dsb_hotel2/build
-examples/dsb_media/build
-examples/dsb_media_sql/build
+examples/dsb_mediamicroservices/build
 examples/dsb_sn2/build
 examples/sockshop2/build
 examples/sockshop3/build
-examples/train_ticket2/build
+examples/trainticket/build
 
 **/.DS_Store

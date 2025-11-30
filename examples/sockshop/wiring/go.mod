@@ -1,6 +1,6 @@
 module github.com/blueprint-uservices/blueprint/examples/sockshop/wiring
 
-go 1.22
+go 1.22.4
 
 toolchain go1.24.0
 
@@ -8,28 +8,17 @@ require github.com/blueprint-uservices/blueprint/blueprint v0.0.0
 
 require github.com/blueprint-uservices/blueprint/plugins v0.0.0
 
-require github.com/blueprint-uservices/blueprint/examples/sockshop/tests v0.0.0
+require github.com/blueprint-uservices/blueprint/examples/sockshop/workflow v0.0.0
 
 require (
-	github.com/blueprint-uservices/blueprint/examples/sockshop/workflow v0.0.0
-	github.com/blueprint-uservices/blueprint/examples/sockshop/workload v0.0.0-20240405152959-f078915d2306
-)
-
-require (
-	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/blueprint-uservices/blueprint/runtime v0.0.0 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-sql-driver/mysql v1.8.1 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/klauspost/compress v1.17.8 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/openzipkin/zipkin-go v0.4.3 // indirect
 	github.com/otiai10/copy v1.14.0 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
@@ -39,7 +28,6 @@ require (
 	go.opentelemetry.io/otel v1.26.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.26.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.26.0 // indirect
-	go.opentelemetry.io/otel/exporters/zipkin v1.26.0 // indirect
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.26.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.26.0 // indirect
@@ -60,5 +48,3 @@ replace github.com/blueprint-uservices/blueprint/plugins => ../../../plugins
 replace github.com/blueprint-uservices/blueprint/runtime => ../../../runtime
 
 replace github.com/blueprint-uservices/blueprint/examples/sockshop/workflow => ../workflow
-
-replace github.com/blueprint-uservices/blueprint/examples/sockshop/tests => ../tests
