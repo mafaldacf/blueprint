@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 
 	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/carts"
 	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/catalogue"
@@ -41,9 +42,9 @@ type Frontend interface {
 	GetCard(ctx context.Context, cardID string) (user.Card, error)
 	PostCard(ctx context.Context, userID string, card user.Card) (string, error)
 
+	// extra endpoints
 	// catalogue
 	//LoadCatalogue(ctx context.Context) (string, error)
-	//DeleteSock(ctx context.Context, id string) error
 }
 
 type FrontendImpl struct {
@@ -73,9 +74,7 @@ func (f *FrontendImpl) AddItem(ctx context.Context, sessionID string, itemID str
 		return sessionID, err
 	}
 
-	// also works with:
-	// _, err = f.cart.AddItem(ctx, sessionID, Item{ID: itemID, Quantity: 1, UnitPrice: sock.Price})
-	_, err = f.cart.AddItem(ctx, sessionID, carts.Item{ID: sock.ID, Quantity: 1, UnitPrice: sock.Price})
+	_, err = f.cart.AddItem(ctx, sessionID, carts.Item{ID: sock.SockID, Quantity: 1, UnitPrice: sock.Price})
 	return sessionID, err
 }
 
@@ -104,18 +103,46 @@ func (f *FrontendImpl) DeleteCart(ctx context.Context, sessionID string) error {
 }
 
 func (f *FrontendImpl) GetUser(ctx context.Context, userID string) (user.User, error) {
-	f.user.GetUsers(ctx, userID)
-	return user.User{}, nil
+	if userID == "" {
+		return user.User{}, errors.Errorf("no userID specified")
+	}
+
+	users, err := f.user.GetUsers(ctx, userID)
+	if err != nil {
+		return user.User{}, err
+	} else if len(users) == 0 {
+		return user.User{}, errors.Errorf("invalid userID %v", userID)
+	} else {
+		return users[0], nil
+	}
 }
 
 func (f *FrontendImpl) GetAddress(ctx context.Context, addressID string) (user.Address, error) {
-	f.user.GetAddresses(ctx, addressID)
-	return user.Address{}, nil
+	if addressID == "" {
+		return user.Address{}, errors.Errorf("no addressID specified")
+	}
+	addrs, err := f.user.GetAddresses(ctx, addressID)
+	if err != nil {
+		return user.Address{}, err
+	} else if len(addrs) == 0 {
+		return user.Address{}, errors.Errorf("invalid addressID %v", addressID)
+	} else {
+		return addrs[0], nil
+	}
 }
 
 func (f *FrontendImpl) GetCard(ctx context.Context, cardID string) (user.Card, error) {
-	f.user.GetCards(ctx, cardID)
-	return user.Card{}, nil
+	if cardID == "" {
+		return user.Card{}, errors.Errorf("no cardID specified")
+	}
+	cards, err := f.user.GetCards(ctx, cardID)
+	if err != nil {
+		return user.Card{}, err
+	} else if len(cards) == 0 {
+		return user.Card{}, errors.Errorf("invalid cardID %v", cardID)
+	} else {
+		return cards[0], nil
+	}
 }
 
 func (f *FrontendImpl) GetOrder(ctx context.Context, orderID string) (orders.Order, error) {
@@ -123,6 +150,9 @@ func (f *FrontendImpl) GetOrder(ctx context.Context, orderID string) (orders.Ord
 }
 
 func (f *FrontendImpl) GetOrders(ctx context.Context, userID string) ([]orders.Order, error) {
+	if userID == "" {
+		return nil, errors.Errorf("no userID specified")
+	}
 	return f.order.GetOrders(ctx, userID)
 }
 
@@ -179,16 +209,12 @@ func (f *FrontendImpl) Register(ctx context.Context, sessionID string, username 
 }
 
 func (f *FrontendImpl) UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (string, error) {
-	/* item, err := f.catalogue.Get(ctx, itemID)
+	item, err := f.catalogue.Get(ctx, itemID)
 	if err != nil {
 		return sessionID, err
-	} */
+	}
 
-	return sessionID, f.cart.UpdateItem(ctx, sessionID, carts.Item{ID: "0", Quantity: quantity, UnitPrice: 1})
-}
-
-func (f *FrontendImpl) DeleteSock(ctx context.Context, id string) error {
-	return f.catalogue.DeleteSock(ctx, id)
+	return sessionID, f.cart.UpdateItem(ctx, sessionID, carts.Item{ID: item.SockID, Quantity: quantity, UnitPrice: item.Price})
 }
 
 func (f *FrontendImpl) LoadCatalogue(ctx context.Context) (string, error) {
@@ -197,7 +223,7 @@ func (f *FrontendImpl) LoadCatalogue(ctx context.Context) (string, error) {
 
 	sock := func(name, description string, price float32, qty int, url1, url2 string, tags ...string) catalogue.Sock {
 		return catalogue.Sock{Name: name, Description: description,
-			Price: price, Quantity: qty, ImageURL_1: url1, ImageURL_2: url2, Tags: tags}
+			Price: price, Quantity: qty, ImageURL1: url1, ImageURL2: url2, Tags: tags}
 	}
 
 	var socks = []catalogue.Sock{

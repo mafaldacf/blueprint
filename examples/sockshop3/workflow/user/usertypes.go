@@ -10,15 +10,15 @@ import (
 )
 
 type User struct {
-	FirstName string
-	LastName  string
-	Email     string
-	Username  string
-	Password  string
-	Addresses []Address
-	Cards     []Card
-	UserID    string
-	Salt      string
+	FirstName string    `json:"firstName" bson:"firstName"`
+	LastName  string    `json:"lastName" bson:"lastName"`
+	Email     string    `json:"email" bson:"email"`
+	Username  string    `json:"username" bson:"username"`
+	Password  string    `json:"password" bson:"password,omitempty"`
+	Addresses []Address `json:"addresses,omitempty" bson:"-"`
+	Cards     []Card    `json:"cards,omitempty" bson:"-"`
+	UserID    string    `json:"id" bson:"-"`
+	Salt      string    `json:"salt" bson:"salt"`
 }
 type Address struct {
 	Street   string

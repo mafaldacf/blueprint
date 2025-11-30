@@ -126,7 +126,7 @@ func (s *CartServiceImpl) RemoveItem(ctx context.Context, customerID string, ite
 	}
 
 	if len(cart.Items) == 0 {
-		return s.deleteMany(ctx, customerID)
+		return s.DeleteCart(ctx, customerID)
 	}
 	return s.replaceOne(ctx, customerID, cart)
 }
@@ -149,7 +149,7 @@ func (s *CartServiceImpl) UpdateItem(ctx context.Context, customerID string, ite
 
 		// If no items left in cart, delete cart
 		if len(cart.Items) == 0 {
-			return s.deleteMany(ctx, customerID)
+			return s.DeleteCart(ctx, customerID)
 		}
 	} else {
 		// Item doesn't exist in cart and no items added, so do nothing

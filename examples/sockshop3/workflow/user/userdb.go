@@ -71,7 +71,7 @@ func (s *UserServiceImpl) userdb_GetUserByName(ctx context.Context, username str
 	}
 
 	// Execute query
-	cursor, err := collection.FindOne(ctx, bson.D{{Key: "username", Value: username}})
+	cursor, err := collection.FindOne(ctx, bson.D{{Key: "Username", Value: username}})
 	if err != nil {
 		return newUser(), err
 	}
@@ -101,7 +101,7 @@ func (s *UserServiceImpl) userdb_GetUser(ctx context.Context, userid string) (Us
 	}
 
 	// Execute query
-	cursor, err := collection.FindOne(ctx, bson.D{{Key: "_id", Value: id}})
+	cursor, err := collection.FindOne(ctx, bson.D{{Key: "UserID", Value: id}})
 	if err != nil {
 		return newUser(), err
 	}

@@ -96,35 +96,10 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 		return Order{}, errors.Errorf("missing cartID")
 	}
 
-	// TODO
-	/* // Fetch data concurrently
-	var wg sync.WaitGroup
-	wg.Add(4)
-
-	var items []Item
-	var addresses []Address
-	var cards []Card
-
-	go func() {
-		defer wg.Done()
-		items, _ = s.carts.GetCart(ctx, cartID)
-	}()
-	go func() {
-		defer wg.Done()
-		s.users.GetUsers(ctx, customerID)
-	}()
-	go func() {
-		defer wg.Done()
-		addresses, _ = s.users.GetAddresses(ctx, addressID)
-	}()
-	go func() {
-		defer wg.Done()
-		cards, _ = s.users.GetCards(ctx, cardID)
-	}()
-
-	// Await completion and validate responses
-	wg.Wait() */
-
+	var items []carts.Item
+	var addresses []user.Address
+	var cards []user.Card
+	var users []user.User
 	items, err1 := s.carts.GetCart(ctx, cartID)
 	if err1 != nil {
 		return Order{}, err1
@@ -142,6 +117,10 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 		return Order{}, err4
 	}
 
+	if err := any(err1, err2, err3, err4); err != nil {
+		return Order{}, err
+	}
+
 	if len(items) == 0 {
 		return Order{}, errors.Errorf("no items in cart")
 	} else if len(users) == 0 {
@@ -153,9 +132,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 	}
 
 	// Calculate total and authorize payment.
-	// 1. calculate total
 	amount := calculateTotal(items)
-	// 2. authorise
 	auth, err := s.payments.Authorise(ctx, amount)
 	if err != nil {
 		return Order{}, err
@@ -194,9 +171,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 		return Order{}, err
 	}
 
-	// Delete the cart
 	return order, nil
-	//return order, s.carts.DeleteCart(ctx, customerID)
 }
 
 func calculateTotal(items []carts.Item) float32 {
