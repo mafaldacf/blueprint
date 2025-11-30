@@ -1,4 +1,4 @@
-package sockshop3
+package catalogue
 
 type Sock struct {
     ID          string   `json:"id" db:"sock_id"`

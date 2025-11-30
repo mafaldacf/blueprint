@@ -1,40 +1,45 @@
 // Package Frontend implements the SockShop Frontend service, typically deployed via HTTP
-package sockshop3
+package frontend
 
 import (
 	"context"
 
 	"github.com/google/uuid"
+
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/carts"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/catalogue"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/orders"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/user"
 )
 
 type Frontend interface {
 	// cart
-	GetCart(ctx context.Context, sessionID string) ([]Item, error)
+	GetCart(ctx context.Context, sessionID string) ([]carts.Item, error)
 	AddItem(ctx context.Context, sessionID string, itemID string) (newSessionID string, err error)
 	DeleteCart(ctx context.Context, sessionID string) error
 	RemoveItem(ctx context.Context, sessionID string, itemID string) error
 	UpdateItem(ctx context.Context, sessionID string, itemID string, quantity int) (newSessionID string, err error)
 
 	// items
-	ListItems(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]Sock, error)
-	GetSock(ctx context.Context, itemID string) (Sock, error)
+	ListItems(ctx context.Context, tags []string, order string, pageNum, pageSize int) ([]catalogue.Sock, error)
+	GetSock(ctx context.Context, itemID string) (catalogue.Sock, error)
 
 	// tags
 	ListTags(ctx context.Context) ([]string, error)
 
 	// orders
-	NewOrder(ctx context.Context, userID, addressID, cardID, cartID string) (Order, error)
-	GetOrders(ctx context.Context, userID string) ([]Order, error)
-	GetOrder(ctx context.Context, orderID string) (Order, error)
+	NewOrder(ctx context.Context, userID, addressID, cardID, cartID string) (orders.Order, error)
+	GetOrders(ctx context.Context, userID string) ([]orders.Order, error)
+	GetOrder(ctx context.Context, orderID string) (orders.Order, error)
 
 	// users
-	Login(ctx context.Context, sessionID, username, password string) (newSessionID string, u User, err error)
+	Login(ctx context.Context, sessionID, username, password string) (newSessionID string, u user.User, err error)
 	Register(ctx context.Context, sessionID, username, password, email, first, last string) (newSessionID string, err error)
-	GetUser(ctx context.Context, userID string) (User, error)
-	GetAddress(ctx context.Context, addressID string) (Address, error)
-	PostAddress(ctx context.Context, userID string, address Address) (string, error)
-	GetCard(ctx context.Context, cardID string) (Card, error)
-	PostCard(ctx context.Context, userID string, card Card) (string, error)
+	GetUser(ctx context.Context, userID string) (user.User, error)
+	GetAddress(ctx context.Context, addressID string) (user.Address, error)
+	PostAddress(ctx context.Context, userID string, address user.Address) (string, error)
+	GetCard(ctx context.Context, cardID string) (user.Card, error)
+	PostCard(ctx context.Context, userID string, card user.Card) (string, error)
 
 	// catalogue
 	//LoadCatalogue(ctx context.Context) (string, error)
@@ -42,13 +47,13 @@ type Frontend interface {
 }
 
 type FrontendImpl struct {
-	user      UserService
-	catalogue CatalogueService
-	cart      CartService
-	order     OrderService
+	user      user.UserService
+	catalogue catalogue.CatalogueService
+	cart      carts.CartService
+	order     orders.OrderService
 }
 
-func NewFrontendImpl(ctx context.Context, user UserService, catalogue CatalogueService, cart CartService, order OrderService) (Frontend, error) {
+func NewFrontendImpl(ctx context.Context, user user.UserService, catalogue catalogue.CatalogueService, cart carts.CartService, order orders.OrderService) (Frontend, error) {
 	f := &FrontendImpl{
 		user:      user,
 		catalogue: catalogue,
@@ -70,7 +75,7 @@ func (f *FrontendImpl) AddItem(ctx context.Context, sessionID string, itemID str
 
 	// also works with:
 	// _, err = f.cart.AddItem(ctx, sessionID, Item{ID: itemID, Quantity: 1, UnitPrice: sock.Price})
-	_, err = f.cart.AddItem(ctx, sessionID, Item{ID: sock.ID, Quantity: 1, UnitPrice: sock.Price})
+	_, err = f.cart.AddItem(ctx, sessionID, carts.Item{ID: sock.ID, Quantity: 1, UnitPrice: sock.Price})
 	return sessionID, err
 }
 
@@ -82,7 +87,7 @@ func (f *FrontendImpl) RemoveItem(ctx context.Context, sessionID string, itemID 
 	return f.cart.RemoveItem(ctx, sessionID, itemID)
 }
 
-func (f *FrontendImpl) GetCart(ctx context.Context, sessionID string) ([]Item, error) {
+func (f *FrontendImpl) GetCart(ctx context.Context, sessionID string) ([]carts.Item, error) {
 	if sessionID == "" {
 		return nil, nil
 	}
@@ -98,34 +103,34 @@ func (f *FrontendImpl) DeleteCart(ctx context.Context, sessionID string) error {
 	return f.cart.DeleteCart(ctx, sessionID)
 }
 
-func (f *FrontendImpl) GetUser(ctx context.Context, userID string) (User, error) {
+func (f *FrontendImpl) GetUser(ctx context.Context, userID string) (user.User, error) {
 	f.user.GetUsers(ctx, userID)
-	return User{}, nil
+	return user.User{}, nil
 }
 
-func (f *FrontendImpl) GetAddress(ctx context.Context, addressID string) (Address, error) {
+func (f *FrontendImpl) GetAddress(ctx context.Context, addressID string) (user.Address, error) {
 	f.user.GetAddresses(ctx, addressID)
-	return Address{}, nil
+	return user.Address{}, nil
 }
 
-func (f *FrontendImpl) GetCard(ctx context.Context, cardID string) (Card, error) {
+func (f *FrontendImpl) GetCard(ctx context.Context, cardID string) (user.Card, error) {
 	f.user.GetCards(ctx, cardID)
-	return Card{}, nil
+	return user.Card{}, nil
 }
 
-func (f *FrontendImpl) GetOrder(ctx context.Context, orderID string) (Order, error) {
+func (f *FrontendImpl) GetOrder(ctx context.Context, orderID string) (orders.Order, error) {
 	return f.order.GetOrder(ctx, orderID)
 }
 
-func (f *FrontendImpl) GetOrders(ctx context.Context, userID string) ([]Order, error) {
+func (f *FrontendImpl) GetOrders(ctx context.Context, userID string) ([]orders.Order, error) {
 	return f.order.GetOrders(ctx, userID)
 }
 
-func (f *FrontendImpl) GetSock(ctx context.Context, itemID string) (Sock, error) {
+func (f *FrontendImpl) GetSock(ctx context.Context, itemID string) (catalogue.Sock, error) {
 	return f.catalogue.Get(ctx, itemID)
 }
 
-func (f *FrontendImpl) ListItems(ctx context.Context, tags []string, order string, pageNum int, pageSize int) ([]Sock, error) {
+func (f *FrontendImpl) ListItems(ctx context.Context, tags []string, order string, pageNum int, pageSize int) ([]catalogue.Sock, error) {
 	return f.catalogue.List(ctx, tags, order, pageNum, pageSize)
 }
 
@@ -133,10 +138,10 @@ func (f *FrontendImpl) ListTags(ctx context.Context) ([]string, error) {
 	return f.catalogue.Tags(ctx)
 }
 
-func (f *FrontendImpl) Login(ctx context.Context, sessionID string, username string, password string) (string, User, error) {
+func (f *FrontendImpl) Login(ctx context.Context, sessionID string, username string, password string) (string, user.User, error) {
 	u, err := f.user.Login(ctx, username, password)
 	if err != nil {
-		return sessionID, User{}, err
+		return sessionID, user.User{}, err
 	}
 
 	if sessionID != "" {
@@ -148,15 +153,15 @@ func (f *FrontendImpl) Login(ctx context.Context, sessionID string, username str
 	return u.UserID, u, nil
 }
 
-func (f *FrontendImpl) NewOrder(ctx context.Context, userID string, addressID string, cardID string, cartID string) (Order, error) {
+func (f *FrontendImpl) NewOrder(ctx context.Context, userID string, addressID string, cardID string, cartID string) (orders.Order, error) {
 	return f.order.NewOrder(ctx, userID, addressID, cardID, cartID)
 }
 
-func (f *FrontendImpl) PostAddress(ctx context.Context, userID string, address Address) (string, error) {
+func (f *FrontendImpl) PostAddress(ctx context.Context, userID string, address user.Address) (string, error) {
 	return f.user.PostAddress(ctx, userID, address)
 }
 
-func (f *FrontendImpl) PostCard(ctx context.Context, userID string, card Card) (string, error) {
+func (f *FrontendImpl) PostCard(ctx context.Context, userID string, card user.Card) (string, error) {
 	return f.user.PostCard(ctx, userID, card)
 }
 
@@ -179,7 +184,7 @@ func (f *FrontendImpl) UpdateItem(ctx context.Context, sessionID string, itemID 
 		return sessionID, err
 	} */
 
-	return sessionID, f.cart.UpdateItem(ctx, sessionID, Item{ID: "0", Quantity: quantity, UnitPrice: 1})
+	return sessionID, f.cart.UpdateItem(ctx, sessionID, carts.Item{ID: "0", Quantity: quantity, UnitPrice: 1})
 }
 
 func (f *FrontendImpl) DeleteSock(ctx context.Context, id string) error {
@@ -190,12 +195,12 @@ func (f *FrontendImpl) LoadCatalogue(ctx context.Context) (string, error) {
 	err_msg := "Failed to load catalogue"
 	var alltags = []string{"brown", "geek", "formal", "blue", "skin", "red", "action", "sport", "black", "magic", "green"}
 
-	sock := func(name, description string, price float32, qty int, url1, url2 string, tags ...string) Sock {
-		return Sock{Name: name, Description: description,
+	sock := func(name, description string, price float32, qty int, url1, url2 string, tags ...string) catalogue.Sock {
+		return catalogue.Sock{Name: name, Description: description,
 			Price: price, Quantity: qty, ImageURL_1: url1, ImageURL_2: url2, Tags: tags}
 	}
 
-	var socks = []Sock{
+	var socks = []catalogue.Sock{
 		sock("Weave special", "Limited issue Weave socks.", 17.15, 33, "/catalogue/images/weave1.jpg", "/catalogue/images/weave2.jpg", "geek", "black"),
 		sock("Nerd leg", "For all those leg lovers out there. A perfect example of a swivel chair trained calf. Meticulously trained on a diet of sitting and Pina Coladas. Phwarr...", 7.99, 115, "/catalogue/images/bit_of_leg_1.jpeg", "/catalogue/images/bit_of_leg_2.jpeg", "blue", "skin"),
 		sock("Crossed", "A mature sock, crossed, with an air of nonchalance.", 17.32, 738, "/catalogue/images/cross_1.jpeg", "/catalogue/images/cross_2.jpeg", "formal", "blue", "red", "action"),

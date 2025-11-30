@@ -3,7 +3,7 @@
 // The service fakes payments, implementing simple logic whereby payments
 // are authorized when they're below a predefined threshold, and rejected
 // when they are above that threshold.
-package sockshop3
+package payment
 
 import (
 	"context"

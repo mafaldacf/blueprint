@@ -1,5 +1,5 @@
 // Package cart implements the SockShop cart microservice.
-package sockshop3
+package carts
 
 import (
 	"context"

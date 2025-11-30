@@ -1,4 +1,4 @@
-package sockshop3
+package shipping
 
 type Shipment struct {
 	ID     string

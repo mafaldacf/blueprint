@@ -1,6 +1,6 @@
 // Package queuemaster implements the queue-master SockShop service, responsible for
 // pulling and "processing" shipments from the shipment queue.
-package sockshop3
+package queuemaster
 
 import (
 	"context"
@@ -10,12 +10,15 @@ import (
 	"time"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/shipping"
 )
+
 type QueueMaster interface {
 	Run(ctx context.Context) error
 }
 
-func NewQueueMasterImpl(ctx context.Context, queue backend.Queue, shipping ShippingService) (QueueMaster, error) {
+func NewQueueMasterImpl(ctx context.Context, queue backend.Queue, shipping shipping.ShippingService) (QueueMaster, error) {
 	return &QueueMasterImpl{
 		q:           queue,
 		shipping:    shipping,
@@ -26,7 +29,7 @@ func NewQueueMasterImpl(ctx context.Context, queue backend.Queue, shipping Shipp
 
 type QueueMasterImpl struct {
 	q           backend.Queue
-	shipping    ShippingService
+	shipping    shipping.ShippingService
 	exitOnError bool
 	processed   int32
 }
@@ -39,7 +42,7 @@ func (q *QueueMasterImpl) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		default:
-			var shipment Shipment
+			var shipment shipping.Shipment
 			didPop, err := q.q.Pop(ctx, &shipment)
 			if err != nil {
 				if q.exitOnError {

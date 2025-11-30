@@ -2,7 +2,7 @@
 //
 // The service calls other services to collect information and then
 // submits the order to the shipping service
-package sockshop3
+package orders
 
 import (
 	"context"
@@ -12,6 +12,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
+
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/carts"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/payment"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/shipping"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/user"
 )
 
 type OrderService interface {
@@ -20,7 +25,7 @@ type OrderService interface {
 	GetOrder(ctx context.Context, orderID string) (Order, error)
 }
 
-func NewOrderServiceImpl(ctx context.Context, userService UserService, cartService CartService, payments PaymentService, shipping ShippingService, orderDB backend.NoSQLDatabase) (OrderService, error) {
+func NewOrderServiceImpl(ctx context.Context, userService user.UserService, cartService carts.CartService, payments payment.PaymentService, shipping shipping.ShippingService, orderDB backend.NoSQLDatabase) (OrderService, error) {
 	return &OrderServiceImpl{
 		users:    userService,
 		carts:    cartService,
@@ -31,10 +36,10 @@ func NewOrderServiceImpl(ctx context.Context, userService UserService, cartServi
 }
 
 type OrderServiceImpl struct {
-	users    UserService
-	carts    CartService
-	payments PaymentService
-	shipping ShippingService
+	users    user.UserService
+	carts    carts.CartService
+	payments payment.PaymentService
+	shipping shipping.ShippingService
 	db       backend.NoSQLDatabase
 }
 
@@ -65,7 +70,7 @@ func (s *OrderServiceImpl) GetOrders(ctx context.Context, customerID string) ([]
 	if err != nil {
 		return nil, err
 	}
-	
+
 	filter := bson.D{{Key: "CustomerID", Value: customerID}}
 	cursor, err := collection.FindMany(ctx, filter)
 	if err != nil {
@@ -90,7 +95,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 	} else if cartID == "" {
 		return Order{}, errors.Errorf("missing cartID")
 	}
-	
+
 	// TODO
 	/* // Fetch data concurrently
 	var wg sync.WaitGroup
@@ -137,7 +142,6 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 		return Order{}, err4
 	}
 
-
 	if len(items) == 0 {
 		return Order{}, errors.Errorf("no items in cart")
 	} else if len(users) == 0 {
@@ -160,7 +164,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 	}
 
 	// Submit the shipment
-	shipment := Shipment{
+	shipment := shipping.Shipment{
 		ID:     uuid.NewString(),
 		Name:   customerID,
 		Status: "awaiting shipment",
@@ -195,7 +199,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 	//return order, s.carts.DeleteCart(ctx, customerID)
 }
 
-func calculateTotal(items []Item) float32 {
+func calculateTotal(items []carts.Item) float32 {
 	amount := float32(0)
 	shipping := float32(4.99)
 	for _, item := range items {

@@ -1,4 +1,4 @@
-package sockshop3
+package carts
 
 type Cart struct {
     ID    string

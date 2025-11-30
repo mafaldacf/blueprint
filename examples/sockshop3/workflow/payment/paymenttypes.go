@@ -1,4 +1,4 @@
-package sockshop3
+package payment
 
 type Authorisation struct {
 	Authorised bool   `json:"authorised"`

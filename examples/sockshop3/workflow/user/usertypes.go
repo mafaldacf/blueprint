@@ -1,4 +1,4 @@
-package sockshop3
+package user
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 

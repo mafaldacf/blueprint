@@ -11,7 +11,7 @@
 //
 // The UserService thus uses three collections for the above information.
 // To get the data for a user also means more than one database call.
-package sockshop3
+package user
 
 import (
 	"context"

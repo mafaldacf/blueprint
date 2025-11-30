@@ -1,5 +1,5 @@
 // Package catalogue implements the SockShop catalogue microservice
-package sockshop3
+package catalogue
 
 import (
 	"context"

@@ -3,7 +3,7 @@
 // All the shipping microservice does is push the shipment to a queue.
 // The queue-master service pulls shipments from the queue and "processes"
 // them.
-package sockshop3
+package shipping
 
 import (
 	"context"

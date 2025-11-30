@@ -2,7 +2,14 @@ package specs
 
 import (
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/wiring"
-	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/sockshop3"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/carts"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/catalogue"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/frontend"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/orders"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/payment"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/queuemaster"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/shipping"
+	"github.com/blueprint-uservices/blueprint/examples/sockshop3/workflow/user"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
 	"github.com/blueprint-uservices/blueprint/plugins/goproc"
 	"github.com/blueprint-uservices/blueprint/plugins/http"
@@ -60,35 +67,35 @@ func makeDockerRabbitSpec(spec wiring.WiringSpec) ([]string, error) {
 	allServices = append(allServices, shipdb)
 	allServices = append(allServices, shipqueue)
 
-	user_service := workflow.Service[sockshop3.UserService](spec, "user_service", user_db)
+	user_service := workflow.Service[user.UserService](spec, "user_service", user_db)
 	user_service_ctr := applyDockerDefaults(spec, user_service, "user_service_proc", "user_service_container")
 	containers = append(containers, user_service_ctr)
 
-	payment_service := workflow.Service[sockshop3.PaymentService](spec, "payment_service", "500")
+	payment_service := workflow.Service[payment.PaymentService](spec, "payment_service", "500")
 	payment_service_ctr := applyDockerDefaults(spec, payment_service, "payment_service_proc", "payment_service_container")
 	containers = append(containers, payment_service_ctr)
 
-	cart_service := workflow.Service[sockshop3.CartService](spec, "cart_service", cart_db)
+	cart_service := workflow.Service[carts.CartService](spec, "cart_service", cart_db)
 	cart_service_ctr := applyDockerDefaults(spec, cart_service, "cart_service_proc", "cart_service_container")
 	containers = append(containers, cart_service_ctr)
 
-	shipping_service := workflow.Service[sockshop3.ShippingService](spec, "shipping_service", shipqueue, shipdb)
+	shipping_service := workflow.Service[shipping.ShippingService](spec, "shipping_service", shipqueue, shipdb)
 	shipping_service_ctr := applyDockerDefaults(spec, shipping_service, "shipping_service_proc", "shipping_service_container")
 	containers = append(containers, shipping_service_ctr)
 
-	queue_service := workflow.Service[sockshop3.QueueMaster](spec, "queue_master", shipqueue, shipping_service)
+	queue_service := workflow.Service[queuemaster.QueueMaster](spec, "queue_master", shipqueue, shipping_service)
 	queue_service_ctr := applyDockerQueueHandlerDefaults(spec, queue_service, "queue_service_proc", "queue_service_container")
 	containers = append(containers, queue_service_ctr)
 
-	order_service := workflow.Service[sockshop3.OrderService](spec, "order_service", user_service, cart_service, payment_service, shipping_service, order_db)
+	order_service := workflow.Service[orders.OrderService](spec, "order_service", user_service, cart_service, payment_service, shipping_service, order_db)
 	order_service_ctr := applyDockerDefaults(spec, order_service, "order_service_proc", "order_service_container")
 	containers = append(containers, order_service_ctr)
 
-	catalogue_service := workflow.Service[sockshop3.CatalogueService](spec, "catalogue_service", catalogue_db)
+	catalogue_service := workflow.Service[catalogue.CatalogueService](spec, "catalogue_service", catalogue_db)
 	catalogue_service_ctr := applyDockerDefaults(spec, catalogue_service, "catalogue_service_proc", "catalogue_service_container")
 	containers = append(containers, catalogue_service_ctr)
 
-	frontend_service := workflow.Service[sockshop3.Frontend](spec, "frontend", user_service, catalogue_service, cart_service, order_service)
+	frontend_service := workflow.Service[frontend.Frontend](spec, "frontend", user_service, catalogue_service, cart_service, order_service)
 	frontend_service_ctr := applyHTTPDefaults(spec, frontend_service, "frontend_service_proc", "frontend_service_container")
 	containers = append(containers, frontend_service_ctr)
 
