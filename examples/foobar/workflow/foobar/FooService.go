@@ -13,7 +13,7 @@ type Foo struct {
 }
 
 type FooService interface {
-	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error)
+	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, Bar, error)
 	ReadFoo(ctx context.Context, id string) (Foo, error)
 	//UpdateFoo(ctx context.Context, id string, timestamp string) error
 }
@@ -50,7 +50,7 @@ func (s *FooServiceImpl) invokeService(ctx context.Context, barID2 string, id2 s
 	return nil
 }
 
-func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error) {
+func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, Bar, error) {
 	foo := Foo{
 		FooID: id,
 		Text:  text,
@@ -60,7 +60,7 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, b
 
 	err := s.writeToDatabase(ctx, foo)
 	if err != nil {
-		return Foo{}, err
+		return Foo{}, Bar{}, err
 	}
 
 	/* collection, err := s.database.GetCollection(ctx, "foo_db", "foo")
@@ -77,15 +77,15 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, b
 
 	err = s.invokeService(ctx, barID, id, text)
 	if err != nil {
-		return Foo{}, err
+		return Foo{}, Bar{}, err
 	}
 
-	/* _, err = s.barService.WriteBar(ctx, barID, text, id)
-	if err != nil {
-		return Foo{}, err
-	} */
+	/* var bar Bar
+	go func() {
+		bar, err = s.barService.WriteBar(ctx, barID, text, id)
+	}() */
 
-	return foo, nil
+	return foo, Bar{}, nil
 }
 
 func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
@@ -147,4 +147,4 @@ func (s *FooServiceImpl) ReadFoo(ctx context.Context, id string) (Foo, error) {
 	_, err = collection.UpdateMany(ctx, query, update)
 	return err
 }
- */
+*/

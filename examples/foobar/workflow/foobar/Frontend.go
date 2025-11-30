@@ -5,7 +5,7 @@ import (
 )
 
 type Frontend interface {
-	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error)
+	WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, Bar, error)
 	ReadBarFoo(ctx context.Context, barID string) (Bar, Foo, error)
 	//UpdateFoo(ctx context.Context, id string, timestamp string) error
 }
@@ -20,7 +20,7 @@ func NewFrontendImpl(ctx context.Context, fooService FooService, barService BarS
 	return f, nil
 }
 
-func (s *FrontendImpl) WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, error) {
+func (s *FrontendImpl) WriteFoo(ctx context.Context, id string, text string, barID string) (Foo, Bar, error) {
 	return s.fooService.WriteFoo(ctx, id, text, barID)
 }
 
