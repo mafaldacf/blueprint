@@ -226,7 +226,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	allServices = append(allServices, admin_user_service)
 
 	dashboard := workflow.Service[train_ticket2.Dashboard](spec, "dashboard",
-		basic_service, config_service, contacts_service, payment_service, preserve_service, execute_service, cancel_service, rebook_service,
+		basic_service, config_service, contacts_service, payment_service, preserve_service, execute_service, cancel_service, rebook_service, price_service,
 		assurance_service, order_service, food_service, consign_service, delivery_service)
 	dashboard_ctr := applyHTTPDefaults(spec, dashboard, "dashboard_proc", "dashboard_container")
 	containers = append(containers, dashboard_ctr)

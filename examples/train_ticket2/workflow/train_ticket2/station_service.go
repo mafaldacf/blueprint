@@ -27,6 +27,8 @@ type StationService interface {
 	FindID(ctx context.Context, name string) (string, error)
 	// Find the station `ids` for stations with Names `names`
 	FindIDs(ctx context.Context, names []string) ([]string, error)
+
+	FindAll(ctx context.Context) ([]Station, error)
 }
 
 // Implementation of the StationService
@@ -118,19 +120,14 @@ func (s *StationServiceImpl) FindID(ctx context.Context, name string) (string, e
 func (s *StationServiceImpl) FindIDs(ctx context.Context, names []string) ([]string, error) {
 	var ids []string
 
-	// FIXME: ORIGINAL FORLOOP
-	/* for _, name := range names {
+	for _, name := range names {
 		id, err := s.FindID(ctx, name)
 		if err != nil {
 			// Attach an empty string to indicate that the ID was not found for a given station
 			ids = append(ids, "")
 		}
 		ids = append(ids, id)
-	} */
-
-	// FIXME: TEMPORARY WORKAROUND FOR FORLOOP
-	id, _ := s.FindID(ctx, names[0])
-	ids = append(ids, id)
+	}
 
 	return ids, nil
 }
@@ -159,19 +156,30 @@ func (s *StationServiceImpl) FindByID(ctx context.Context, id string) (Station, 
 func (s *StationServiceImpl) FindByIDs(ctx context.Context, ids []string) ([]Station, error) {
 	var stations []Station
 
-	// FIXME: ORIGINAL FORLOOP
-	/* for _, id := range ids {
+	for _, id := range ids {
 		st, err := s.FindByID(ctx, id)
 		if err != nil {
 			// Attach an empty Station object to indicate that the ID was not found for a given station
 			stations = append(stations, Station{})
 		}
 		stations = append(stations, st)
-	} */
-
-	// FIXME: TEMPORARY WORKAROUND FOR FORLOOP
-	st, _ := s.FindByID(ctx, ids[0])
-	stations = append(stations, st)
-
+	}
 	return stations, nil
+}
+
+func (s *StationServiceImpl) FindAll(ctx context.Context) ([]Station, error) {
+	coll, err := s.stationDB.GetCollection(ctx, "station_db", "station")
+	if err != nil {
+		return nil, err
+	}
+	cursor, err := coll.FindMany(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	var stations []Station
+	err = cursor.All(ctx, stations)
+	if err != nil {
+		return nil, err
+	}
+	return stations, err
 }

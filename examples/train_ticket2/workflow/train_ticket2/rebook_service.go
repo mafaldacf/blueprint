@@ -190,8 +190,9 @@ func (s *RebookServiceImpl) updateOrder(ctx context.Context, order Order, info R
 			return err
 		}
 	}
-	s.orderService.DeleteOrder(ctx, order.ID)
-	s.orderService.CreateNewOrder(ctx, order)
+	s.orderService.UpdateOrder(ctx, order)
+	/* s.orderService.DeleteOrder(ctx, order.ID)
+	s.orderService.CreateNewOrder(ctx, order) */
 	return nil
 }
 

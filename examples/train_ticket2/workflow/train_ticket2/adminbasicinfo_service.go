@@ -10,23 +10,23 @@ type AdminBasicInfoService interface {
 	DeleteContact(ctx context.Context, id string) error
 	AddContact(ctx context.Context, contact Contact) error
 
-	// Get all stations
-	// Mofidy station
+	ModifyStation(ctx context.Context, station Station) (bool, error)
+	GetAllStations(ctx context.Context) ([]Station, error)
 	DeleteStation(ctx context.Context, id string) error
 	AddStation(ctx context.Context, station Station) error
-	
-	// Get all trains
-	// Modify train
+
+	ModifyTrain(ctx context.Context, ttype TrainType) (bool, error)
+	GetAllTrains(ctx context.Context) ([]TrainType, error)
 	DeleteTrain(ctx context.Context, id string) error
 	AddTrain(ctx context.Context, trainType TrainType) error
 
-	// Get all configs
-	// Modify config
+	ModifyConfig(ctx context.Context, config Config) (bool, error)
+	GetAllConfigs(ctx context.Context) ([]Config, error)
 	DeleteConfig(ctx context.Context, name string) error
 	AddConfig(ctx context.Context, config Config) error
-	
-	// Get all prices
-	// Modify price
+
+	ModifyPrice(ctx context.Context, config PriceConfig) (bool, error)
+	GetAllPrices(ctx context.Context) ([]PriceConfig, error)
 	DeletePrice(ctx context.Context, id string) error
 	AddPrice(ctx context.Context, config PriceConfig) error
 }
@@ -79,17 +79,41 @@ func (a *AdminBasicInfoServiceImpl) AddContact(ctx context.Context, contact Cont
 	return a.contactsService.CreateContacts(ctx, contact)
 }
 
+func (a *AdminBasicInfoServiceImpl) ModifyConfig(ctx context.Context, config Config) (bool, error) {
+	return a.configService.Update(ctx, config)
+}
+
 func (a *AdminBasicInfoServiceImpl) AddPrice(ctx context.Context, config PriceConfig) error {
 	return a.priceService.CreateNewPriceConfig(ctx, config)
+}
+
+func (a *AdminBasicInfoServiceImpl) ModifyStation(ctx context.Context, station Station) (bool, error) {
+	return a.stationService.UpdateStation(ctx, station)
+}
+
+func (a *AdminBasicInfoServiceImpl) GetAllStations(ctx context.Context) ([]Station, error) {
+	return a.stationService.FindAll(ctx)
 }
 
 func (a *AdminBasicInfoServiceImpl) DeleteStation(ctx context.Context, id string) error {
 	return a.stationService.DeleteStation(ctx, id)
 }
 
+func (a *AdminBasicInfoServiceImpl) ModifyTrain(ctx context.Context, ttype TrainType) (bool, error) {
+	return a.trainService.Update(ctx, ttype)
+}
+
+func (a *AdminBasicInfoServiceImpl) GetAllTrains(ctx context.Context) ([]TrainType, error) {
+	return a.trainService.AllTrains(ctx)
+}
+
 func (a *AdminBasicInfoServiceImpl) DeleteTrain(ctx context.Context, id string) error {
 	_, err := a.trainService.Delete(ctx, id)
 	return err
+}
+
+func (a *AdminBasicInfoServiceImpl) GetAllConfigs(ctx context.Context) ([]Config, error) {
+	return a.configService.FindAll(ctx)
 }
 
 func (a *AdminBasicInfoServiceImpl) DeleteConfig(ctx context.Context, name string) error {
@@ -98,6 +122,14 @@ func (a *AdminBasicInfoServiceImpl) DeleteConfig(ctx context.Context, name strin
 
 func (a *AdminBasicInfoServiceImpl) DeleteContact(ctx context.Context, id string) error {
 	return a.contactsService.Delete(ctx, id)
+}
+
+func (a *AdminBasicInfoServiceImpl) ModifyPrice(ctx context.Context, config PriceConfig) (bool, error) {
+	return a.priceService.UpdatePriceConfig(ctx, config)
+}
+
+func (a *AdminBasicInfoServiceImpl) GetAllPrices(ctx context.Context) ([]PriceConfig, error) {
+	return a.priceService.GetAllPriceConfig(ctx)
 }
 
 func (a *AdminBasicInfoServiceImpl) DeletePrice(ctx context.Context, id string) error {

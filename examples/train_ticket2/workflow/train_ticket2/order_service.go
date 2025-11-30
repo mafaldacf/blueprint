@@ -242,7 +242,7 @@ func (o *OrderServiceImpl) SaveOrderInfo(ctx context.Context, order Order) (Orde
 		return Order{}, fmt.Errorf("order (%s) does not exist", order.ID)
 	}
 
-	_, err = collection.ReplaceOne(ctx, filter, order)
+	_, err = collection.Upsert(ctx, filter, order)
 	if err != nil {
 		return Order{}, err
 	}
@@ -418,11 +418,11 @@ func (o *OrderServiceImpl) update(ctx context.Context, order Order) error {
 	}
 
 	filter := bson.D{{Key: "ID", Value: order.ID}}
-	updated, err := collection.ReplaceOne(ctx, filter, order)
+	updated, err := collection.Upsert(ctx, filter, order)
 	if err != nil {
 		return err
 	}
-	if updated == 0 {
+	if updated {
 		return fmt.Errorf("order not found for id (%s)", order.ID)
 	}
 	return nil
