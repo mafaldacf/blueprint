@@ -170,7 +170,7 @@ func (s *OrderServiceImpl) NewOrder(ctx context.Context, customerID, addressID, 
 	if err != nil {
 		return Order{}, err
 	}
-
+	s.carts.DeleteCart(ctx, customerID)
 	return order, nil
 }
 
