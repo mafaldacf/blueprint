@@ -147,66 +147,58 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 	userIDstr := strconv.FormatInt(userID, 10)
 	followeeIDstr := strconv.FormatInt(followeeID, 10)
 	var err1, err2, err3 error
-	var wg sync.WaitGroup
-	wg.Add(3)
-	go func() {
-		defer wg.Done()
-		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
-		if err_internal != nil {
-			err1 = err_internal
-			return
-		}
-		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
-		update_d := bson.D{
-			{Key: "$push", Value: bson.D{
-				{Key: "followees", Value: bson.D{
-					{Key: "UserID", Value: followeeIDstr},
-					{Key: "Timestamp", Value: timestamp},
-				}},
+
+	collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
+	if err_internal != nil {
+		return err_internal
+	}
+	query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+	update_d := bson.D{
+		{Key: "$push", Value: bson.D{
+			{Key: "followees", Value: bson.D{
+				{Key: "UserID", Value: followeeIDstr},
+				{Key: "Timestamp", Value: timestamp},
 			}},
-		}
-		_, err1 = collection.UpdateOne(ctx, query_d, update_d)
-	}()
-	go func() {
-		defer wg.Done()
-		collection, err_internal := s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
-		if err_internal != nil {
-			err1 = err_internal
-			return
-		}
-		query_d := bson.D{{Key: "UserID", Value: followeeIDstr}}
-		update_d := bson.D{
-			{Key: "$push", Value: bson.D{
-				{Key: "followers", Value: bson.D{
-					{Key: "UserID", Value: userIDstr},
-					{Key: "Timestamp", Value: timestamp},
-				}},
-			}},
-		}
-		_, err2 = collection.UpdateOne(ctx, query_d, update_d)
-	}()
-	go func() {
-		defer wg.Done()
-		var followees []FolloweeInfo
-		var followers []FollowerInfo
-		s.socialGraphCache.Get(ctx, userIDstr+":followees", &followees)
-		s.socialGraphCache.Get(ctx, followeeIDstr+":followers", &followers)
-		followees = append(followees, FolloweeInfo{FolloweeID: followeeID, Timestamp: now})
-		followers = append(followers, FollowerInfo{FollowerID: userID, Timestamp: now})
-		err3 = s.socialGraphCache.Put(ctx, userIDstr+":followees", followees)
-		if err3 != nil {
-			return
-		}
-		err3 = s.socialGraphCache.Put(ctx, followeeIDstr+":followers", followers)
-	}()
-	wg.Wait()
+		}},
+	}
+	_, err1 = collection.UpdateOne(ctx, query_d, update_d)
 	if err1 != nil {
 		return err1
 	}
+
+	collection, err_internal = s.socialGraphDB.GetCollection(ctx, "socialgraph_db", "socialgraph")
+	if err_internal != nil {
+		return err_internal
+	}
+	query_d = bson.D{{Key: "UserID", Value: followeeIDstr}}
+	update_d = bson.D{
+		{Key: "$push", Value: bson.D{
+			{Key: "followers", Value: bson.D{
+				{Key: "UserID", Value: userIDstr},
+				{Key: "Timestamp", Value: timestamp},
+			}},
+		}},
+	}
+	_, err2 = collection.UpdateOne(ctx, query_d, update_d)
 	if err2 != nil {
 		return err2
 	}
-	return err3
+
+	var followees []FolloweeInfo
+	var followers []FollowerInfo
+	s.socialGraphCache.Get(ctx, userIDstr+":followees", &followees)
+	s.socialGraphCache.Get(ctx, followeeIDstr+":followers", &followers)
+	followees = append(followees, FolloweeInfo{FolloweeID: followeeID, Timestamp: now})
+	followers = append(followers, FollowerInfo{FollowerID: userID, Timestamp: now})
+	err3 = s.socialGraphCache.Put(ctx, userIDstr+":followees", followees)
+	if err3 != nil {
+		return err3
+	}
+	err3 = s.socialGraphCache.Put(ctx, followeeIDstr+":followers", followers)
+	if err3 != nil {
+		return err3
+	}
+	return nil
 }
 
 // Implements SocialGraphService interface
