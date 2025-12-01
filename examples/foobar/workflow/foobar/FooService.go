@@ -75,6 +75,8 @@ func (s *FooServiceImpl) WriteFoo(ctx context.Context, id string, text string, b
 
 	// invoke service
 
+	//s.barService.WriteBar(ctx, barID, text, id)
+
 	err = s.invokeService(ctx, barID, id, text)
 	if err != nil {
 		return Foo{}, Bar{}, err
