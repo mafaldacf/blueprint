@@ -50,7 +50,6 @@ func (s *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, m
 }
 
 func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, title string, rating int) error {
-	return nil
 	var movieID string
 
 	ok, err := s.cache.Get(ctx, title, &movieID)

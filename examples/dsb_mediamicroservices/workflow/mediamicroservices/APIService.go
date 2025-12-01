@@ -145,17 +145,17 @@ func (api *APIServiceImpl) Login(ctx context.Context, reqID int64, username stri
 }
 
 func (api *APIServiceImpl) UploadUserWithUsername(ctx context.Context, reqID int64, username string) error {
-	return api.UploadUserWithUsername(ctx, reqID, username)
+	return api.userService.UploadUserWithUsername(ctx, reqID, username)
 }
 
 func (api *APIServiceImpl) UploadText(ctx context.Context, reqID int64, text string) error {
-	return api.UploadText(ctx, reqID, text)
+	return api.textService.UploadText(ctx, reqID, text)
 }
 
 func (api *APIServiceImpl) UploadMovieId(ctx context.Context, reqID int64, title string, rating int) error {
-	return api.UploadMovieId(ctx, reqID, title, rating)
+	return api.movieIdService.UploadMovieId(ctx, reqID, title, rating)
 }
 
 func (api *APIServiceImpl) UploadUniqueId(ctx context.Context, reqID int64) error {
-	return api.UploadUniqueId(ctx, reqID)
+	return api.uniqueIdService.UploadUniqueId(ctx, reqID)
 }

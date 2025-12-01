@@ -3,6 +3,7 @@ package mediamicroservices
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
@@ -113,6 +114,10 @@ func (s *ReviewStorageServiceImpl) ReadReviews(ctx context.Context, reqID int64,
 		for _, review := range reviews {
 			s.cache.Put(ctx, strconv.FormatInt(review.ReviewID, 10), review)
 		}
+	}
+
+	if len(returnReviews) != len(reviewIDs) {
+		return nil, fmt.Errorf("return set incomplete ")
 	}
 	return returnReviews, nil
 }
