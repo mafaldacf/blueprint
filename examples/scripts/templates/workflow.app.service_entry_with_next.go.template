@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Service{{.N}}Data struct {
@@ -12,54 +13,72 @@ type Service{{.N}}Data struct {
 }
 
 type Service{{.N}} interface {
-	Method{{.N}}(ctx context.Context, id string, data string) (Service{{.N}}Data, error)
+	{{- range $idx := .Methods }}
+	// Endpoint {{$idx}}
+	Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N}} string, data{{$.N}} string) (Service{{$.N}}Data, error)
+	{{- end }}
+	MethodDelete{{.N}}(ctx context.Context, id{{.N}} string) error
 }
 
 type Service{{.N}}Impl struct {
-    service{{.N}}DB backend.NoSQLDatabase
-    {{- range $i, $next := .Next }}
-    service{{$next}} Service{{$next}}
-    {{- end }}
+	service{{.N}}DB backend.NoSQLDatabase
+	{{- range $i, $next := .Next }}
+	service{{$next}} Service{{$next}}
+	{{- end }}
 }
 
 func NewService{{.N}}Impl(
-    ctx context.Context,
-    service{{.N}}DB backend.NoSQLDatabase,
-    {{- range $i, $next := .Next }}
-    service{{$next}} Service{{$next}},
-    {{- end }}
+	ctx context.Context,
+	service{{.N}}DB backend.NoSQLDatabase,
+	{{- range $i, $next := .Next }}
+	service{{$next}} Service{{$next}},
+	{{- end }}
 ) (Service{{.N}}, error) {
-    return &Service{{.N}}Impl{
-        service{{.N}}DB: service{{.N}}DB,
-        {{- range $i, $next := .Next }}
-        service{{$next}}: service{{$next}},
-        {{- end }}
-    }, nil
+	return &Service{{.N}}Impl{
+		service{{.N}}DB: service{{.N}}DB,
+		{{- range $i, $next := .Next }}
+		service{{$next}}: service{{$next}},
+		{{- end }}
+	}, nil
 }
 
-func (s *Service{{.N}}Impl) Method{{.N}}(ctx context.Context, id{{.N}} string, data{{.N}} string) (Service{{.N}}Data, error) {
+{{- range $idx := .Methods }}
+
+func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N}} string, data{{$.N}} string) (Service{{$.N}}Data, error) {
 	// ----------------------- DATABASE WRITE -----------------------
-	coll, err := s.service{{.N}}DB.GetCollection(ctx, "service{{.N}}_db", "service{{.N}}_data")
+	coll, err := s.service{{$.N}}DB.GetCollection(ctx, "service{{$.N}}_db", "service{{$.N}}_data")
 	if err != nil {
-		return Service{{.N}}Data{}, err
+		return Service{{$.N}}Data{}, err
 	}
-	service{{.N}}Data := Service{{.N}}Data{
-		ID:   	id{{.N}},
-		Data: 	data{{.N}},
+	service{{$.N}}Data := Service{{$.N}}Data{
+		ID:   id{{$.N}},
+		Data: data{{$.N}},
 	}
-	if err := coll.InsertOne(ctx, service{{.N}}Data); err != nil {
-		return Service{{.N}}Data{}, err
+	if err := coll.InsertOne(ctx, service{{$.N}}Data); err != nil {
+		return Service{{$.N}}Data{}, err
 	}
 
 	// ----------------------- SERVICES RPCs -----------------------
-
-	// call the next services in the chain
-	{{- range $i, $next := .Next }}
-	if _, err := s.service{{$next}}.Method{{$next}}(ctx, id{{$.N}}, data{{$.N}}); err != nil {
+	{{- range $j, $next := $.Next }}
+	if _, err := s.service{{$next}}.Method{{$next}}_{{$idx}}(ctx, id{{$.N}}, data{{$.N}}); err != nil {
 		return Service{{$.N}}Data{}, err
 	}
 	{{- end }}
 
-	return service{{.N}}Data, nil
+	return service{{$.N}}Data, nil
 }
 
+{{- end }}
+
+func (s *Service{{.N}}Impl) MethodDelete{{.N}}(ctx context.Context, id{{.N}} string) error {
+	// ----------------------- DATABASE DELETE -----------------------
+	coll, err := s.service{{.N}}DB.GetCollection(ctx, "service{{.N}}_db", "service{{.N}}_data")
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{
+		{Key: "ID", Value: id{{.N}}},
+	}
+	return coll.DeleteOne(ctx, filter)
+}

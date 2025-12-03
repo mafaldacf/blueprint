@@ -17,12 +17,13 @@ type AppConfig struct {
 	AppName   string `yaml:"app"`
 	CallDepth int    `yaml:"call_depth"`
 	OutDegree int    `yaml:"out_degree"`
+	Endpoints int    `yaml:"endpoints"`
 }
 
 var cfgs []AppConfig
 
 var APPNAME, APP_BASE_DIR, WORKFLOW_DIR, SERVICES_PKG_IMPORT string
-var CALL_DEPTH, OUT_DEGREE, NUM_SERVICES int
+var CALL_DEPTH, OUT_DEGREE, NUM_SERVICES, NUM_ENDPOINTS int
 
 //go:embed templates/.gitignore.template
 var gitIgnoreTemplate string
@@ -61,10 +62,15 @@ func loadConfigs(path string) {
 func main() {
 	loadConfigs("config.yaml")
 	for _, cfg := range cfgs {
-		fmt.Printf("==== Generating app: %s (depth=%d, out_degree=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.OutDegree)
+		fmt.Printf("==== Generating app: %s (depth=%d, out_degree=%d, endpoints=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.OutDegree, cfg.Endpoints)
 		APPNAME = cfg.AppName
 		CALL_DEPTH = cfg.CallDepth
 		OUT_DEGREE = cfg.OutDegree
+		if cfg.Endpoints <= 0 {
+			NUM_ENDPOINTS = 1
+		} else {
+			NUM_ENDPOINTS = cfg.Endpoints
+		}
 		APP_BASE_DIR = fmt.Sprintf("../%s", APPNAME)
 		WORKFLOW_DIR = filepath.Join(APP_BASE_DIR, fmt.Sprintf("workflow/%s", APPNAME))
 		SERVICES_PKG_IMPORT = fmt.Sprintf("github.com/blueprint-uservices/blueprint/examples/%s/workflow/%s", APPNAME, APPNAME)
@@ -292,11 +298,20 @@ type serviceData struct {
 	N       int
 	Next    []int
 	PkgName string
+	Methods []int
 }
 
 type mainData struct {
 	N       int
 	PkgName string
+}
+
+func makeMethods(n int) []int {
+	ms := make([]int, n)
+	for i := range ms {
+		ms[i] = i + 1 // methods indices: 1..n
+	}
+	return ms
 }
 
 func GenWorkflow() {
@@ -308,7 +323,7 @@ func GenWorkflow() {
 
 	for _, g := range graph {
 		filename := filepath.Join(WORKFLOW_DIR, fmt.Sprintf("service%d.go", g.ID))
-		data := serviceData{N: g.ID, Next: g.Next, PkgName: APPNAME}
+		data := serviceData{N: g.ID, Next: g.Next, PkgName: APPNAME, Methods: makeMethods(NUM_ENDPOINTS),}
 
 		code, err := GenWorkflowServices(data)
 		if err != nil {
