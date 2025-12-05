@@ -15,7 +15,9 @@ import (
 
 type AppConfig struct {
 	AppName     string `yaml:"app"`
+	Description string `yaml:"description"`
 	CallDepth   int    `yaml:"call_depth"`
+	RpcDepth    int    `yaml:"rpc_depth"`
 	OutDegree   int    `yaml:"out_degree"`
 	Entrypoints int    `yaml:"entrypoints"`
 	DbAccesses  int    `yaml:"db_accesses"`
@@ -24,7 +26,7 @@ type AppConfig struct {
 var cfgs []AppConfig
 
 var APPNAME, APP_BASE_DIR, WORKFLOW_DIR, SERVICES_PKG_IMPORT string
-var CALL_DEPTH, OUT_DEGREE, NUM_SERVICES, NUM_ENTRYPOINTS, NUM_DB_ACCESSES int
+var RPC_DEPTH, OUT_DEGREE, NUM_SERVICES, NUM_ENTRYPOINTS, NUM_DB_ACCESSES int
 
 //go:embed templates/.gitignore.template
 var gitIgnoreTemplate string
@@ -38,14 +40,8 @@ var wiringGoModTemplate string
 //go:embed templates/workflow.go.mod.template
 var workflowGoModTemplate string
 
-//go:embed templates/workflow.app.service_entry_with_next.go.template
-var worflowServiceEntryWithNextTemplate string
-
-//go:embed templates/workflow.app.service_with_next.go.template
-var worflowServiceWithNextTemplate string
-
-//go:embed templates/workflow.app.service_terminal.go.template
-var workflowServiceTerminalTemplate string
+//go:embed templates/workflow.app.service.go.template
+var workflowServiceTemplate string
 
 func loadConfigs(path string) {
 	data, err := os.ReadFile(path)
@@ -63,9 +59,13 @@ func loadConfigs(path string) {
 func main() {
 	loadConfigs("config.yaml")
 	for _, cfg := range cfgs {
-		fmt.Printf("==== Generating app: %s (depth=%d, out_degree=%d, entrypoints=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.OutDegree, cfg.Entrypoints)
+		fmt.Printf("==== Generating app: %s (call_depth=%d, rpc_depth=%d, out_degree=%d, entrypoints=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.RpcDepth, cfg.OutDegree, cfg.Entrypoints)
 		APPNAME = cfg.AppName
-		CALL_DEPTH = cfg.CallDepth
+		if cfg.RpcDepth > 0 {
+			RPC_DEPTH = cfg.RpcDepth
+		} else {
+			RPC_DEPTH = cfg.CallDepth - 1
+		}
 		OUT_DEGREE = cfg.OutDegree
 		if cfg.Entrypoints <= 0 {
 			NUM_ENTRYPOINTS = 1
@@ -97,7 +97,7 @@ func main() {
 func computeNumberOfServices() int {
 	total := 0
 	pow := 1
-	for i := 0; i <= CALL_DEPTH; i++ {
+	for i := 0; i <= RPC_DEPTH; i++ {
 		total += pow
 		pow *= OUT_DEGREE
 	}
@@ -125,7 +125,7 @@ func intPow(a, b int) int {
 
 func generateCallGraph() []GraphService {
 	// levels[d] = list of IDs at depth d
-	levels := make([][]int, CALL_DEPTH+1)
+	levels := make([][]int, RPC_DEPTH+1)
 
 	nextID := 1
 	// root
@@ -133,7 +133,7 @@ func generateCallGraph() []GraphService {
 	nextID++
 
 	// allocate IDs for each subsequent level
-	for d := 1; d <= CALL_DEPTH; d++ {
+	for d := 1; d <= RPC_DEPTH; d++ {
 		levelSize := intPow(OUT_DEGREE, d)
 		level := make([]int, levelSize)
 		for i := 0; i < levelSize; i++ {
@@ -158,7 +158,7 @@ func generateCallGraph() []GraphService {
 	}
 
 	// assign Next for all nodes except leaves (depth = MaxDepth)
-	for d := 0; d < CALL_DEPTH; d++ {
+	for d := 0; d < RPC_DEPTH; d++ {
 		parents := levels[d]
 		children := levels[d+1]
 		childIdx := 0
@@ -193,7 +193,7 @@ func generateCallGraph() []GraphService {
 	}
 
 	// assign DB accesses: deepest levels first (leaves → root) until remaining == 0
-	for d := CALL_DEPTH; d >= 0 && remaining > 0; d-- {
+	for d := RPC_DEPTH; d >= 0 && remaining > 0; d-- {
 		for _, id := range levels[d] {
 			if remaining == 0 {
 				break
@@ -364,11 +364,11 @@ func GenWorkflow() {
 	for _, g := range graph {
 		filename := filepath.Join(WORKFLOW_DIR, fmt.Sprintf("service%d.go", g.ID))
 		data := serviceData{
-			N: g.ID, 
-			Next: g.Next, 
-			PkgName: APPNAME, 
+			N:       g.ID,
+			Next:    g.Next,
+			PkgName: APPNAME,
 			Methods: makeMethods(NUM_ENTRYPOINTS),
-			HasDB: g.HasDB,
+			HasDB:   g.HasDB,
 		}
 
 		code, err := GenWorkflowServices(data)
@@ -399,23 +399,11 @@ func GenWorkflow() {
 }
 
 func GenWorkflowServices(data serviceData) (string, error) {
-	serviceEntryWithNext := template.Must(template.New("entry_with_next").Parse(worflowServiceEntryWithNextTemplate))
-	serviceWithNext := template.Must(template.New("with_next").Parse(worflowServiceWithNextTemplate))
-	serviceTerminal := template.Must(template.New("terminal").Parse(workflowServiceTerminalTemplate))
-
+	var workflowServiceTmpl = template.Must(
+		template.New("service").Parse(workflowServiceTemplate),
+	)
 	buf := &bytes.Buffer{}
-	var err error
-
-	switch {
-	case data.N == 1:
-		err = serviceEntryWithNext.Execute(buf, data)
-	case len(data.Next) > 0:
-		err = serviceWithNext.Execute(buf, data)
-	default:
-		err = serviceTerminal.Execute(buf, data)
-	}
-
-	if err != nil {
+	if err := workflowServiceTmpl.Execute(buf, data); err != nil {
 		return "", err
 	}
 	return buf.String(), nil

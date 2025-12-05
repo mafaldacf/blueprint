@@ -3,7 +3,9 @@ package {{.PkgName}}
 import (
 	"context"
 	{{- if .HasDB }}
-
+    {{- if eq .N 1 }}
+	"go.mongodb.org/mongo-driver/bson"
+    {{- end }}
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	{{- end }}
 )
@@ -18,13 +20,17 @@ type Service{{.N}} interface {
 	// Endpoint {{$idx}}
 	Method{{$.N}}_{{$idx}}(ctx context.Context, id string, data string) (Service{{$.N}}Data, error)
 	{{- end }}
+	{{- if eq .N 1 }}
+	// Only the entry service exposes a delete
+	MethodDelete{{.N}}(ctx context.Context, id string) error
+	{{- end }}
 }
 
 type Service{{.N}}Impl struct {
 	{{- if .HasDB }}
 	service{{.N}}DB backend.NoSQLDatabase
 	{{- end }}
-	{{- range $i, $next := .Next }}
+	{{- range $next := .Next }}
 	service{{$next}} Service{{$next}}
 	{{- end }}
 }
@@ -34,7 +40,7 @@ func NewService{{.N}}Impl(
 	{{- if .HasDB }}
 	service{{.N}}DB backend.NoSQLDatabase,
 	{{- end }}
-	{{- range $i, $next := .Next }}
+	{{- range $next := .Next }}
 	service{{$next}} Service{{$next}},
 	{{- end }}
 ) (Service{{.N}}, error) {
@@ -42,7 +48,7 @@ func NewService{{.N}}Impl(
 		{{- if .HasDB }}
 		service{{.N}}DB: service{{.N}}DB,
 		{{- end }}
-		{{- range $i, $next := .Next }}
+		{{- range $next := .Next }}
 		service{{$next}}: service{{$next}},
 		{{- end }}
 	}, nil
@@ -50,11 +56,11 @@ func NewService{{.N}}Impl(
 
 {{- range $idx := .Methods }}
 
-func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N}} string, data{{$.N}} string) (Service{{$.N}}Data, error) {
+func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id string, data string) (Service{{$.N}}Data, error) {
 	// Prepare response payload
-	service{{$.N}}Data := Service{{$.N}}Data{
-		ID:   id{{$.N}},
-		Data: data{{$.N}},
+	result := Service{{$.N}}Data{
+		ID:   id,
+		Data: data,
 	}
 
 	{{- if $.HasDB }}
@@ -63,20 +69,42 @@ func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N
 	if err != nil {
 		return Service{{$.N}}Data{}, err
 	}
-	if err := coll.InsertOne(ctx, service{{$.N}}Data); err != nil {
+	if err := coll.InsertOne(ctx, result); err != nil {
 		return Service{{$.N}}Data{}, err
 	}
 	{{- end }}
 
+	{{- if gt (len $.Next) 0 }}
 	// ----------------------- SERVICES RPCs -----------------------
-	// call the next services in the chain for endpoint {{$idx}}
-	{{- range $j, $next := $.Next }}
-	if _, err := s.service{{$next}}.Method{{$next}}_{{$idx}}(ctx, id{{$.N}}, data{{$.N}}); err != nil {
+	{{- range $next := $.Next }}
+	if _, err := s.service{{$next}}.Method{{$next}}_{{$idx}}(ctx, id, data); err != nil {
 		return Service{{$.N}}Data{}, err
 	}
 	{{- end }}
+	{{- end }}
 
-	return service{{$.N}}Data, nil
+	return result, nil
 }
+{{- end }}
 
+{{- if eq .N 1 }}
+
+func (s *Service{{.N}}Impl) MethodDelete{{.N}}(ctx context.Context, id string) error {
+	{{- if .HasDB }}
+	coll, err := s.service{{.N}}DB.GetCollection(ctx, "service{{.N}}_db", "service{{.N}}_data")
+	if err != nil {
+		return err
+	}
+
+	filter := bson.D{
+		{Key: "ID", Value: id},
+	}
+	if err := coll.DeleteOne(ctx, filter); err != nil {
+		return err
+	}
+	{{- end }}
+
+	// NOTE: no cascades to other services
+	return nil
+}
 {{- end }}

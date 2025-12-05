@@ -1,14 +1,29 @@
-#- app: synthetic_app2
-#  description: 30x avg. fan-out
-#  call_depth: 1
-#  out_degree: 375
-
-- app: synthetic_app3
-  #description: ALIBABA: p50 stateful (8), avg. call depth (4.27), p50 fanout (3)
-  call_depth: 4
-  out_degree: 3
-  db_accesses: 8
+- app: synthetic_app1
+  db_accesses: 20 # p90 Alibaba
+  call_depth: 4   # avg Alibaba
+  out_degree: 3   # p50 Alibaba  (+/- looking at the graph)
   entrypoints: 1
 
-#- app: synthetic_app4
-#  description: UBER: avg. rpc depth (8.5), avg total rpc (112)
+- app: synthetic_app2
+  db_accesses: 20 # p90 Alibaba
+  call_depth: 4   # avg Alibaba
+  out_degree: 5   # p90 Alibaba
+  entrypoints: 1
+
+- app: synthetic_app3
+  db_accesses: 20   # p90 Alibaba
+  call_depth: 350   # 10x max. Uber
+  out_degree: 1
+  entrypoints: 1
+
+- app: synthetic_app4
+  db_accesses: 100  # 10x p90 Alibaba
+  call_depth: 350   # 10x max. Uber
+  out_degree: 1
+  entrypoints: 1
+
+- app: synthetic_app5
+  db_accesses: 20 # p90 Alibaba
+  call_depth: 4   # avg Alibaba
+  out_degree: 3   # p50 Alibaba  (+/- looking at the graph)
+  entrypoints: 500
