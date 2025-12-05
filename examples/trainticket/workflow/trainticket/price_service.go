@@ -29,7 +29,7 @@ func NewPriceServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (PriceSe
 }
 
 func (p *PriceServiceImpl) GetAllPriceConfig(ctx context.Context) ([]PriceConfig, error) {
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "price_config")
 	if err != nil {
 		return []PriceConfig{}, err
 	}
@@ -46,7 +46,7 @@ func (p *PriceServiceImpl) GetAllPriceConfig(ctx context.Context) ([]PriceConfig
 }
 
 func (p *PriceServiceImpl) DeletePriceConfig(ctx context.Context, id string) error {
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "price_config")
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (p *PriceServiceImpl) DeletePriceConfig(ctx context.Context, id string) err
 }
 
 func (p *PriceServiceImpl) UpdatePriceConfig(ctx context.Context, pc PriceConfig) (bool, error) {
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "price_config")
 	if err != nil {
 		return false, err
 	}
@@ -65,7 +65,7 @@ func (p *PriceServiceImpl) UpdatePriceConfig(ctx context.Context, pc PriceConfig
 
 func (p *PriceServiceImpl) CreateNewPriceConfig(ctx context.Context, pc PriceConfig) error {
 
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "price_config")
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func (p *PriceServiceImpl) CreateNewPriceConfig(ctx context.Context, pc PriceCon
 }
 
 func (p *PriceServiceImpl) FindByRouteIDAndTrainType(ctx context.Context, routeID string, trainType string) (PriceConfig, error) {
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "price_config")
 	if err != nil {
 		return PriceConfig{}, err
 	}
@@ -128,7 +128,7 @@ func (p *PriceServiceImpl) FindByRouteIDsAndTrainTypes(ctx context.Context, rtsA
 }
 
 func (p *PriceServiceImpl) findByID(ctx context.Context, id string) (PriceConfig, error) {
-	coll, err := p.priceDB.GetCollection(ctx, "price_db", "priceConfig")
+	coll, err := p.priceDB.GetCollection(ctx, "price_db", "price_config")
 	if err != nil {
 		return PriceConfig{}, err
 	}
