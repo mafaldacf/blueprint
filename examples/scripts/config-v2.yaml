@@ -1,0 +1,4 @@
+- app: synthetic_app2
+  description: 30x avg. fan-out
+  call_depth: 1
+  out_degree: 375

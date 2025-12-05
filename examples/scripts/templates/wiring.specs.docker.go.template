@@ -43,9 +43,13 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	{{/* -------- terminal N first, then middles, then entry 1 (provided by data.Services order) -------- */}}
 	{{range .Services}}
 	//----- service{{.N}} {{.Comment}} ----------
+	{{- if .HasDB }}
     service{{.N}}_db := mongodb.Container(spec, "service{{.N}}_db")
     allServices = append(allServices, service{{.N}}_db)
-    {{- if .HasNext }}
+	{{- end }}
+
+	{{- if .HasDB }}
+		{{- if .HasNext }}
     service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](
         spec,
         "service{{.N}}",
@@ -54,9 +58,29 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
         service{{$next}},
         {{- end }}
     )
-    {{- else }}
-    service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](spec, "service{{.N}}", service{{.N}}_db)
-    {{- end }}
+		{{- else }}
+    service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](
+        spec,
+        "service{{.N}}",
+        service{{.N}}_db,
+    )
+		{{- end }}
+	{{- else }} {{/* no DB for this service */}}
+		{{- if .HasNext }}
+    service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](
+        spec,
+        "service{{.N}}",
+        {{- range $i, $next := .Next }}
+        service{{$next}},
+        {{- end }}
+    )
+		{{- else }}
+    service{{.N}} := workflow.Service[{{.PkgName}}.Service{{.N}}](
+        spec,
+        "service{{.N}}",
+    )
+		{{- end }}
+	{{- end }}
 
 	{{- if .HTTP }}
 	service{{.N}}_ctr := applyHTTPDefaults(spec, service{{.N}}, "service{{.N}}_proc", "service{{.N}}_container")

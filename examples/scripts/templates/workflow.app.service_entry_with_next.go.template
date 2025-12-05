@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	{{- if .HasDB }}
 	"go.mongodb.org/mongo-driver/bson"
+	{{- end }}
 )
 
 type Service{{.N}}Data struct {
@@ -45,18 +47,22 @@ func NewService{{.N}}Impl(
 {{- range $idx := .Methods }}
 
 func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N}} string, data{{$.N}} string) (Service{{$.N}}Data, error) {
+	// Prepare response payload
+	service{{$.N}}Data := Service{{$.N}}Data{
+		ID:   id{{$.N}},
+		Data: data{{$.N}},
+	}
+
+	{{- if $.HasDB }}
 	// ----------------------- DATABASE WRITE -----------------------
 	coll, err := s.service{{$.N}}DB.GetCollection(ctx, "service{{$.N}}_db", "service{{$.N}}_data")
 	if err != nil {
 		return Service{{$.N}}Data{}, err
 	}
-	service{{$.N}}Data := Service{{$.N}}Data{
-		ID:   id{{$.N}},
-		Data: data{{$.N}},
-	}
 	if err := coll.InsertOne(ctx, service{{$.N}}Data); err != nil {
 		return Service{{$.N}}Data{}, err
 	}
+	{{- end }}
 
 	// ----------------------- SERVICES RPCs -----------------------
 	{{- range $j, $next := $.Next }}
@@ -71,6 +77,7 @@ func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N
 {{- end }}
 
 func (s *Service{{.N}}Impl) MethodDelete{{.N}}(ctx context.Context, id{{.N}} string) error {
+	{{- if .HasDB }}
 	// ----------------------- DATABASE DELETE -----------------------
 	coll, err := s.service{{.N}}DB.GetCollection(ctx, "service{{.N}}_db", "service{{.N}}_data")
 	if err != nil {
@@ -80,5 +87,9 @@ func (s *Service{{.N}}Impl) MethodDelete{{.N}}(ctx context.Context, id{{.N}} str
 	filter := bson.D{
 		{Key: "ID", Value: id{{.N}}},
 	}
-	return coll.DeleteOne(ctx, filter)
+	if err := coll.DeleteOne(ctx, filter); err != nil {
+		return err
+	}
+	{{- end }}
+	return nil
 }

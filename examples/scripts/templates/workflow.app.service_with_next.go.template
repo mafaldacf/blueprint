@@ -2,8 +2,10 @@ package {{.PkgName}}
 
 import (
 	"context"
+	{{- if .HasDB }}
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	{{- end }}
 )
 
 type Service{{.N}}Data struct {
@@ -19,7 +21,9 @@ type Service{{.N}} interface {
 }
 
 type Service{{.N}}Impl struct {
+	{{- if .HasDB }}
 	service{{.N}}DB backend.NoSQLDatabase
+	{{- end }}
 	{{- range $i, $next := .Next }}
 	service{{$next}} Service{{$next}}
 	{{- end }}
@@ -27,13 +31,17 @@ type Service{{.N}}Impl struct {
 
 func NewService{{.N}}Impl(
 	ctx context.Context,
+	{{- if .HasDB }}
 	service{{.N}}DB backend.NoSQLDatabase,
+	{{- end }}
 	{{- range $i, $next := .Next }}
 	service{{$next}} Service{{$next}},
 	{{- end }}
 ) (Service{{.N}}, error) {
 	return &Service{{.N}}Impl{
+		{{- if .HasDB }}
 		service{{.N}}DB: service{{.N}}DB,
+		{{- end }}
 		{{- range $i, $next := .Next }}
 		service{{$next}}: service{{$next}},
 		{{- end }}
@@ -43,18 +51,22 @@ func NewService{{.N}}Impl(
 {{- range $idx := .Methods }}
 
 func (s *Service{{$.N}}Impl) Method{{$.N}}_{{$idx}}(ctx context.Context, id{{$.N}} string, data{{$.N}} string) (Service{{$.N}}Data, error) {
+	// Prepare response payload
+	service{{$.N}}Data := Service{{$.N}}Data{
+		ID:   id{{$.N}},
+		Data: data{{$.N}},
+	}
+
+	{{- if $.HasDB }}
 	// ----------------------- DATABASE WRITE -----------------------
 	coll, err := s.service{{$.N}}DB.GetCollection(ctx, "service{{$.N}}_db", "service{{$.N}}_data")
 	if err != nil {
 		return Service{{$.N}}Data{}, err
 	}
-	service{{$.N}}Data := Service{{$.N}}Data{
-		ID:   id{{$.N}},
-		Data: data{{$.N}},
-	}
 	if err := coll.InsertOne(ctx, service{{$.N}}Data); err != nil {
 		return Service{{$.N}}Data{}, err
 	}
+	{{- end }}
 
 	// ----------------------- SERVICES RPCs -----------------------
 	// call the next services in the chain for endpoint {{$idx}}

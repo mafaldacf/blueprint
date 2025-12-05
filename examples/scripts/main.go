@@ -14,16 +14,17 @@ import (
 )
 
 type AppConfig struct {
-	AppName   string `yaml:"app"`
-	CallDepth int    `yaml:"call_depth"`
-	OutDegree int    `yaml:"out_degree"`
-	Endpoints int    `yaml:"endpoints"`
+	AppName     string `yaml:"app"`
+	CallDepth   int    `yaml:"call_depth"`
+	OutDegree   int    `yaml:"out_degree"`
+	Entrypoints int    `yaml:"entrypoints"`
+	DbAccesses  int    `yaml:"db_accesses"`
 }
 
 var cfgs []AppConfig
 
 var APPNAME, APP_BASE_DIR, WORKFLOW_DIR, SERVICES_PKG_IMPORT string
-var CALL_DEPTH, OUT_DEGREE, NUM_SERVICES, NUM_ENDPOINTS int
+var CALL_DEPTH, OUT_DEGREE, NUM_SERVICES, NUM_ENTRYPOINTS, NUM_DB_ACCESSES int
 
 //go:embed templates/.gitignore.template
 var gitIgnoreTemplate string
@@ -62,14 +63,14 @@ func loadConfigs(path string) {
 func main() {
 	loadConfigs("config.yaml")
 	for _, cfg := range cfgs {
-		fmt.Printf("==== Generating app: %s (depth=%d, out_degree=%d, endpoints=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.OutDegree, cfg.Endpoints)
+		fmt.Printf("==== Generating app: %s (depth=%d, out_degree=%d, entrypoints=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.OutDegree, cfg.Entrypoints)
 		APPNAME = cfg.AppName
 		CALL_DEPTH = cfg.CallDepth
 		OUT_DEGREE = cfg.OutDegree
-		if cfg.Endpoints <= 0 {
-			NUM_ENDPOINTS = 1
+		if cfg.Entrypoints <= 0 {
+			NUM_ENTRYPOINTS = 1
 		} else {
-			NUM_ENDPOINTS = cfg.Endpoints
+			NUM_ENTRYPOINTS = cfg.Entrypoints
 		}
 		APP_BASE_DIR = fmt.Sprintf("../%s", APPNAME)
 		WORKFLOW_DIR = filepath.Join(APP_BASE_DIR, fmt.Sprintf("workflow/%s", APPNAME))
@@ -78,6 +79,11 @@ func main() {
 		NUM_SERVICES = computeNumberOfServices()
 		if err := os.RemoveAll(APP_BASE_DIR); err != nil {
 			panic(err)
+		}
+		if cfg.DbAccesses <= 0 || cfg.DbAccesses > NUM_SERVICES {
+			NUM_DB_ACCESSES = NUM_SERVICES
+		} else {
+			NUM_DB_ACCESSES = cfg.DbAccesses
 		}
 		if err := os.MkdirAll(APP_BASE_DIR, 0o755); err != nil {
 			panic(err)
@@ -106,6 +112,7 @@ type GraphService struct {
 	ID    int
 	Next  []int
 	Depth int
+	HasDB bool
 }
 
 func intPow(a, b int) int {
@@ -145,6 +152,7 @@ func generateCallGraph() []GraphService {
 				ID:    id,
 				Depth: d,
 				Next:  nil,
+				HasDB: false,
 			}
 		}
 	}
@@ -167,6 +175,35 @@ func generateCallGraph() []GraphService {
 			svc := services[p]
 			svc.Next = nexts
 			services[p] = svc
+		}
+	}
+
+	// ----------------- DB assignment -----------------
+
+	remaining := NUM_DB_ACCESSES
+
+	// Root (service 1) must always have a DB
+	if remaining > 0 {
+		root := services[1]
+		if !root.HasDB {
+			root.HasDB = true
+			services[1] = root
+			remaining--
+		}
+	}
+
+	// assign DB accesses: deepest levels first (leaves → root) until remaining == 0
+	for d := CALL_DEPTH; d >= 0 && remaining > 0; d-- {
+		for _, id := range levels[d] {
+			if remaining == 0 {
+				break
+			}
+			svc := services[id]
+			if !svc.HasDB {
+				svc.HasDB = true
+				services[id] = svc
+				remaining--
+			}
 		}
 	}
 
@@ -206,6 +243,7 @@ type ServiceSpec struct {
 	Next    []int
 	HasNext bool
 	HTTP    bool
+	HasDB   bool
 	Comment string
 	PkgName string
 }
@@ -240,6 +278,7 @@ func GenWiring() {
 			Next:    g.Next,
 			HasNext: len(g.Next) > 0,
 			HTTP:    g.ID == 1, // service 1 is entry / HTTP
+			HasDB:   g.HasDB,
 			PkgName: APPNAME,
 		}
 
@@ -299,6 +338,7 @@ type serviceData struct {
 	Next    []int
 	PkgName string
 	Methods []int
+	HasDB   bool
 }
 
 type mainData struct {
@@ -323,7 +363,13 @@ func GenWorkflow() {
 
 	for _, g := range graph {
 		filename := filepath.Join(WORKFLOW_DIR, fmt.Sprintf("service%d.go", g.ID))
-		data := serviceData{N: g.ID, Next: g.Next, PkgName: APPNAME, Methods: makeMethods(NUM_ENDPOINTS),}
+		data := serviceData{
+			N: g.ID, 
+			Next: g.Next, 
+			PkgName: APPNAME, 
+			Methods: makeMethods(NUM_ENTRYPOINTS),
+			HasDB: g.HasDB,
+		}
 
 		code, err := GenWorkflowServices(data)
 		if err != nil {

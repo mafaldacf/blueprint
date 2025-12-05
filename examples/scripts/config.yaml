@@ -1,74 +1,14 @@
-# num_services = 1 + 3 + 9 + 27 + 81 = 121
-#- app: synthetic_app
+#- app: synthetic_app2
+#  description: 30x avg. fan-out
 #  call_depth: 1
-#  out_degree: 100
-#
-#- app: synthetic_appA
-#  call_depth: 9
-#  out_degree: 1
-#
-#- app: synthetic_appB
-#  call_depth: 1
-#  out_degree: 9
+#  out_degree: 375
 
-# num_services = 1 + 1 + 1 ... = 341
-- app: synthetic_app1
-  description: High call depth
-  call_depth: 340
-  out_degree: 1
-
-# num_services = 1 + 3 + 9 + 27 + 81  = 127
-- app: synthetic_app2
-  description: Avg. depth Alibaba
-  call_depth: 5
-  out_degree: 3
-
-# num_services = 1 + 4 + 16 + 64 + 256 = 341
 - app: synthetic_app3
-  description: Avg. depth Alibaba
+  #description: ALIBABA: p50 stateful (8), avg. call depth (4.27), p50 fanout (3)
   call_depth: 4
-  out_degree: 4
+  out_degree: 3
+  db_accesses: 8
+  entrypoints: 1
 
-# UBER
-# - 4000 microservices
-# - 40000 unique RPC endpoints
-# => 10 endpoints per microservice
-#
-# - avg. RPCs = 112
-# - avg. RPC depth = 8.5
-# num_services = 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128
-- app: synthetic_app4
-  description: Uber avg. RPC depth, avg. total RPCs
-  call_depth: 8
-  out_degree: 2
-
-# num_services = 1 + 340 = 341
-- app: synthetic_app5
-  description: High fan-out
-  call_depth: 1
-  out_degree: 340
-
-# ALIBABA
-# - more than 4% of graphs have a call depth > 10
-# - avg. depth = 4.27
-# - more than 10% microservices have out-degree of at least 5
-# - 8000 front-end microservices
-# num_services = 1 + 5 + 25 + 125 + 625 = 781
-- app: synthetic_app6
-  description: Alibaba avg. call depth, common out-degree
-  call_depth: 4
-  out_degree: 5
-
-# UBER
-# - 4000 microservices
-# - 40000 unique RPC endpoints
-# => 10 endpoints per microservice
-#
-# - avg. RPCs = 112
-# - avg. RPC depth = 8.5
-# num_services = 1 + 2 + 4 + 8 + 16 + 32 + 64 + 128
-- app: synthetic_app7
-  description: Uber avg. RPC depth, avg. total RPCs
-  call_depth: 8
-  out_degree: 2
-  endpoints: 10
+#- app: synthetic_app4
+#  description: UBER: avg. rpc depth (8.5), avg total rpc (112)
