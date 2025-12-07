@@ -1,12 +1,14 @@
-# N_SERVICES = 63 (~p90 SL)
+# N_SERVICES = 63
 - app: synthetic_app1
+  #rpcs: 6          # median  SL
   db_accesses: 7    # median  SF
   call_depth: 6     # median  CD
   out_degree: 2     # median  FO
   entrypoints: 1
 
-# N_SERVICES = 63 (~p90 SL)
+# N_SERVICES = 63
 - app: synthetic_app2
+  #rpcs: 6          # median  SL
   db_accesses: 55   # p90     SF
   call_depth: 6     # median  CD
   out_degree: 2     # median  FO
@@ -14,20 +16,23 @@
 
 # N_SERVICES = 4095
 - app: synthetic_app3
+  #rpcs: 6          # median  SL
   db_accesses: 7    # median  SF
   call_depth: 12    # p90     CD
   out_degree: 2     # median  FO
   entrypoints: 1
 
-# N_SERVICES = 9331
+# N_SERVICES = 1.118.481
 - app: synthetic_app4
+  #rpcs: 6          # median  SL
   db_accesses: 7    # median  SF
   call_depth: 6     # median  CD
-  out_degree: 6     # p75     FO
+  out_degree: 16    # p90     FO
   entrypoints: 1
 
 # N_SERVICES = 63
 - app: synthetic_app5
+  #rpcs: 6          # median  SL
   db_accesses: 7    # median  SF
   call_depth: 6     # median  CD
   out_degree: 2     # median  FO
