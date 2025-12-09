@@ -1,36 +1,44 @@
 # N_SERVICES = 63 (~p90 SL)
 - app: synthetic_app1
-  db_accesses: 7    # median  SF
-  call_depth: 6     # median  CD
-  out_degree: 2     # median  FO
-  entrypoints: 1
+  description: "median: CD=6, FO=2, ~p90 SL"
+  call_depth: 6
+  fanout: 2
+  reqs_stateful: 7
+  rpc_depth: 5
+  num_services: 50
+  call_graphs: 100
 
 # N_SERVICES = 63 (~p90 SL)
 - app: synthetic_app2
-  db_accesses: 55   # p90     SF
-  call_depth: 6     # median  CD
-  out_degree: 2     # median  FO
-  entrypoints: 1
+  call_depth: 6       # median  CD
+  fanout: 2           # median  FO
+  reqs_stateful: 55   # p90     SF
+  num_services: 50
+  call_graphs: 100
 
 # N_SERVICES = 4095
 - app: synthetic_app3
-  db_accesses: 7    # median  SF
-  call_depth: 12    # p90     CD
-  out_degree: 2     # median  FO
-  entrypoints: 1
+  call_depth: 12      # p90     CD
+  fanout: 2           # median  FO
+  reqs_stateful: 7    # median  SF
+  num_services: 350
+  call_graphs: 100
 
 # N_SERVICES = 9331
 - app: synthetic_app4
-  db_accesses: 7    # median  SF
-  call_depth: 6     # median  CD
-  out_degree: 6     # p75     FO
-  entrypoints: 1
+  call_depth: 6       # median  CD
+  fanout: 6           # p75     FO
+  reqs_stateful: 7    # median  SF
+  num_services: 350
+  call_graphs: 100
 
 # N_SERVICES = 63
 - app: synthetic_app5
-  db_accesses: 7    # median  SF
-  call_depth: 6     # median  CD
-  out_degree: 2     # median  FO
-  entrypoints: 10000 # 10k requests
+  call_depth: 6
+  fanout: 2
+  reqs_stateful: 7
+  rpc_depth: 5
+  num_services: 20
+  call_graphs: 1000
 
 

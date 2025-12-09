@@ -18,9 +18,10 @@ type AppConfig struct {
 	Description string `yaml:"description"`
 	CallDepth   int    `yaml:"call_depth"`
 	RpcDepth    int    `yaml:"rpc_depth"`
-	OutDegree   int    `yaml:"out_degree"`
-	Entrypoints int    `yaml:"entrypoints"`
-	DbAccesses  int    `yaml:"db_accesses"`
+	Fanout   int    `yaml:"fanout"`
+	CallGraphs int    	   `yaml:"call_graphs"`
+	ReqsStateful  int    `yaml:"reqs_stateful"`
+	NumServices int    `yaml:"num_services"` // NEW: optional override
 }
 
 var cfgs []AppConfig
@@ -53,47 +54,73 @@ func loadConfigs(path string) {
 	if err != nil {
 		panic(err)
 	}
-
 }
 
 func main() {
 	loadConfigs("config.yaml")
+
 	for _, cfg := range cfgs {
-		fmt.Printf("==== Generating app: %s (call_depth=%d, rpc_depth=%d, out_degree=%d, entrypoints=%d) ====\n", cfg.AppName, cfg.CallDepth, cfg.RpcDepth, cfg.OutDegree, cfg.Entrypoints)
+		fmt.Printf(
+			"==== Generating app: %s (call_depth=%d, rpc_depth=%d, fanout=%d, call_graphs=%d) ====\n",
+			cfg.AppName, cfg.CallDepth, cfg.RpcDepth, cfg.Fanout, cfg.CallGraphs,
+		)
+
 		APPNAME = cfg.AppName
+
 		if cfg.RpcDepth > 0 {
 			RPC_DEPTH = cfg.RpcDepth
 		} else {
 			RPC_DEPTH = cfg.CallDepth - 1
 		}
-		OUT_DEGREE = cfg.OutDegree
-		if cfg.Entrypoints <= 0 {
+
+		OUT_DEGREE = cfg.Fanout
+
+		if cfg.CallGraphs <= 0 {
 			NUM_ENTRYPOINTS = 1
 		} else {
-			NUM_ENTRYPOINTS = cfg.Entrypoints
+			NUM_ENTRYPOINTS = cfg.CallGraphs
 		}
+
 		APP_BASE_DIR = fmt.Sprintf("../%s", APPNAME)
 		WORKFLOW_DIR = filepath.Join(APP_BASE_DIR, fmt.Sprintf("workflow/%s", APPNAME))
 		SERVICES_PKG_IMPORT = fmt.Sprintf("github.com/blueprint-uservices/blueprint/examples/%s/workflow/%s", APPNAME, APPNAME)
 
-		NUM_SERVICES = computeNumberOfServices()
+		// Decide NUM_SERVICES: either from config or theoretical maximum
+		maxPossible := computeNumberOfServices() // full k-ary tree size
+		if cfg.NumServices > 0 {
+			if cfg.NumServices > maxPossible {
+				panic(fmt.Errorf(
+					"num_services=%d exceeds maximum possible (%d) for rpc_depth=%d, fanout=%d",
+					cfg.NumServices, maxPossible, RPC_DEPTH, OUT_DEGREE,
+				))
+			}
+			NUM_SERVICES = cfg.NumServices
+		} else {
+			NUM_SERVICES = maxPossible
+		}
+
 		if err := os.RemoveAll(APP_BASE_DIR); err != nil {
 			panic(err)
 		}
-		if cfg.DbAccesses <= 0 || cfg.DbAccesses > NUM_SERVICES {
+
+		if cfg.ReqsStateful <= 0 || cfg.ReqsStateful > NUM_SERVICES {
 			NUM_DB_ACCESSES = NUM_SERVICES
 		} else {
-			NUM_DB_ACCESSES = cfg.DbAccesses
+			NUM_DB_ACCESSES = cfg.ReqsStateful
 		}
+
 		if err := os.MkdirAll(APP_BASE_DIR, 0o755); err != nil {
 			panic(err)
 		}
+
 		GenBaseDirFiles()
 		GenWorkflow()
 		GenWiring()
 	}
 }
 
+// computeNumberOfServices returns the full k-ary tree size for the given
+// RPC_DEPTH and OUT_DEGREE, i.e., the theoretical maximum number of services.
 func computeNumberOfServices() int {
 	total := 0
 	pow := 1
@@ -115,67 +142,79 @@ type GraphService struct {
 	HasDB bool
 }
 
-func intPow(a, b int) int {
-	res := 1
-	for i := 0; i < b; i++ {
-		res *= a
-	}
-	return res
-}
-
+// generateCallGraph builds a k-ary tree up to RPC_DEPTH with fan-out OUT_DEGREE,
+// but truncated to exactly NUM_SERVICES nodes. It guarantees IDs 1..NUM_SERVICES.
 func generateCallGraph() []GraphService {
-	// levels[d] = list of IDs at depth d
-	levels := make([][]int, RPC_DEPTH+1)
+	if NUM_SERVICES <= 0 {
+		panic("NUM_SERVICES must be > 0")
+	}
 
-	nextID := 1
-	// root
-	levels[0] = []int{nextID}
-	nextID++
+	// Initialize services 1..NUM_SERVICES
+	services := make([]GraphService, NUM_SERVICES+1) // 1-based
+	for i := 1; i <= NUM_SERVICES; i++ {
+		services[i] = GraphService{
+			ID:    i,
+			Next:  nil,
+			Depth: -1, // uninitialized
+			HasDB: false,
+		}
+	}
 
-	// allocate IDs for each subsequent level
-	for d := 1; d <= RPC_DEPTH; d++ {
-		levelSize := intPow(OUT_DEGREE, d)
-		level := make([]int, levelSize)
-		for i := 0; i < levelSize; i++ {
-			level[i] = nextID
+	// BFS-style construction of a k-ary tree up to RPC_DEPTH
+	type qItem struct {
+		id    int
+		depth int
+	}
+
+	// Root
+	services[1].Depth = 0
+	queue := []qItem{{id: 1, depth: 0}}
+	nextID := 2
+
+	for len(queue) > 0 && nextID <= NUM_SERVICES {
+		item := queue[0]
+		queue = queue[1:]
+
+		if item.depth >= RPC_DEPTH {
+			// do not add children beyond RPC_DEPTH
+			continue
+		}
+
+		parent := services[item.id]
+
+		for c := 0; c < OUT_DEGREE && nextID <= NUM_SERVICES; c++ {
+			childID := nextID
 			nextID++
+
+			parent.Next = append(parent.Next, childID)
+
+			child := services[childID]
+			child.Depth = item.depth + 1
+			services[childID] = child
+
+			queue = append(queue, qItem{id: childID, depth: item.depth + 1})
 		}
-		levels[d] = level
+
+		services[item.id] = parent
 	}
 
-	total := nextID - 1
-	services := make([]GraphService, total+1) // 1-based, index 0 unused
-
-	for d, lvl := range levels {
-		for _, id := range lvl {
-			services[id] = GraphService{
-				ID:    id,
-				Depth: d,
-				Next:  nil,
-				HasDB: false,
-			}
+	// Compute levels from Depth to assign DBs
+	maxDepth := 0
+	for i := 1; i <= NUM_SERVICES; i++ {
+		if services[i].Depth < 0 {
+			// In practice this should not happen if NUM_SERVICES <= maxPossible,
+			// but guard anyway: treat as depth 0.
+			services[i].Depth = 0
+		}
+		if services[i].Depth > maxDepth {
+			maxDepth = services[i].Depth
 		}
 	}
 
-	// assign Next for all nodes except leaves (depth = MaxDepth)
-	for d := 0; d < RPC_DEPTH; d++ {
-		parents := levels[d]
-		children := levels[d+1]
-		childIdx := 0
-
-		for _, p := range parents {
-			nexts := make([]int, 0, OUT_DEGREE)
-			for i := 0; i < OUT_DEGREE; i++ {
-				if childIdx >= len(children) {
-					panic("not enough children allocated for given fanout")
-				}
-				nexts = append(nexts, children[childIdx])
-				childIdx++
-			}
-			svc := services[p]
-			svc.Next = nexts
-			services[p] = svc
-		}
+	levels := make([][]int, maxDepth+1)
+	for i := 1; i <= NUM_SERVICES; i++ {
+		d := services[i].Depth
+		levels[d] = append(levels[d], i)
 	}
 
 	// ----------------- DB assignment -----------------
@@ -192,8 +231,8 @@ func generateCallGraph() []GraphService {
 		}
 	}
 
-	// assign DB accesses: deepest levels first (leaves → root) until remaining == 0
-	for d := RPC_DEPTH; d >= 0 && remaining > 0; d-- {
+	// Assign DB accesses deepest-first until remaining == 0
+	for d := maxDepth; d >= 0 && remaining > 0; d-- {
 		for _, id := range levels[d] {
 			if remaining == 0 {
 				break
@@ -207,14 +246,14 @@ func generateCallGraph() []GraphService {
 		}
 	}
 
-	// flatten 1..total
-	res := make([]GraphService, 0, total)
-	for id := 1; id <= total; id++ {
+	// Flatten 1..NUM_SERVICES
+	res := make([]GraphService, 0, NUM_SERVICES)
+	for id := 1; id <= NUM_SERVICES; id++ {
 		res = append(res, services[id])
 	}
 
 	if len(res) != NUM_SERVICES {
-		panic(fmt.Sprintf("NUM_SERVICES mismatch: const=%d, generated=%d", NUM_SERVICES, len(res)))
+		panic(fmt.Sprintf("NUM_SERVICES mismatch: expected=%d, generated=%d", NUM_SERVICES, len(res)))
 	}
 
 	return res
