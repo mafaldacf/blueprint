@@ -4,6 +4,7 @@ package trainticket
 import (
 	"context"
 	"errors"
+	"strconv"
 
 	//"strconv"
 	"strings"
@@ -86,19 +87,14 @@ func (r *RouteServiceImpl) GetRouteById(ctx context.Context, id string) (Route, 
 func (r *RouteServiceImpl) GetRouteByIds(ctx context.Context, ids []string) ([]Route, error) {
 	var routes []Route
 
-	// FIXME: SUPPORT ORIGINAL CODE
-	/* for _, id := range ids {
+	for _, id := range ids {
 		route, err := r.GetRouteById(ctx, id)
 		if err == nil {
 			routes = append(routes, route)
 		} else {
 			routes = append(routes, Route{})
 		}
-	} */
-
-	// FIXME: REMOVE WORKAROUND CODE
-	route, _ := r.GetRouteById(ctx, ids[0])
-	routes = append(routes, route)
+	}
 
 	return routes, nil
 }
@@ -135,15 +131,14 @@ func (r *RouteServiceImpl) CreateAndModify(ctx context.Context, info RouteInfo) 
 	var distances []int64
 	stations := strings.Split(info.StationList, ",")
 
-	// FIXME: SUPPORT ORIGINAL CODE
-	//dist_pieces := strings.Split(info.DistanceList, ",")
-	/* for _, piece := range dist_pieces {
+	dist_pieces := strings.Split(info.DistanceList, ",")
+	for _, piece := range dist_pieces {
 		converted_distance, err := strconv.ParseInt(piece, 10, 64)
 		if err != nil {
 			return Route{}, err
 		}
 		distances = append(distances, converted_distance)
-	} */
+	}
 
 	if len(stations) != len(distances) {
 		return Route{}, errors.New("Length of stations and distances do not match")

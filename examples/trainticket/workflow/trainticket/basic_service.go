@@ -210,8 +210,6 @@ func (b *BasicServiceImpl) QueryForTravels(ctx context.Context, infos []Travel) 
 		if len(avaTrips) == 0 {
 			return nil, fmt.Errorf("no travel info available")
 		}
-
-		// TODO: FINALIZE
 	}
 	return nil, nil
 }
