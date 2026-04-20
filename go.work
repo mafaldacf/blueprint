@@ -1,39 +1,26 @@
-go 1.24.0
+go 1.25.0
 
 use (
 	./blueprint
-	./examples/eshopmicroservices/wiring
-	./examples/eshopmicroservices/workflow
-	./examples/app_constraints_referential_integrity/wiring
-	./examples/app_constraints_referential_integrity/workflow
-	./examples/coupons_app/wiring
-	./examples/coupons_app/workflow
-	./examples/coupons_app_cache/wiring
-	./examples/coupons_app_cache/workflow
-	./examples/coupons_app_sql/wiring
-	./examples/coupons_app_sql/workflow
+	./examples/digota/tests
+	./examples/digota/wiring
+	./examples/digota/workflow
 	./examples/dsb_hotel/tests
 	./examples/dsb_hotel/wiring
 	./examples/dsb_hotel/workflow
 	./examples/dsb_hotel/workload
 	./examples/dsb_mediamicroservices/wiring
 	./examples/dsb_mediamicroservices/workflow
-	./examples/employee_app/wiring
-	./examples/employee_app/workflow
-	./examples/foobar/wiring
-	./examples/leaf/workflow
-	./examples/postnotification/wiring
-	./examples/postnotification/workflow
 	./examples/dsb_socialnetwork/wiring
 	./examples/dsb_socialnetwork/workflow
-	./examples/shopping_app/wiring
-	./examples/shopping_app/workflow
-	./examples/shopping_simple/wiring
-	./examples/shopping_simple/workflow
+	./examples/eshopmicroservices/wiring
+	./examples/eshopmicroservices/workflow
+	./examples/leaf/workflow
+	./examples/postnotification/tests
+	./examples/postnotification/wiring
+	./examples/postnotification/workflow
 	./examples/sockshop/wiring
 	./examples/sockshop/workflow
-	./examples/threechain2/wiring
-	./examples/threechain2/workflow
 	./plugins
 	./runtime
 	./test/wiring
