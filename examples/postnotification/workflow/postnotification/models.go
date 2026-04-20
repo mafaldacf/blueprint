@@ -5,25 +5,25 @@ type Creator struct {
 }
 
 type Post struct {
-	ReqID     int64
-	PostID    int64
-	MediaID   int64
-	Text      string
-	Mentions  []string
-	Timestamp int64
+	ReqID     int64    `bson:"ReqID"`
+	PostID    int64    `bson:"PostID"`
+	MediaID   int64    `bson:"MediaID"`
+	Text      string   `bson:"Text"`
+	Mentions  []string `bson:"Mentions"`
+	Timestamp int64    `bson:"Timestamp"`
 	Creator   Creator
 }
 
 type Message struct {
-	ReqID     int64
-	PostID    int64
-	Timestamp int64
+	ReqID     int64 `bson:"ReqID"`
+	PostID    int64 `bson:"PostID"`
+	Timestamp int64 `bson:"Timestamp"`
 }
 
 type Analytics struct {
-	PostID int64
+	PostID int64 `bson:"PostID"`
 }
 
 type TriggerAnalyticsMessage struct {
-	PostID string
+	PostID string `bson:"PostID"`
 }

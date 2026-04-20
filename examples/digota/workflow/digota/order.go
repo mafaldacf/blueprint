@@ -6,27 +6,27 @@ import (
 )
 
 type Order struct {
-	Id        string            `json:"id,omitempty" bson:"_id"`
-	Amount    int64             `json:"amount,omitempty"`
-	Currency  int32             `json:"currency,omitempty"`
-	Items     []*OrderItem      `json:"items,omitempty"`
-	Metadata  map[string]string `json:"metadata,omitempty"`
-	Email     string            `json:"email,omitempty"`
-	ChargeId  string            `json:"chargeId,omitempty"`
-	Status    int32             `json:"Status,omitempty"`
-	Shipping  *Shipping         `json:"shipping,omitempty"`
-	Shipping2 Shipping          `json:"shipping2,omitempty"`
-	Created   int64             `json:"created,omitempty"`
-	Updated   int64             `json:"updated,omitempty"`
+	Id        string            `json:"id,omitempty" bson:"Id"`
+	Amount    int64             `json:"amount,omitempty" bson:"Amount"`
+	Currency  int32             `json:"currency,omitempty" bson:"Currency"`
+	Items     []*OrderItem      `json:"items,omitempty" bson:"Items"`
+	Metadata  map[string]string `json:"metadata,omitempty" bson:"Metadata"`
+	Email     string            `json:"email,omitempty" bson:"Email"`
+	ChargeId  string            `json:"chargeId,omitempty" bson:"ChargeId"`
+	Status    int32             `json:"Status,omitempty" bson:"Status"`
+	Shipping  *Shipping         `json:"shipping,omitempty" bson:"Shipping"`
+	Shipping2 Shipping          `json:"shipping2,omitempty" bson:"Shipping2"`
+	Created   int64             `json:"created,omitempty" bson:"Created"`
+	Updated   int64             `json:"updated,omitempty" bson:"Updated"`
 }
 
 type OrderItem struct {
-	Type        int32  `json:"type,omitempty"`
-	Quantity    int64  `json:"quantity,omitempty"`
-	Amount      int64  `json:"amount,omitempty"`
-	Currency    int32  `json:"currency,omitempty"`
-	Parent      string `json:"parent,omitempty"`
-	Description string `json:"description,omitempty"`
+	Type        int32  `json:"type,omitempty" bson:"Type"`
+	Quantity    int64  `json:"quantity,omitempty" bson:"Quantity"`
+	Amount      int64  `json:"amount,omitempty" bson:"Amount"`
+	Currency    int32  `json:"currency,omitempty" bson:"Currency"`
+	Parent      string `json:"parent,omitempty" bson:"Parent"`
+	Description string `json:"description,omitempty" bson:"Description"`
 }
 
 func (item *OrderItem) IsTypeReserved() bool { return item.Type == 0 }
@@ -56,7 +56,6 @@ func (order *Order) GetAmount() int64 {
 	return order.Amount
 }
 
-
 func (o *Order) IsReturnable(amount int64) error {
 	if o.Status != int32(Order_Paid) && o.Status != int32(Order_Fulfilled) && o.Status != int32(Order_Canceled) {
 		return fmt.Errorf("Order is not paid or fulfilled.")
@@ -73,23 +72,13 @@ func (o *Order) IsPayable() error {
 		return fmt.Errorf("Order is not in created status.")
 	}
 	if time.Since(time.Unix(o.Created, 0)) > orderTTL {
-		return fmt.Errorf("Order is too old for paying.")
+		return fmt.Errorf("Order is too old for paying (created: %d).", o.Created)
 	}
 	if o.GetAmount() <= 0 {
 		return fmt.Errorf("Order amount is Zero.")
 	}
 	return nil
 }
-
-/* type OrderItem_Type int32
-
-const (
-	OrderItem_reserved OrderItem_Type = 0
-	OrderItem_sku      OrderItem_Type = 1
-	OrderItem_discount OrderItem_Type = 2
-	OrderItem_tax      OrderItem_Type = 3
-	OrderItem_shipping OrderItem_Type = 4
-) */
 
 var OrderItem_Type_name = map[int32]string{
 	0: "reserved",
@@ -116,21 +105,6 @@ const (
 	Order_Returned  OrderStatus = 4
 )
 
-/* var OrderStatus_name = map[int32]string{
-	0: "Created",
-	1: "Paid",
-	2: "Canceled",
-	3: "Fulfilled",
-	4: "Returned",
-}
-var OrderStatus_value = map[string]int32{
-	"Created":   0,
-	"Paid":      1,
-	"Canceled":  2,
-	"Fulfilled": 3,
-	"Returned":  4,
-} */
-
 type Shipping struct {
 	Name           string            `json:"name,omitempty"`
 	Phone          string            `json:"phone,omitempty"`
@@ -149,6 +123,6 @@ type Shipping_Address struct {
 }
 
 type OrderList struct {
-	Orders []*Order `json:"orders,omitempty"`
-	Total  int32    `json:"total,omitempty"`
+	Orders []Order
+	Total  int32
 }

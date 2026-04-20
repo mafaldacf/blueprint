@@ -4,9 +4,7 @@ import (
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/wiring"
 	"github.com/blueprint-uservices/blueprint/examples/digota/workflow/digota"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
-	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
-	//"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
 )
 
@@ -16,8 +14,6 @@ var Docker = cmdbuilder.SpecOption{
 	Build:       makeDockerSpec,
 }
 
-// Create a basic social network wiring spec.
-// Returns the names of the nodes to instantiate or an error.
 func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	var containers []string
 	var allServices []string
@@ -50,9 +46,6 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	order_service_ctr := applyHTTPDefaults(spec, order_service, "order_service_proc", "order_service_container")
 	containers = append(containers, order_service_ctr)
 	allServices = append(allServices, "order_service")
-
-	tests := gotests.Test(spec, allServices...)
-	containers = append(containers, tests)
 
 	return containers, nil
 }

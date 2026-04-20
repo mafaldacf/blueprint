@@ -14,6 +14,17 @@ To compile the application, we execute `wiring/main.go` and specify which wiring
 go run wiring/main.go -h
 ```
 
+If you encounter errors because of missing modules that are supposed to be replaced by local ones, do:
+
+```zsh
+cd wiring
+go clean -cache -modcache
+export GOFLAGS=-mod=mod
+export GOWORK=off
+go mod tidy
+cd ..
+```
+
 The following will compile the `docker` wiring spec to the directory `build`. This will fail if the pre-requisite thrift compiler is not installed.
 
 ```

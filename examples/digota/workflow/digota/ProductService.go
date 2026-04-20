@@ -5,14 +5,15 @@ import (
 	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 type ProductService interface {
-	New(ctx context.Context, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error)
+	New(ctx context.Context, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, productUrl string) (*Product, error)
 	Get(ctx context.Context, id string) (*Product, error)
 	List(ctx context.Context, page int64, limit int64, sort int32) (*ProductList, error)
-	Update(ctx context.Context, id string, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error)
+	Update(ctx context.Context, id string, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, productUrl string) (*Product, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -21,12 +22,12 @@ type ProductServiceImpl struct {
 }
 
 func NewProductServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (ProductService, error) {
-	s := &ProductServiceImpl{db: db}
-	return s, nil
+	return &ProductServiceImpl{db: db}, nil
 }
 
-func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error) {	
+func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, productUrl string) (*Product, error) {
 	product := &Product{
+		Id:          uuid.NewString(),
 		Name:        name,
 		Active:      active,
 		Attributes:  attributes,
@@ -34,7 +35,7 @@ func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, 
 		Images:      images,
 		Metadata:    metadata,
 		Shippable:   shippable,
-		Url:         url,
+		ProductUrl:  productUrl,
 	}
 
 	collection, err := s.db.GetCollection(ctx, "products_db", "products")
@@ -48,42 +49,42 @@ func (s *ProductServiceImpl) New(ctx context.Context, name string, active bool, 
 func (s *ProductServiceImpl) Get(ctx context.Context, id string) (*Product, error) {
 	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting collection : %v", err)
 	}
 
 	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error querying product: %v", err)
 	}
 
-	var product *Product
-	found, err := result.One(ctx, product)
+	var product Product
+	found, err := result.One(ctx, &product)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error finding product: %v", err)
 	}
 	if !found {
 		return nil, fmt.Errorf("product not found for id (%s)", id)
 	}
 
-	return product, nil
+	return &product, nil
 }
 
 func (s *ProductServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*ProductList, error) {
 	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting collection: %s\n", err.Error())
 	}
 
-	result, err := collection.FindMany(ctx, nil)
+	result, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error finding products: %s\n", err.Error())
 	}
 
-	var products []*Product
-	err = result.All(ctx, products)
+	var products []Product
+	err = result.All(ctx, &products)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error loading products: %s\n", err.Error())
 	}
 
 	productList := &ProductList{
@@ -94,7 +95,7 @@ func (s *ProductServiceImpl) List(ctx context.Context, page int64, limit int64, 
 	return productList, nil
 }
 
-func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, url string) (*Product, error) {
+func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string, active bool, attributes []string, description string, images []string, metadata map[string]string, shippable bool, productUrl string) (*Product, error) {
 	collection, err := s.db.GetCollection(ctx, "products_db", "products")
 	if err != nil {
 		return nil, err
@@ -103,13 +104,13 @@ func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string,
 	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error finding product for id (%s): %v", id, err)
 	}
 
 	var product *Product = &Product{}
 	found, err := result.One(ctx, product)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error loading product for id (%s): %v", id, err)
 	}
 	if !found {
 		return nil, fmt.Errorf("product not found for id (%s)", id)
@@ -134,8 +135,8 @@ func (s *ProductServiceImpl) Update(ctx context.Context, id string, name string,
 	if metadata != nil {
 		product.Metadata = metadata
 	}
-	if url != "" {
-		product.Url = url
+	if productUrl != "" {
+		product.ProductUrl = productUrl
 	}
 
 	filter := bson.D{{Key: "Id", Value: id}}

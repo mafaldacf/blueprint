@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -20,12 +21,12 @@ type PaymentServiceImpl struct {
 }
 
 func NewPaymentServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (PaymentService, error) {
-	s := &PaymentServiceImpl{db: db}
-	return s, nil
+	return &PaymentServiceImpl{db: db}, nil
 }
 
 func (s *PaymentServiceImpl) NewCharge(ctx context.Context, currency int32, total uint64, card *Card, email string, statement string, paymentProviderId int32, metadata map[string]string) (*Charge, error) {
 	charge := &Charge{
+		Id:           uuid.NewString(),
 		Currency:     currency,
 		ChargeAmount: total,
 		Email:        email,
@@ -36,8 +37,7 @@ func (s *PaymentServiceImpl) NewCharge(ctx context.Context, currency int32, tota
 	if err != nil {
 		return nil, err
 	}
-	err = collection.InsertOne(ctx, *charge)
-	return charge, err
+	return charge, collection.InsertOne(ctx, *charge)
 }
 
 func (s *PaymentServiceImpl) Get(ctx context.Context, id string) (*Charge, error) {
@@ -52,8 +52,8 @@ func (s *PaymentServiceImpl) Get(ctx context.Context, id string) (*Charge, error
 		return nil, err
 	}
 
-	var charge *Charge
-	found, err := result.One(ctx, charge)
+	var charge Charge
+	found, err := result.One(ctx, &charge)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (s *PaymentServiceImpl) Get(ctx context.Context, id string) (*Charge, error
 		return nil, fmt.Errorf("charge not found for id (%s)", id)
 	}
 
-	return charge, nil
+	return &charge, nil
 }
 
 func (s *PaymentServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*ChargeList, error) {
@@ -70,23 +70,18 @@ func (s *PaymentServiceImpl) List(ctx context.Context, page int64, limit int64, 
 		return nil, err
 	}
 
-	result, err := collection.FindMany(ctx, nil)
+	result, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
 
-	var charges []*Charge
-	err = result.All(ctx, charges)
+	var charges []Charge
+	err = result.All(ctx, &charges)
 	if err != nil {
 		return nil, err
 	}
 
-	chargeList := &ChargeList{
-		Charges: charges,
-		Total:   int32(len(charges)),
-	}
-
-	return chargeList, nil
+	return &ChargeList{Charges: charges, Total: int32(len(charges))}, nil
 }
 
 func (s *PaymentServiceImpl) RefundCharge(ctx context.Context, id string, amount uint64, reason int32) (*Charge, error) {
@@ -101,8 +96,8 @@ func (s *PaymentServiceImpl) RefundCharge(ctx context.Context, id string, amount
 		return nil, err
 	}
 
-	var charge *Charge
-	found, err := result.One(ctx, charge)
+	var charge Charge
+	found, err := result.One(ctx, &charge)
 	if err != nil {
 		return nil, err
 	}
@@ -110,5 +105,5 @@ func (s *PaymentServiceImpl) RefundCharge(ctx context.Context, id string, amount
 		return nil, fmt.Errorf("charge not found for id (%s)", id)
 	}
 
-	return charge, nil
+	return &charge, nil
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -17,20 +18,18 @@ type SkuService interface {
 }
 
 type SkuServiceImpl struct {
-	db    backend.NoSQLDatabase
-	/* queue backend.Queue */
+	db             backend.NoSQLDatabase
 	productService ProductService
 }
 
-func NewSkuServiceImpl(ctx context.Context, productService ProductService, db backend.NoSQLDatabase/* , queue backend.Queue */) (SkuService, error) {
-	s := &SkuServiceImpl{productService: productService,  db: db/* , queue: queue */}
-	return s, nil
+func NewSkuServiceImpl(ctx context.Context, productService ProductService, db backend.NoSQLDatabase) (SkuService, error) {
+	return &SkuServiceImpl{productService: productService, db: db}, nil
 }
 
 func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, active bool, price uint64, parent string, metadata map[string]string, image string, packageDimensions *PackageDimensions, inventory *Inventory, attributes map[string]string) (*Sku, error) {
 	product, err := s.productService.Get(ctx, parent)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error calling product service: %v", err)
 	}
 
 	var validAttr = make(map[string]string)
@@ -41,8 +40,9 @@ func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, a
 			}
 		}
 	}
-	
+
 	sku := &Sku{
+		Id:                uuid.NewString(),
 		Name:              name,
 		Currency:          currency,
 		Active:            active,
@@ -56,7 +56,7 @@ func (s *SkuServiceImpl) New(ctx context.Context, name string, currency int32, a
 
 	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error getting collection: %v", err)
 	}
 	err = collection.InsertOne(ctx, sku)
 	return sku, err
@@ -74,8 +74,8 @@ func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
 		return nil, err
 	}
 
-	var sku *Sku
-	found, err := result.One(ctx, sku)
+	var sku Sku
+	found, err := result.One(ctx, &sku)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (s *SkuServiceImpl) Get(ctx context.Context, id string) (*Sku, error) {
 		return nil, fmt.Errorf("sku not found for id (%s)", id)
 	}
 
-	return sku, nil
+	return &sku, nil
 }
 
 func (s *SkuServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*SkuList, error) {
@@ -92,13 +92,13 @@ func (s *SkuServiceImpl) List(ctx context.Context, page int64, limit int64, sort
 		return nil, err
 	}
 
-	result, err := collection.FindMany(ctx, nil)
+	result, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
 
-	var skus []*Sku
-	err = result.All(ctx, skus)
+	var skus []Sku
+	err = result.All(ctx, &skus)
 	if err != nil {
 		return nil, err
 	}
@@ -120,21 +120,21 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 	query := bson.D{{Key: "Id", Value: id}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error finding sku for id (%s): %v", id, err)
 	}
 
 	var sku *Sku = &Sku{}
 	found, err := result.One(ctx, sku)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error loading sku for id (%s): %v", id, err)
 	}
 	if !found {
 		return nil, fmt.Errorf("sku not found for id (%s)", id)
 	}
 
-	product, err := s.productService.Get(ctx, parent)
+	product, err := s.productService.Get(ctx, sku.Parent)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error calling product service: %v", err)
 	}
 
 	var attrs = make(map[string]string)
@@ -157,7 +157,7 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 	sku.Attributes = validAttr
 
 	// update fields
-	
+
 	sku.Active = active
 
 	if name != "" {
@@ -190,7 +190,6 @@ func (s *SkuServiceImpl) Update(ctx context.Context, id string, name string, cur
 	return sku, err
 }
 
-
 func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
 	collection, err := s.db.GetCollection(ctx, "skus_db", "skus")
 	if err != nil {
@@ -199,15 +198,6 @@ func (s *SkuServiceImpl) Delete(ctx context.Context, id string) error {
 
 	filter := bson.D{{Key: "Id", Value: id}}
 	err = collection.DeleteOne(ctx, filter)
-
-	/* if err != nil {
-		return err
-	}
-
-	message := QueueMessage{
-		id: id,
-	}
-	_, err = s.queue.Push(ctx, message) */
 
 	return err
 }

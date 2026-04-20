@@ -9,9 +9,9 @@ require (
 )
 
 require (
-	go.opentelemetry.io/otel v1.26.0 // indirect
-	go.opentelemetry.io/otel/metric v1.26.0 // indirect
-	go.opentelemetry.io/otel/trace v1.26.0 // indirect
+	go.opentelemetry.io/otel v1.32.0 // indirect.
+	go.opentelemetry.io/otel/metric v1.32.0 // indirect.
+	go.opentelemetry.io/otel/trace v1.32.0 // indirect.
 	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d // indirect
 )
 

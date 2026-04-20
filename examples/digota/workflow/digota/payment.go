@@ -1,205 +1,27 @@
 package digota
 
 type Charge struct {
-	Id               string
-	Statement        string
-	ChargeAmount     uint64
-	RefundAmount     uint64
-	Refunds          []*Refund
-	Currency         int32
-	Email            string
-	Paid             bool
-	Refunded         bool
-	ProviderId       int32
-	ProviderChargeId string
-	Created          int64
-	Updated          int64
+	Id               string    `json:"id,omitempty" bson:"Id"`
+	Statement        string    `json:"statement,omitempty" bson:"Statement"`
+	ChargeAmount     uint64    `json:"charge_amount,omitempty" bson:"ChargeAmount"`
+	RefundAmount     uint64    `json:"refund_amount,omitempty" bson:"RefundAmount"`
+	Refunds          []*Refund `json:"refunds,omitempty" bson:"Refunds"`
+	Currency         int32     `json:"currency,omitempty" bson:"Currency"`
+	Email            string    `json:"email,omitempty" bson:"Email"`
+	Paid             bool      `json:"paid,omitempty" bson:"Paid"`
+	Refunded         bool      `json:"refunded,omitempty" bson:"Refunded"`
+	ProviderId       int32     `json:"provider_id,omitempty" bson:"ProviderId"`
+	ProviderChargeId string    `json:"provider_charge_id,omitempty" bson:"ProviderChargeId"`
+	Created          int64     `json:"created,omitempty" bson:"Created"`
+	Updated          int64     `json:"updated,omitempty" bson:"Updated"`
 }
 
 type Refund struct {
-	RefundAmount     uint64
-	ProviderRefundId string
-	Reason           int32
-	Created          int64
+	RefundAmount     uint64 `json:"refund_amount,omitempty" bson:"RefundAmount"`
+	ProviderRefundId string `json:"provider_refund_id,omitempty" bson:"ProviderRefundId"`
+	Reason           int32  `json:"reason,omitempty" bson:"Reason"`
+	Created          int64  `json:"created,omitempty" bson:"Created"`
 }
-
-/* type RefundReason int32
-
-const (
-	RefundReason_GeneralError        RefundReason = 0
-	RefundReason_Fraud               RefundReason = 1
-	RefundReason_Duplicate           RefundReason = 2
-	RefundReason_RequestedByCustomer RefundReason = 3
-) */
-
-/* var RefundReason_name = map[int32]string{
-	0: "GeneralError",
-	1: "Fraud",
-	2: "Duplicate",
-	3: "RequestedByCustomer",
-}
-var RefundReason_value = map[string]int32{
-	"GeneralError":        0,
-	"Fraud":               1,
-	"Duplicate":           2,
-	"RequestedByCustomer": 3,
-} */
-
-/* type PaymentProviderId int32
-
-const (
-	PaymentProviderId_PROVIDER_Reserved PaymentProviderId = 0
-	PaymentProviderId_Stripe            PaymentProviderId = 1
-	PaymentProviderId_Paypal            PaymentProviderId = 2
-	PaymentProviderId_Braintree         PaymentProviderId = 3
-) */
-
-/* var PaymentProviderId_name = map[int32]string{
-	0: "PROVIDER_Reserved",
-	1: "Stripe",
-	2: "Paypal",
-	3: "Braintree",
-}
-var PaymentProviderId_value = map[string]int32{
-	"PROVIDER_Reserved": 0,
-	"Stripe":            1,
-	"Paypal":            2,
-	"Braintree":         3,
-} */
-
-/* type Currency int32
-
-const (
-	Currency_CUR_RESERVED Currency = 0
-	Currency_AFN          Currency = 1
-	Currency_ALL          Currency = 2
-	Currency_AMD          Currency = 3
-	Currency_ANG          Currency = 4
-	Currency_ARS          Currency = 5
-	Currency_AUD          Currency = 6
-	Currency_AWG          Currency = 7
-	Currency_AZN          Currency = 8
-	Currency_BAM          Currency = 9
-	Currency_BBD          Currency = 10
-	Currency_BGN          Currency = 11
-	Currency_BHD          Currency = 12
-	Currency_BMD          Currency = 13
-	Currency_BND          Currency = 14
-	Currency_BOB          Currency = 15
-	Currency_BRL          Currency = 16
-	Currency_BSD          Currency = 17
-	Currency_BWP          Currency = 18
-	Currency_BYN          Currency = 19
-	Currency_BYR          Currency = 20
-	Currency_BZD          Currency = 21
-	Currency_CAD          Currency = 22
-	Currency_CLP          Currency = 23
-	Currency_CNY          Currency = 24
-	Currency_COP          Currency = 25
-	Currency_CRC          Currency = 26
-	Currency_CUP          Currency = 27
-	Currency_CZK          Currency = 28
-	Currency_DKK          Currency = 29
-	Currency_DOP          Currency = 30
-	Currency_DZD          Currency = 31
-	Currency_EEK          Currency = 32
-	Currency_EGP          Currency = 33
-	Currency_EUR          Currency = 34
-	Currency_FJD          Currency = 35
-	Currency_FKP          Currency = 36
-	Currency_GBP          Currency = 37
-	Currency_GGP          Currency = 38
-	Currency_GHC          Currency = 39
-	Currency_GIP          Currency = 40
-	Currency_GTQ          Currency = 41
-	Currency_GYD          Currency = 42
-	Currency_HKD          Currency = 43
-	Currency_HNL          Currency = 44
-	Currency_HRK          Currency = 45
-	Currency_HUF          Currency = 46
-	Currency_IDR          Currency = 47
-	Currency_ILS          Currency = 48
-	Currency_IMP          Currency = 49
-	Currency_INR          Currency = 50
-	Currency_IQD          Currency = 51
-	Currency_IRR          Currency = 52
-	Currency_ISK          Currency = 53
-	Currency_JEP          Currency = 54
-	Currency_JMD          Currency = 55
-	Currency_JOD          Currency = 56
-	Currency_JPY          Currency = 57
-	Currency_KES          Currency = 58
-	Currency_KGS          Currency = 59
-	Currency_KHR          Currency = 60
-	Currency_KPW          Currency = 61
-	Currency_KRW          Currency = 62
-	Currency_KWD          Currency = 63
-	Currency_KYD          Currency = 64
-	Currency_KZT          Currency = 65
-	Currency_LAK          Currency = 66
-	Currency_LBP          Currency = 67
-	Currency_LKR          Currency = 68
-	Currency_LRD          Currency = 69
-	Currency_LTL          Currency = 70
-	Currency_LVL          Currency = 71
-	Currency_LYD          Currency = 72
-	Currency_MAD          Currency = 73
-	Currency_MKD          Currency = 74
-	Currency_MNT          Currency = 75
-	Currency_MUR          Currency = 76
-	Currency_MXN          Currency = 77
-	Currency_MWK          Currency = 78
-	Currency_MYR          Currency = 79
-	Currency_MZN          Currency = 80
-	Currency_NAD          Currency = 81
-	Currency_NGN          Currency = 82
-	Currency_NIO          Currency = 83
-	Currency_NOK          Currency = 84
-	Currency_NPR          Currency = 85
-	Currency_NZD          Currency = 86
-	Currency_OMR          Currency = 87
-	Currency_PAB          Currency = 88
-	Currency_PEN          Currency = 89
-	Currency_PHP          Currency = 90
-	Currency_PKR          Currency = 91
-	Currency_PLN          Currency = 92
-	Currency_PYG          Currency = 93
-	Currency_QAR          Currency = 94
-	Currency_RON          Currency = 95
-	Currency_RSD          Currency = 96
-	Currency_RUB          Currency = 97
-	Currency_RUR          Currency = 98
-	Currency_SAR          Currency = 99
-	Currency_SBD          Currency = 100
-	Currency_SCR          Currency = 101
-	Currency_SEK          Currency = 102
-	Currency_SGD          Currency = 103
-	Currency_SHP          Currency = 104
-	Currency_SOS          Currency = 105
-	Currency_SRD          Currency = 106
-	Currency_SVC          Currency = 107
-	Currency_SYP          Currency = 108
-	Currency_THB          Currency = 109
-	Currency_TND          Currency = 110
-	Currency_TRL          Currency = 111
-	Currency_TRY          Currency = 112
-	Currency_TTD          Currency = 113
-	Currency_TWD          Currency = 114
-	Currency_TZS          Currency = 115
-	Currency_UAH          Currency = 116
-	Currency_UGX          Currency = 117
-	Currency_AED          Currency = 118
-	Currency_UYU          Currency = 119
-	Currency_UZS          Currency = 120
-	Currency_VEF          Currency = 121
-	Currency_VND          Currency = 122
-	Currency_XCD          Currency = 123
-	Currency_YER          Currency = 124
-	Currency_ZAR          Currency = 125
-	Currency_ZMW          Currency = 126
-	Currency_ZWD          Currency = 127
-	Currency_USD          Currency = 128
-) */
 
 var Currency_name = map[int32]string{
 	0:   "CUR_RESERVED",
@@ -474,69 +296,13 @@ type Card struct {
 	Type        int32
 }
 
-/* type CardType int32
-
-const (
-	CardType_CARD_Reserved   CardType = 0
-	CardType_Mastercard      CardType = 1
-	CardType_Visa            CardType = 2
-	CardType_AmericanExpress CardType = 3
-	CardType_JCB             CardType = 4
-	CardType_Discover        CardType = 5
-	CardType_DinersClub      CardType = 6
-) */
-
-/* var CardType_name = map[int32]string{
-	0: "CARD_Reserved",
-	1: "Mastercard",
-	2: "Visa",
-	3: "AmericanExpress",
-	4: "JCB",
-	5: "Discover",
-	6: "DinersClub",
-}
-var CardType_value = map[string]int32{
-	"CARD_Reserved":   0,
-	"Mastercard":      1,
-	"Visa":            2,
-	"AmericanExpress": 3,
-	"JCB":             4,
-	"Discover":        5,
-	"DinersClub":      6,
-} */
-
 type ListRequest struct {
 	Page  int64
 	Limit int64
 	Sort  int32
 }
 
-/* type ListRequest_Sort int32
-
-const (
-	ListRequest_Natural     ListRequest_Sort = 0
-	ListRequest_CreatedDesc ListRequest_Sort = 1
-	ListRequest_CreatedAsc  ListRequest_Sort = 2
-	ListRequest_UpdatedDesc ListRequest_Sort = 3
-	ListRequest_UpdatedAsc  ListRequest_Sort = 4
-) */
-
-/* var ListRequest_Sort_name = map[int32]string{
-	0: "Natural",
-	1: "CreatedDesc",
-	2: "CreatedAsc",
-	3: "UpdatedDesc",
-	4: "UpdatedAsc",
-}
-var ListRequest_Sort_value = map[string]int32{
-	"Natural":     0,
-	"CreatedDesc": 1,
-	"CreatedAsc":  2,
-	"UpdatedDesc": 3,
-	"UpdatedAsc":  4,
-} */
-
 type ChargeList struct {
-	Charges []*Charge
+	Charges []Charge
 	Total   int32
 }

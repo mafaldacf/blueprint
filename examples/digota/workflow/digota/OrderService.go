@@ -7,11 +7,11 @@ import (
 
 	"github.com/Rhymond/go-money"
 	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
+	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
-	ns                         = "order"
 	orderTTL                   = time.Minute * 2
 	defaultTaxDescription      = "Tax"
 	defaultDiscountDescription = "Discount"
@@ -33,36 +33,37 @@ type OrderServiceImpl struct {
 }
 
 func NewOrderServiceImpl(ctx context.Context, skuService SkuService, paymentService PaymentService, db backend.NoSQLDatabase) (OrderService, error) {
-	s := &OrderServiceImpl{skuService: skuService, paymentService: paymentService, db: db}
-	return s, nil
+	return &OrderServiceImpl{skuService: skuService, paymentService: paymentService, db: db}, nil
 }
 
 func (s *OrderServiceImpl) New(ctx context.Context, currency int32, items []*OrderItem, metadata map[string]string, email string, shipping *Shipping) (*Order, error) {
 	order := &Order{
+		Id:       uuid.NewString(),
 		Currency: currency,
 		Items:    items,
 		Metadata: metadata,
 		Email:    email,
 		Shipping: shipping,
+		Created:  time.Now().Unix(),
 	}
 
 	var orderItems []*OrderItem
 
 	orderItems, err := s.getUpdatedOrderItems(ctx, items)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[OrderService] error getting updated order items: %v", err)
 	}
 	order.Items = orderItems
 
 	amount, err := calculateTotal(order.Currency, order.Items)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[OrderService] error calculating total amount: %v", err)
 	}
 	order.Amount = amount
 
 	collection, err := s.db.GetCollection(ctx, "orders_db", "orders")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[OrderService] error getting orders collection: %v", err)
 	}
 	err = collection.InsertOne(ctx, order)
 	return order, err
@@ -80,8 +81,8 @@ func (s *OrderServiceImpl) Get(ctx context.Context, id string) (*Order, error) {
 		return nil, err
 	}
 
-	var order *Order
-	found, err := result.One(ctx, order)
+	var order Order
+	found, err := result.One(ctx, &order)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +90,7 @@ func (s *OrderServiceImpl) Get(ctx context.Context, id string) (*Order, error) {
 		return nil, fmt.Errorf("order not found for id (%s)", id)
 	}
 
-	return order, nil
+	return &order, nil
 }
 
 func (s *OrderServiceImpl) List(ctx context.Context, page int64, limit int64, sort int32) (*OrderList, error) {
@@ -98,13 +99,13 @@ func (s *OrderServiceImpl) List(ctx context.Context, page int64, limit int64, so
 		return nil, err
 	}
 
-	result, err := collection.FindMany(ctx, nil)
+	result, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}
 
-	var orders []*Order
-	err = result.All(ctx, orders)
+	var orders []Order
+	err = result.All(ctx, &orders)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +278,7 @@ func calculateTotal(currency int32, orderItems []*OrderItem) (int64, error) {
 		vCurrencyString := Currency_name[int32(v.Currency)]
 		m, err = m.Add(money.New(v.Quantity*v.Amount, vCurrencyString))
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("[OrderService] error calculating total amount (currency: %s, vCurrency: %s): %v", currencyString, vCurrencyString, err)
 		}
 	}
 	return m.Amount(), nil
@@ -365,6 +366,8 @@ func (s *OrderServiceImpl) getLockedOrderItems(ctx context.Context, order *Order
 			items = append(items, &lockedOrderItem{
 				OrderItem: orderItem,
 				Sku:       item,
+				Unlock:    func() error { return nil },
+				Update:    func() error { return nil },
 			})
 		}
 	}

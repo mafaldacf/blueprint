@@ -1,19 +1,14 @@
 .vs
-# original apps
-examples/dsb_hotel/build
-examples/dsb_sn/build
-examples/leaf/build
-examples/sockshop/build
-examples/trainticket/build
-# new custom apps
-examples/foobar/build
-examples/postnotification/build
 examples/digota/build
+examples/dotnet_eshop/build
+examples/dsb_hotel/build
 examples/dsb_hotel2/build
 examples/dsb_mediamicroservices/build
-examples/dsb_sn2/build
-examples/sockshop2/build
-examples/sockshop3/build
+examples/dsb_socialnetwork/build
+examples/eshopmicroservices/build
+examples/leaf/build
+examples/postnotification/build
+examples/simpleshop/build
+examples/sockshop/build
 examples/trainticket/build
-
 **/.DS_Store

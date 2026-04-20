@@ -25,13 +25,13 @@ require (
 	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	go.mongodb.org/mongo-driver v1.17.4 // indirect
-	go.opentelemetry.io/otel v1.26.0 // indirect
-	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.26.0 // indirect
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.26.0 // indirect
-	go.opentelemetry.io/otel/metric v1.26.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.26.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.26.0 // indirect
-	go.opentelemetry.io/otel/trace v1.26.0 // indirect
+	go.opentelemetry.io/otel v1.32.0 // indirect.
+	go.opentelemetry.io/otel/exporters/stdout/stdoutmetric v1.32.0 // indirect.
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.32.0 // indirect.
+	go.opentelemetry.io/otel/metric v1.32.0 // indirect.
+	go.opentelemetry.io/otel/sdk v1.32.0 // indirect.
+	go.opentelemetry.io/otel/sdk/metric v1.32.0 // indirect.
+	go.opentelemetry.io/otel/trace v1.32.0 // indirect.
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
 	golang.org/x/mod v0.17.0 // indirect

@@ -1,31 +1,31 @@
 package digota
 
 type Sku struct {
-	Id                string
-	Name              string
-	Price             uint64
-	Currency          int32
-	Active            bool
-	Parent            string
-	Metadata          map[string]string
-	Attributes        map[string]string
-	Image             string
-	PackageDimensions *PackageDimensions
-	Inventory         *Inventory
-	Created           int64
-	Updated           int64
+	Id                string             `json:"id,omitempty" bson:"Id"`
+	Name              string             `json:"name,omitempty" bson:"Name"`
+	Price             uint64             `json:"price,omitempty" bson:"Price"`
+	Currency          int32              `json:"currency,omitempty" bson:"Currency"`
+	Active            bool               `json:"active,omitempty" bson:"Active"`
+	Parent            string             `json:"parent,omitempty" bson:"Parent"`
+	Metadata          map[string]string  `json:"metadata,omitempty" bson:"Metadata"`
+	Attributes        map[string]string  `json:"attributes,omitempty" bson:"Attributes"`
+	Image             string             `json:"image,omitempty" bson:"Image"`
+	PackageDimensions *PackageDimensions `json:"packageDimensions,omitempty" bson:"PackageDimensions"`
+	Inventory         *Inventory         `json:"inventory,omitempty" bson:"Inventory"`
+	Created           int64              `json:"created,omitempty" bson:"Created"`
+	Updated           int64              `json:"updated,omitempty" bson:"Updated"`
 }
 
 type PackageDimensions struct {
-	Height float64
-	Length float64
-	Weight float64
-	Width  float64
+	Height float64 `json:"height,omitempty" bson:"Height"`
+	Length float64 `json:"length,omitempty" bson:"Length"`
+	Weight float64 `json:"weight,omitempty" bson:"Weight"`
+	Width  float64 `json:"width,omitempty" bson:"Width"`
 }
 
 type Inventory struct {
-	Quantity int64
-	Type     int32
+	Quantity int64 `json:"quantity,omitempty" bson:"Quantity"`
+	Type     int32 `json:"type,omitempty" bson:"Type"`
 }
 
 type Inventory_Type int32
@@ -45,6 +45,6 @@ var Inventory_Type_value = map[string]int32{
 }
 
 type SkuList struct {
-	Orders []*Sku `json:"orders,omitempty"`
-	Total  int32  `json:"total,omitempty"`
+	Orders []Sku `json:"orders,omitempty"`
+	Total  int32 `json:"total,omitempty"`
 }

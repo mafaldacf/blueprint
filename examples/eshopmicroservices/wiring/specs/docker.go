@@ -8,7 +8,6 @@ import (
 	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/order"
 	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/web"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
-	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
 	"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
@@ -58,9 +57,6 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	web_app_ctr := applyHTTPDefaults(spec, web_app, "web_app_proc", "web_app_container")
 	containers = append(containers, web_app_ctr)
 	allServices = append(allServices, "web_app")
-
-	tests := gotests.Test(spec, allServices...)
-	containers = append(containers, tests)
 
 	return containers, nil
 }

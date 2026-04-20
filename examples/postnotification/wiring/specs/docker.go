@@ -4,7 +4,6 @@ import (
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/wiring"
 	"github.com/blueprint-uservices/blueprint/examples/postnotification/workflow/postnotification"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
-	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
 	"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
@@ -43,9 +42,6 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	upload_service_ctr := applyHTTPDefaults(spec, upload_service, "upload_service_proc", "upload_service_container")
 	containers = append(containers, upload_service_ctr)
 	allServices = append(allServices, "upload_service")
-
-	tests := gotests.Test(spec, allServices...)
-	containers = append(containers, tests)
 
 	return containers, nil
 }

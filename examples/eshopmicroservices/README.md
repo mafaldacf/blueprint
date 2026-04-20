@@ -1,5 +1,7 @@
 # Digota
 
+This is a Blueprint re-implementation of the [eShopMicroservices application](https://github.com/mehmetozkaya/EShopMicroservices).
+
 ## Getting started
 
 Prerequisites for this tutorial:
