@@ -71,6 +71,9 @@ func New_{{.Name}}(ctx context.Context, serverAddress string) (*{{.Name}}, error
 {{$receiver := .Name -}}
 {{- range $_, $f := .Service.Methods }}
 func (client *{{$receiver}}) {{SignatureWithRetVars $f}} {
+	{{- if and (eq $f.Name "Init") (eq (len $f.Arguments) 0) (eq (len $f.Returns) 0)}}
+	return
+	{{- else}}
 	vals := url.Values{}
 	{{range $_, $arg := $f.Arguments}}
 	{{if eq (NameOf $arg.Type) "string" -}}
@@ -117,6 +120,7 @@ func (client *{{$receiver}}) {{SignatureWithRetVars $f}} {
 	ret{{$i}} = response.Ret{{$i}}
 	{{end}}
 	return
+	{{- end}}
 }
 {{end}}
 `

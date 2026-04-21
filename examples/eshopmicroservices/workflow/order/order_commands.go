@@ -1,13 +1,11 @@
 package order
 
-import "github.com/google/uuid"
-
 type CreateOrderCommand struct {
 	OrderDto OrderDto
 }
 
 type CreateOrderResult struct {
-	Id uuid.UUID
+	Id string
 }
 
 type UpdateOrderCommand struct {
@@ -19,7 +17,7 @@ type UpdateOrderResult struct {
 }
 
 type DeleteOrderCommand struct {
-	Id uuid.UUID
+	Id string
 }
 
 type DeleteOrderResult struct {
@@ -27,7 +25,7 @@ type DeleteOrderResult struct {
 }
 
 type GetOrdersByCustomerQuery struct {
-	CustomerId uuid.UUID
+	CustomerId string
 }
 
 type GetOrdersByCustomerResult struct {

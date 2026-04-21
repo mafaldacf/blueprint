@@ -10,12 +10,13 @@ import (
 )
 
 type CatalogService interface {
-	Run(ctx context.Context) error
 	CreateProduct(ctx context.Context, command CreateProductCommand) (CreateProductResponse, error)
 	DeleteProduct(ctx context.Context, command DeleteProductCommand) error
 	GetProductById(ctx context.Context, query GetProductByIdQuery) (GetProductByIdResponse, error)
 	GetProductByCategory(ctx context.Context, query GetProductByCategoryQuery) (GetProductByCategoryResponse, error)
 	GetProducts(ctx context.Context) (GetProductsResponse, error)
+
+	Init(ctx context.Context) error // new RunnableHTTP in Blueprint
 }
 
 type CatalogServiceImpl struct {
@@ -29,12 +30,13 @@ func NewCatalogServiceImpl(ctx context.Context, database backend.NoSQLDatabase) 
 	return s, nil
 }
 
-func (s *CatalogServiceImpl) Run(ctx context.Context) error {
+func (s *CatalogServiceImpl) Init(ctx context.Context) error {
 	return nil
 }
 
 func (s *CatalogServiceImpl) CreateProduct(ctx context.Context, command CreateProductCommand) (CreateProductResponse, error) {
 	product := Product{
+		Id:          uuid.NewString(),
 		Name:        command.Name,
 		Category:    command.Category,
 		Description: command.Description,
@@ -84,7 +86,7 @@ func (s *CatalogServiceImpl) store(ctx context.Context, product Product) error {
 	return collection.InsertOne(ctx, product)
 }
 
-func (s *CatalogServiceImpl) delete(ctx context.Context, id uuid.UUID) error {
+func (s *CatalogServiceImpl) delete(ctx context.Context, id string) error {
 	collection, err := s.database.GetCollection(ctx, "catalog_db", "product")
 	if err != nil {
 		return err
@@ -93,7 +95,7 @@ func (s *CatalogServiceImpl) delete(ctx context.Context, id uuid.UUID) error {
 	return collection.DeleteOne(ctx, filter)
 }
 
-func (s *CatalogServiceImpl) load(ctx context.Context, id uuid.UUID) (Product, error) {
+func (s *CatalogServiceImpl) load(ctx context.Context, id string) (Product, error) {
 	collection, err := s.database.GetCollection(ctx, "catalog_db", "product")
 	if err != nil {
 		return Product{}, err
@@ -140,7 +142,7 @@ func (s *CatalogServiceImpl) loadAll(ctx context.Context) ([]Product, error) {
 	if err != nil {
 		return nil, err
 	}
-	cursor, err := collection.FindMany(ctx, nil)
+	cursor, err := collection.FindMany(ctx, bson.D{})
 	if err != nil {
 		return nil, err
 	}

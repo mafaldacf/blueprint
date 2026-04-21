@@ -32,7 +32,7 @@ func NewCartServiceImpl(ctx context.Context, db backend.NoSQLDatabase) (CartServ
 func (s *CartServiceImpl) AddItem(ctx context.Context, customerID string, item Item) (Item, error) {
 	cart, err := s.getCart(ctx, customerID)
 	if err != nil {
-		return Item{}, err
+		cart = &Cart{ID: customerID}
 	}
 
 	if existingItem := findItem(cart, item.ID); existingItem != nil {
@@ -56,7 +56,7 @@ func (s *CartServiceImpl) DeleteCart(ctx context.Context, customerID string) err
 func (s *CartServiceImpl) GetCart(ctx context.Context, customerID string) ([]Item, error) {
 	cart, err := s.getCart(ctx, customerID)
 	if err != nil {
-		return cart.Items, err
+		return nil, err
 	}
 
 	return cart.Items, nil
@@ -65,7 +65,7 @@ func (s *CartServiceImpl) GetCart(ctx context.Context, customerID string) ([]Ite
 func (s *CartServiceImpl) GetItem(ctx context.Context, customerID string, itemID string) (Item, error) {
 	cart, err := s.getCart(ctx, customerID)
 	if err != nil {
-		return Item{}, err
+		return Item{}, nil
 	}
 
 	if item := findItem(cart, itemID); item != nil {
@@ -134,7 +134,7 @@ func (s *CartServiceImpl) RemoveItem(ctx context.Context, customerID string, ite
 func (s *CartServiceImpl) UpdateItem(ctx context.Context, customerID string, item Item) error {
 	cart, err := s.getCart(ctx, customerID)
 	if err != nil {
-		return err
+		cart = &Cart{ID: customerID}
 	}
 
 	if existing := findItem(cart, item.ID); existing != nil {
@@ -177,11 +177,11 @@ func (s *CartServiceImpl) getCart(ctx context.Context, id string) (*Cart, error)
 	}
 	var cart Cart
 	ok, err := cursor.One(ctx, &cart)
-	if !ok {
-		return nil, fmt.Errorf("could not get cart for id (%s)", id)
-	}
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		return nil, fmt.Errorf("could not get cart for id (%s)", id)
 	}
 	return &cart, nil
 }
@@ -201,12 +201,12 @@ func (s *CartServiceImpl) upsert(ctx context.Context, id string, cart *Cart) err
 	}
 
 	filter := bson.D{{Key: "ID", Value: id}}
-	ok, err := collection.Upsert(ctx, filter, cart)
+	found, err := collection.Upsert(ctx, filter, cart)
 	if err != nil {
 		return err
 	}
-	if !ok {
-		return fmt.Errorf("could not update cart for id (%s)", id)
+	if !found {
+		return nil
 	}
 	return nil
 }

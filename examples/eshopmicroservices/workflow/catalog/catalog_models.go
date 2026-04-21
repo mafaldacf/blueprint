@@ -1,12 +1,10 @@
 package catalog
 
-import "github.com/google/uuid"
-
 type Product struct {
-	Id          uuid.UUID
-	Name        string
-	Category    []string
-	Description string
-	ImageFile   string
-	Price       float64
+	Id          string `bson:"Id"`
+	Name        string    `bson:"Name"`
+	Category    []string  `bson:"Category"`
+	Description string    `bson:"Description"`
+	ImageFile   string    `bson:"ImageFile"`
+	Price       float64   `bson:"Price"`
 }

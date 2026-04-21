@@ -18,9 +18,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slog"
+
+	"github.com/blueprint-uservices/blueprint/runtime/core/backend"
 )
 
 // Constructs a node. Within a namespace, a BuildFunc will only be called once,
@@ -40,6 +41,11 @@ type BuildFunc func(n *Namespace) (node any, err error)
 type Runnable interface {
 	// [Namespace] will call Run in a separate goroutine.
 	Run(ctx context.Context) error
+}
+
+type RunnableHttp interface {
+	// [Namespace] will call Run in a separate goroutine.
+	Init(ctx context.Context) error
 }
 
 // The NamespaceBuilder is used at runtime by golang nodes to
@@ -395,6 +401,25 @@ func (n *Namespace) Get(name string, receiver any) error {
 			}
 			go func() {
 				err := runnable.Run(n.ctx)
+				if err != nil {
+					slog.Error(fmt.Sprintf("%v error running node %v: %v", n.name, name, err.Error()))
+					n.cancel()
+				} else {
+					slog.Info(fmt.Sprintf("%v %v exited", n.name, name))
+				}
+				n.wg.Done()
+				if n.parent != nil {
+					n.parent.wg.Done()
+				}
+			}()
+		} else if runnable, isRunnable := built.(RunnableHttp); isRunnable {
+			slog.Info(fmt.Sprintf("%v running %v", n.name, name))
+			n.wg.Add(1)
+			if n.parent != nil {
+				n.parent.wg.Add(1)
+			}
+			go func() {
+				err := runnable.Init(n.ctx)
 				if err != nil {
 					slog.Error(fmt.Sprintf("%v error running node %v: %v", n.name, name, err.Error()))
 					n.cancel()

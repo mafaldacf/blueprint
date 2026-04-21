@@ -57,17 +57,25 @@ func (s *BasketServiceImpl) StoreBasket(ctx context.Context, command StoreBasket
 	// deduct discount
 	for _, item := range command.Cart.Items {
 		coupon, err := s.discountService.GetDiscount(ctx, discount.GetDiscountRequest{ProductName: item.ProductName})
-		if err != nil {
-			return StoreBasketResponse{}, err
+		if err == nil {
+			item.Price -= coupon.Amount
 		}
-		item.Price -= coupon.Amount
 	}
+
+	command.Cart.TotalPrice = calculateTotalPrice(command.Cart)
 
 	err := s.storeBasket(ctx, command.Cart)
 	if err != nil {
 		return StoreBasketResponse{}, err
 	}
 	return StoreBasketResponse{UserName: command.Cart.UserName}, nil
+}
+
+func calculateTotalPrice(cart ShoppingCart) (total float64) {
+	for _, item := range cart.Items {
+		total += item.Price * float64(item.Quantity)
+	}
+	return total
 }
 
 func (s *BasketServiceImpl) GetBasket(ctx context.Context, query GetBasketQuery) (GetBasketResult, error) {

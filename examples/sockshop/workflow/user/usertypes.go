@@ -21,18 +21,18 @@ type User struct {
 	Salt      string    `json:"salt" bson:"salt"`
 }
 type Address struct {
-	Street   string
-	Number   string
-	Country  string
-	City     string
-	PostCode string
-	ID       string
+	Street   string `bson:"Street"`
+	Number   string `bson:"Number"`
+	Country  string `bson:"Country"`
+	City     string `bson:"City"`
+	PostCode string `bson:"PostCode"`
+	ID       string `bson:"-"`
 }
 type Card struct {
-	LongNum string
-	Expires string
-	CCV     string
-	ID      string
+	LongNum string `bson:"LongNum"`
+	Expires string `bson:"Expires"`
+	CCV     string `bson:"CCV"`
+	ID      string `bson:"-"`
 }
 
 func newUser() User {

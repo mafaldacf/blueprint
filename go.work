@@ -9,10 +9,13 @@ use (
 	./examples/dsb_hotel/wiring
 	./examples/dsb_hotel/workflow
 	./examples/dsb_hotel/workload
+	./examples/dsb_mediamicroservices/tests
 	./examples/dsb_mediamicroservices/wiring
 	./examples/dsb_mediamicroservices/workflow
 	./examples/dsb_socialnetwork/wiring
 	./examples/dsb_socialnetwork/workflow
+	./examples/dsb_socialnetwork/tests
+	./examples/eshopmicroservices/tests
 	./examples/eshopmicroservices/wiring
 	./examples/eshopmicroservices/workflow
 	./examples/leaf/workflow
@@ -21,6 +24,10 @@ use (
 	./examples/postnotification/workflow
 	./examples/sockshop/wiring
 	./examples/sockshop/workflow
+	./examples/sockshop/tests
+	./examples/trainticket/wiring
+	./examples/trainticket/workflow
+	./examples/trainticket/tests
 	./plugins
 	./runtime
 	./test/wiring

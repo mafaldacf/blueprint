@@ -155,11 +155,7 @@ func (c *FoodServiceImpl) DeleteFoodOrder(ctx context.Context, orderID string) e
 	}
 
 	filter := bson.D{{Key: "OrderID", Value: orderID}}
-	err = collection.DeleteOne(ctx, filter)
-	if err != nil {
-		return err
-	}
-	return nil
+	return collection.DeleteOne(ctx, filter)
 }
 
 func (c *FoodServiceImpl) FindFoodOrderByOrderId(ctx context.Context, orderID string) (FoodOrder, error) {

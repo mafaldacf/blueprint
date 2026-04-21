@@ -103,8 +103,6 @@ func (s *InsidePaymentServiceImpl) Pay(ctx context.Context, info PaymentInfo) (b
 		if err != nil {
 			return false, err
 		}
-	} else {
-		// other service
 	}
 	if order.Status == ORDER_STATUS_NOT_PAID {
 		return false, fmt.Errorf("order status not allowed to pay")

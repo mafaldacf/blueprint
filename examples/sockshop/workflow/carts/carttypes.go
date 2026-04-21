@@ -1,12 +1,12 @@
 package carts
 
 type Cart struct {
-    ID    string
-    Items []Item
+	ID    string `bson:"ID"`
+	Items []Item `bson:"Items"`
 }
 
 type Item struct {
-    ID        string
-    Quantity  int
-    UnitPrice float32
+	ID        string  `bson:"ID"`
+	Quantity  int     `bson:"Quantity"`
+	UnitPrice float32 `bson:"UnitPrice"`
 }

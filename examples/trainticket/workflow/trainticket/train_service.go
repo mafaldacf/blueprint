@@ -55,11 +55,7 @@ func (ts *TrainServiceImpl) Create(ctx context.Context, tt TrainType) error {
 		return errors.New("TrainType already exists")
 	}
 
-	err = coll.InsertOne(ctx, tt)
-	if err != nil {
-		return err
-	}
-	return nil
+	return coll.InsertOne(ctx, tt)
 }
 
 func (ts *TrainServiceImpl) Retrieve(ctx context.Context, id string) (TrainType, error) {

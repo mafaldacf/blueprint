@@ -120,7 +120,7 @@ func (s *CatalogueServiceImpl) Count(ctx context.Context, tags []string) (int, e
 func (s *CatalogueServiceImpl) Get(ctx context.Context, id string) (Sock, error) {
 	//query := baseQuery + " WHERE sock.SockID =? GROUP BY sock.SockID;"
 	var sock Sock
-	err := s.catalogue_db.Select(ctx, &sock, "SELECT * FROM sock WHERE sock.SockID =? GROUP BY sock.SockID;", id)
+	err := s.catalogue_db.Get(ctx, &sock, "SELECT * FROM sock WHERE sock.SockID =?;", id)
 	if err != nil {
 		return Sock{}, errors.Wrapf(err, "CatalogueService.Get %v", id)
 	}

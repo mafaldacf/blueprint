@@ -1,10 +1,7 @@
 package basket
-
-import "github.com/google/uuid"
-
 type BasketChekoutEvent struct {
 	UserName   string
-	CustomerId uuid.UUID
+	CustomerId string
 	TotalPrice float64
 
 	// Shipping and Billing Address

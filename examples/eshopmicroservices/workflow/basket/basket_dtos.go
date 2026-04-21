@@ -1,10 +1,8 @@
 package basket
 
-import "github.com/google/uuid"
-
 type BasketCheckoutDto struct {
 	UserName   string
-	CustomerId uuid.UUID
+	CustomerId string
 	TotalPrice float64
 
 	// Shipping and Billing Address

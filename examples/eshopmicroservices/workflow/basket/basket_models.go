@@ -1,17 +1,15 @@
 package basket
 
-import "github.com/google/uuid"
-
 type ShoppingCart struct {
-	UserName   string
-	Items      []ShoppingCartItem
-	TotalPrice float64
+	UserName   string             `bson:"UserName"`
+	Items      []ShoppingCartItem `bson:"Items"`
+	TotalPrice float64            `bson:"TotalPrice"`
 }
 
 type ShoppingCartItem struct {
-	Quantity    int
-	Color       string
-	Price       float64
-	ProductId   uuid.UUID
-	ProductName string
+	Quantity    int     `bson:"Quantity"`
+	Color       string  `bson:"Color"`
+	Price       float64 `bson:"Price"`
+	ProductId   string  `bson:"ProductId"`
+	ProductName string  `bson:"ProductName"`
 }

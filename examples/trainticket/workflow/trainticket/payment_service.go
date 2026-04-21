@@ -65,8 +65,7 @@ func (p *PaymentServiceImpl) Query(ctx context.Context) ([]Payment, error) {
 	if err != nil {
 		return payments, err
 	}
-	err = res.All(ctx, &payments)
-	return payments, err
+	return payments, res.All(ctx, &payments)
 }
 
 func (p *PaymentServiceImpl) Pay(ctx context.Context, payment Payment) error {

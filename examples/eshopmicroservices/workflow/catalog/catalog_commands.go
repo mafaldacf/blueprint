@@ -1,7 +1,5 @@
 package catalog
 
-import "github.com/google/uuid"
-
 type CreateProductCommand struct {
 	Name        string
 	Category    []string
@@ -15,11 +13,11 @@ type CreateProductResponse struct {
 }
 
 type DeleteProductCommand struct {
-	Id uuid.UUID
+	Id string
 }
 
 type GetProductByIdQuery struct {
-	Id uuid.UUID
+	Id string
 }
 
 type GetProductByIdResponse struct {

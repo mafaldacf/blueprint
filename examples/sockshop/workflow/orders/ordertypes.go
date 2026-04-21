@@ -7,13 +7,13 @@ import (
 )
 
 type Order struct {
-	ID         string
-	CustomerID string
-	Customer   user.User
-	Address    user.Address
-	Card       user.Card
-	Items      []carts.Item
-	Shipment   shipping.Shipment
-	Date       string
-	Total      float32
+	ID         string          `bson:"ID"`
+	CustomerID string          `bson:"CustomerID"`
+	Customer   user.User       `bson:"Customer"`
+	Address    user.Address    `bson:"Address"`
+	Card       user.Card       `bson:"Card"`
+	Items      []carts.Item    `bson:"Items"`
+	Shipment   shipping.Shipment `bson:"Shipment"`
+	Date       string          `bson:"Date"`
+	Total      float32         `bson:"Total"`
 }

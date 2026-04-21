@@ -3,8 +3,6 @@ package web
 import (
 	"context"
 
-	"github.com/google/uuid"
-
 	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/basket"
 	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/catalog"
 	"github.com/blueprint-uservices/blueprint/examples/eshopmicroservices/workflow/discount"
@@ -12,11 +10,11 @@ import (
 )
 
 type WebApp interface {
-	OnPostRemoveToCartAsync(ctx context.Context, productId uuid.UUID) error
+	OnPostRemoveToCartAsync(ctx context.Context, productId string) error
 	OnPostCheckoutAsync(ctx context.Context) error
 	OnGetOrdersAsync(ctx context.Context) ([]order.OrderDto, error)
 	OnGetProductsAsync(ctx context.Context, categoryName string) ([]catalog.Product, []string, string, error)
-	OnPostAddToCartAsync(ctx context.Context, productId uuid.UUID) error
+	OnPostAddToCartAsync(ctx context.Context, productId string) error
 }
 
 type WebAppImpl struct {
@@ -24,7 +22,7 @@ type WebAppImpl struct {
 	catalogService  catalog.CatalogService
 	discountService discount.DiscountService
 	orderService    order.OrderService
-	customerId      uuid.UUID
+	customerId      string
 }
 
 func NewWebAppImpl(ctx context.Context, basketService basket.BasketService, catalogService catalog.CatalogService, discountService discount.DiscountService, orderService order.OrderService) (WebApp, error) {
@@ -33,7 +31,7 @@ func NewWebAppImpl(ctx context.Context, basketService basket.BasketService, cata
 		catalogService:  catalogService,
 		discountService: discountService,
 		orderService:    orderService,
-		customerId:      uuid.MustParse("5334c996-8457-4cf0-815c-ed2b77c4ff61"),
+		customerId:      "5334c996-8457-4cf0-815c-ed2b77c4ff61",
 	}
 	return s, nil
 }
@@ -41,7 +39,7 @@ func NewWebAppImpl(ctx context.Context, basketService basket.BasketService, cata
 var quantity int
 var color string
 
-func (webapp *WebAppImpl) OnPostRemoveToCartAsync(ctx context.Context, productId uuid.UUID) error {
+func (webapp *WebAppImpl) OnPostRemoveToCartAsync(ctx context.Context, productId string) error {
 	basketResponse, err := webapp.basketService.GetBasket(ctx, basket.GetBasketQuery{UserName: "swn"})
 	if err != nil {
 		return err
@@ -58,7 +56,7 @@ func (webapp *WebAppImpl) OnPostRemoveToCartAsync(ctx context.Context, productId
 	return nil
 }
 
-func removeAll(cart *basket.ShoppingCart, productId uuid.UUID) []basket.ShoppingCartItem {
+func removeAll(cart *basket.ShoppingCart, productId string) []basket.ShoppingCartItem {
 	remainingItems := cart.Items[:0]
 	for _, item := range cart.Items {
 		if item.ProductId != productId {
@@ -81,7 +79,7 @@ func (webapp *WebAppImpl) OnPostCheckoutAsync(ctx context.Context) error {
 	order.UserName = cart.UserName
 	order.TotalPrice = cart.TotalPrice
 
-	webapp.basketService.CheckoutBasket(ctx, basket.CheckoutBasketCommand{order})
+	webapp.basketService.CheckoutBasket(ctx, basket.CheckoutBasketCommand{BasketCheckoutDto: order})
 
 	return nil
 }
@@ -89,7 +87,7 @@ func (webapp *WebAppImpl) OnPostCheckoutAsync(ctx context.Context) error {
 func (webapp *WebAppImpl) OnGetOrdersAsync(ctx context.Context) ([]order.OrderDto, error) {
 	// assumption customerId is passed in from the UI authenticated user swn
 	customerId := webapp.customerId
-	response, err := webapp.orderService.GetOrdersByCustomer(ctx, order.GetOrdersByCustomerQuery{customerId})
+	response, err := webapp.orderService.GetOrdersByCustomer(ctx, order.GetOrdersByCustomerQuery{CustomerId: customerId})
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +131,7 @@ func (webapp *WebAppImpl) OnGetProductsAsync(ctx context.Context, categoryName s
 
 }
 
-func (webapp *WebAppImpl) OnPostAddToCartAsync(ctx context.Context, productId uuid.UUID) error {
+func (webapp *WebAppImpl) OnPostAddToCartAsync(ctx context.Context, productId string) error {
 	productResponse, err := webapp.catalogService.GetProductById(ctx, catalog.GetProductByIdQuery{Id: productId})
 	if err != nil {
 		return err

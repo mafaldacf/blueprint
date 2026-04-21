@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"golang.org/x/exp/slog"
+
 	"github.com/blueprint-uservices/blueprint/plugins/golang"
 	"github.com/blueprint-uservices/blueprint/plugins/golang/gocode"
 	"github.com/blueprint-uservices/blueprint/plugins/golang/gogen"
-	"golang.org/x/exp/slog"
 )
 
 /*
@@ -62,10 +63,21 @@ func New_{{.Name}}(ctx context.Context, service {{.Imports.NameOf .Service.UserT
 
 // Blueprint: Run is called automatically in a separate goroutine by runtime/plugins/golang/di.go
 func (handler *{{.Name}}) Run(ctx context.Context) error {
+	{{ range $_, $f := .Service.Methods -}}
+	{{- if and (eq $f.Name "Init") (eq (len $f.Arguments) 0) (eq (len $f.Returns) 0) -}}
+	go func() {
+		if err := handler.Service.Init(ctx); err != nil {
+			log.Println(err.Error())
+		}
+	}()
+	{{ end -}}
+	{{- end -}}
 	router := mux.NewRouter()
 	// Add paths for the mux router
 	{{ range $_, $f := .Service.Methods }}
+	{{- if not (and (eq $f.Name "Init") (eq (len $f.Arguments) 0) (eq (len $f.Returns) 0))}}
 	router.Path("/{{$f.Name}}").HandlerFunc(handler.{{$f.Name}})
+	{{- end}}
 	{{end}}
 	srv := &http.Server {
 		Addr: handler.Address,
@@ -85,6 +97,7 @@ func (handler *{{.Name}}) Run(ctx context.Context) error {
 {{$service := .Service.Name -}}
 {{$receiver := .Name -}}
 {{ range $_, $f := .Service.Methods }}
+{{- if not (and (eq $f.Name "Init") (eq (len $f.Arguments) 0) (eq (len $f.Returns) 0))}}
 func (handler *{{$receiver}}) {{$f.Name -}}
 	(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -122,5 +135,6 @@ func (handler *{{$receiver}}) {{$f.Name -}}
 	{{end}}
 	json.NewEncoder(w).Encode(response)
 }
+{{- end}}
 {{end}}
 `
