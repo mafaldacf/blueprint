@@ -10,12 +10,12 @@ import (
 
 type MovieId struct {
 	MovieID string `bson:"_id"`
-	Title   string
+	Title   string `bson:"Title"`
 }
 
 type MovieIdService interface {
 	RegisterMovieId(ctx context.Context, reqID int64, movieID string, title string) (MovieId, error)
-	UploadMovieId(ctx context.Context, reqID int64, title string, rating int) error
+	UploadNewMovieId(ctx context.Context, reqID int64, title string, rating int) error
 	ReadMovieId(ctx context.Context, reqID int64, title string) (MovieId, error)
 }
 
@@ -49,7 +49,7 @@ func (s *MovieIdServiceImpl) RegisterMovieId(ctx context.Context, reqID int64, m
 	return movie, err
 }
 
-func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, title string, rating int) error {
+func (s *MovieIdServiceImpl) UploadNewMovieId(ctx context.Context, reqID int64, title string, rating int) error {
 	var movieID string
 
 	ok, err := s.cache.Get(ctx, title, &movieID)
@@ -88,7 +88,7 @@ func (s *MovieIdServiceImpl) UploadMovieId(ctx context.Context, reqID int64, tit
 		return err
 	}
 
-	err = s.ratingService.UploadRating(ctx, reqID, movieID, rating)
+	err = s.ratingService.UploadNewRating(ctx, reqID, movieID, rating)
 	if err != nil {
 		return err
 	}

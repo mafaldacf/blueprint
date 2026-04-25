@@ -11,13 +11,13 @@ import (
 )
 
 type Review struct {
-	ReviewID  int64 `bson:"_id"`
-	ReqID     int64
-	Timestamp int64
-	UserID    int64
-	MovieID   string
-	Text      string
-	Rating    int
+	ReviewID  int64  `bson:"ReviewID"`
+	ReqID     int64  `bson:"ReqID"`
+	Timestamp int64  `bson:"Timestamp"`
+	UserID    int64  `bson:"UserID"`
+	MovieID   string `bson:"MovieID"`
+	Text      string `bson:"Text"`
+	Rating    int    `bson:"Rating"`
 }
 
 type ReviewStorageService interface {
@@ -97,7 +97,7 @@ func (s *ReviewStorageServiceImpl) ReadReviews(ctx context.Context, reqID int64,
 		}
 
 		query := bson.D{
-			{Key: "PostID", Value: bson.D{
+			{Key: "ReviewID", Value: bson.D{
 				{Key: "$in", Value: unique_pids},
 			}},
 		}

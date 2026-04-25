@@ -10,8 +10,8 @@ import (
 )
 
 type Plot struct {
-	PlotID int64 `bson:"_id"`
-	Plot   string
+	PlotID int64  `bson:"PlotID"`
+	Plot   string `bson:"Plot"`
 }
 
 type PlotService interface {
@@ -61,7 +61,7 @@ func (s *PlotServiceImpl) ReadPlot(ctx context.Context, reqID int64, plotID int6
 		plot = cachedPlot.(Plot)
 		return plot, nil
 	}
-	
+
 	// if not cached in memcached
 	collection, err := s.database.GetCollection(ctx, "plot_db", "plot")
 	if err != nil {

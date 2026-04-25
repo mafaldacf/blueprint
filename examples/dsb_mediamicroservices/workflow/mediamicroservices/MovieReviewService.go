@@ -9,13 +9,13 @@ import (
 )
 
 type MovieReviewData struct {
-	ReviewID  int64
-	Timestamp int64
+	ReviewID  int64 `bson:"ReviewID"`
+	Timestamp int64 `bson:"Timestamp"`
 }
 
 type MovieReview struct {
-	MovieID string `bson:"_id"`
-	Reviews []MovieReviewData
+	MovieID string            `bson:"MovieID"`
+	Reviews []MovieReviewData `bson:"Reviews"`
 }
 
 type MovieReviewService interface {

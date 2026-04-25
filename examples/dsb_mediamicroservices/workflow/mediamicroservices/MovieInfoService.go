@@ -9,21 +9,21 @@ import (
 )
 
 type Cast struct {
-	CastID     string
-	CastInfoID string
-	Character  string
+	CastID     string `bson:"CastID"`
+	CastInfoID string `bson:"CastInfoID"`
+	Character  string `bson:"Character"`
 }
 
 type MovieInfo struct {
 	MovieID string `bson:"_id"`
-	Title   string
-	Casts   []Cast
-	PlotID  int64
+	Title   string `bson:"Title"`
+	Casts   []Cast `bson:"Casts"`
+	PlotID  int64  `bson:"PlotID"`
 }
 
 type Rating struct {
-	AvgRating float64
-	NumRating int
+	AvgRating float64 `bson:"AvgRating"`
+	NumRating int     `bson:"NumRating"`
 }
 
 type MovieInfoService interface {
@@ -67,8 +67,8 @@ func (s *MovieInfoServiceImpl) ReadMovieInfo(ctx context.Context, reqID int64, m
 
 	var cachedMovieInfo interface{}
 	found, err := s.cache.Get(ctx, movieID, &cachedMovieInfo)
-	if err == nil {
-		return movieInfo, nil
+	if err != nil {
+		return movieInfo, err
 	}
 	if found {
 		movieInfo = cachedMovieInfo.(MovieInfo)
@@ -80,7 +80,7 @@ func (s *MovieInfoServiceImpl) ReadMovieInfo(ctx context.Context, reqID int64, m
 	if err != nil {
 		return movieInfo, err
 	}
-	query := bson.D{{Key: "MovieID", Value: movieID}}
+	query := bson.D{{Key: "_id", Value: movieID}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return movieInfo, err
@@ -108,7 +108,7 @@ func (s *MovieInfoServiceImpl) UpdateRating(ctx context.Context, reqID int64, mo
 		return err
 	}
 	var rating Rating
-	query := bson.D{{Key: "MovieID", Value: movieID}}
+	query := bson.D{{Key: "_id", Value: movieID}}
 	result, err := collection.FindOne(ctx, query)
 	if err != nil {
 		return err

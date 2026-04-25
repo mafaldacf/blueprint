@@ -15,12 +15,12 @@ import (
 )
 
 type User struct {
-	UserID    int64 `bson:"_id"`
-	Username  string
-	FirstName string
-	LastName  string
-	Password  string
-	Salt      string
+	UserID    int64  `bson:"UserID"`
+	Username  string `bson:"Username"`
+	FirstName string `bson:"FirstName"`
+	LastName  string `bson:"LastName"`
+	Password  string `bson:"Password"`
+	Salt      string `bson:"Salt"`
 }
 
 type UserService interface {
