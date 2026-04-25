@@ -5,22 +5,21 @@ import (
 	"github.com/blueprint-uservices/blueprint/examples/dsb_socialnetwork/workflow/socialnetwork"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
 	"github.com/blueprint-uservices/blueprint/plugins/goproc"
-	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/http"
 	"github.com/blueprint-uservices/blueprint/plugins/linuxcontainer"
 	"github.com/blueprint-uservices/blueprint/plugins/memcached"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
-	"github.com/blueprint-uservices/blueprint/plugins/thrift"
+	"github.com/blueprint-uservices/blueprint/plugins/grpc"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
 )
 
-// A wiring spec that deploys each service into its own Docker container and using thrift to communicate between services.
-// All services except the Wrk2API service use thrift for communication; WRK2API service provides the http frontend.
+// A wiring spec that deploys each service into its own Docker container and using grpc to communicate between services.
+// All services except the Wrk2API service use grpc for communication; WRK2API service provides the http frontend.
 // The user, socialgraph, urlshorten, and usertimeline services use MongoDB instances to store their data.
 // The user, socialgraph, urlshorten, usertimeine, and hometimeline services use memcached instances as the cache data for faster responses.
 var Docker = cmdbuilder.SpecOption{
 	Name:        "docker",
-	Description: "Deploys each service in a separate container with thrift, and uses mongodb as NoSQL database backends.",
+	Description: "Deploys each service in a separate container with grpc, and uses mongodb as NoSQL database backends.",
 	Build:       makeDockerSpec,
 }
 
@@ -131,14 +130,15 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	containers = append(containers, wrk2api_ctr)
 	allServices = append(allServices, "wrk2api_service")
 
-	tests := gotests.Test(spec, allServices...)
-	containers = append(containers, tests)
-
 	return containers, nil
 }
 
+// Note:
+// in github.com/apache/thrift@v0.22.0/lib/go/thrift/client.go:
+// "TStandardClient implements TClient, and uses the standard message format for Thrift.
+// It is not safe for concurrent use."
 func applyDockerDefaults(spec wiring.WiringSpec, serviceName, procName, ctrName string) string {
-	thrift.Deploy(spec, serviceName)
+	grpc.Deploy(spec, serviceName)
 	goproc.CreateProcess(spec, procName, serviceName)
 	return linuxcontainer.CreateContainer(spec, ctrName, procName)
 }

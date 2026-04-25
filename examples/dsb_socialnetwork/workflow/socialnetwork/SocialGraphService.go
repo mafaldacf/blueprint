@@ -33,21 +33,21 @@ type SocialGraphService interface {
 
 // The format of a follower's info stored in the user info in the social-graph
 type FollowerInfo struct {
-	FollowerID int64
-	Timestamp  int64
+	FollowerID int64 `bson:"FollowerID"`
+	Timestamp  int64 `bson:"Timestamp"`
 }
 
 // The format of a followee's info stored in the user info in the social-graph
 type FolloweeInfo struct {
-	FolloweeID int64
-	Timestamp  int64
+	FolloweeID int64 `bson:"FolloweeID"`
+	Timestamp  int64 `bson:"Timestamp"`
 }
 
 // The format of a user's info stored in the social-graph
 type UserInfo struct {
-	UserID    int64
-	Followers []FollowerInfo
-	Followees []FolloweeInfo
+	UserID    int64          `bson:"UserID"`
+	Followers []FollowerInfo `bson:"Followers"`
+	Followees []FolloweeInfo `bson:"Followees"`
 }
 
 // Implementation of [SocialGraphService]
@@ -76,7 +76,7 @@ func (s *SocialGraphServiceImpl) GetFollowers(ctx context.Context, reqID int64, 
 		if err != nil {
 			return followers, err
 		}
-		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+		query_d := bson.D{{Key: "UserID", Value: userID}}
 		val, err := collection.FindOne(ctx, query_d)
 		if err != nil {
 			return followers, err
@@ -115,7 +115,7 @@ func (s *SocialGraphServiceImpl) GetFollowees(ctx context.Context, reqID int64, 
 		if err != nil {
 			return followees, err
 		}
-		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+		query_d := bson.D{{Key: "UserID", Value: userID}}
 		val, err := collection.FindOne(ctx, query_d)
 		if err != nil {
 			return followees, err
@@ -152,11 +152,11 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 	if err_internal != nil {
 		return err_internal
 	}
-	query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+	query_d := bson.D{{Key: "UserID", Value: userID}}
 	update_d := bson.D{
 		{Key: "$push", Value: bson.D{
 			{Key: "followees", Value: bson.D{
-				{Key: "UserID", Value: followeeIDstr},
+				{Key: "UserID", Value: followeeID},
 				{Key: "Timestamp", Value: timestamp},
 			}},
 		}},
@@ -170,11 +170,11 @@ func (s *SocialGraphServiceImpl) Follow(ctx context.Context, reqID int64, userID
 	if err_internal != nil {
 		return err_internal
 	}
-	query_d = bson.D{{Key: "UserID", Value: followeeIDstr}}
+	query_d = bson.D{{Key: "UserID", Value: followeeID}}
 	update_d = bson.D{
 		{Key: "$push", Value: bson.D{
 			{Key: "followers", Value: bson.D{
-				{Key: "UserID", Value: userIDstr},
+				{Key: "UserID", Value: userID},
 				{Key: "Timestamp", Value: timestamp},
 			}},
 		}},
@@ -215,11 +215,11 @@ func (s *SocialGraphServiceImpl) Unfollow(ctx context.Context, reqID int64, user
 			err1 = err_internal
 			return
 		}
-		query_d := bson.D{{Key: "UserID", Value: userIDstr}}
+		query_d := bson.D{{Key: "UserID", Value: userID}}
 		update_d := bson.D{
 			{Key: "$pull", Value: bson.D{
 				{Key: "followees", Value: bson.D{
-					{Key: "UserID", Value: followeeIDstr},
+					{Key: "UserID", Value: followeeID},
 				}},
 			}},
 		}
@@ -232,11 +232,11 @@ func (s *SocialGraphServiceImpl) Unfollow(ctx context.Context, reqID int64, user
 			err2 = err_internal
 			return
 		}
-		query_d := bson.D{{Key: "UserID", Value: followeeIDstr}}
+		query_d := bson.D{{Key: "UserID", Value: followeeID}}
 		update_d := bson.D{
 			{Key: "$pull", Value: bson.D{
 				{Key: "followers", Value: bson.D{
-					{Key: "UserID", Value: userIDstr},
+					{Key: "UserID", Value: userID},
 				}},
 			}},
 		}

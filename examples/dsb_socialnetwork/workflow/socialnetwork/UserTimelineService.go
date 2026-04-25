@@ -24,14 +24,14 @@ type UserTimelineService interface {
 
 // The format of a single post in a user's timeline stored in the backend.
 type PostInfo struct {
-	PostID    int64
-	Timestamp int64
+	PostID    int64 `bson:"PostID"`
+	Timestamp int64 `bson:"Timestamp"`
 }
 
 // The format of a user's timeline stored in the backend.
 type UserPosts struct {
-	UserID int64
-	Posts  []PostInfo
+	UserID int64      `bson:"UserID"`
+	Posts  []PostInfo `bson:"Posts"`
 }
 
 // Implementation of [UserTimelineService]
@@ -83,7 +83,7 @@ func (u *UserTimelineServiceImpl) ReadUserTimeline(ctx context.Context, reqID in
 		}
 		query_d := bson.D{{Key: "UserID", Value: userID}}
 		projection_d := bson.D{
-		{Key: "posts", Value: bson.D{
+		{Key: "Posts", Value: bson.D{
 			{Key: "$slice", Value: bson.A{0, stop}},
 		}},
 	}
@@ -140,8 +140,9 @@ func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID i
 	if err != nil {
 		return err
 	}
-	results.All(ctx, &userPosts)
-
+	if err = results.All(ctx, &userPosts); err != nil {
+		return err
+	}
 	if len(userPosts) == 0 {
 		fmt.Println("Inserting new entry for", userID)
 		userPosts := UserPosts{UserID: userID, Posts: []PostInfo{{PostID: postID, Timestamp: timestamp}}}
@@ -151,15 +152,13 @@ func (u *UserTimelineServiceImpl) WriteUserTimeline(ctx context.Context, reqID i
 		}
 	} else {
 		fmt.Println("Adding a new post for user", userID)
-		postIDstr := strconv.FormatInt(postID, 10)
-		timestampstr := strconv.FormatInt(timestamp, 10)
 		update_d := bson.D{
 			{Key: "$push", Value: bson.D{
 				{Key: "Posts", Value: bson.D{
 					{Key: "$each", Value: bson.A{
 						bson.D{
-							{Key: "PostID", Value: postIDstr},
-							{Key: "Timestamp", Value: timestampstr},
+							{Key: "PostID", Value: postID},
+							{Key: "Timestamp", Value: timestamp},
 						},
 					}},
 					{Key: "$position", Value: 0},
