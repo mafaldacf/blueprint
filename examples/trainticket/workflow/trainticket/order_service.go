@@ -11,8 +11,8 @@ import (
 
 type OrderService interface {
 	QueryOrders(ctx context.Context, qi OrderInfo, accountId string) ([]Order, error)
-	CalculateSoldTicket(ctx context.Context, travelDate time.Time, trainNumber string) (SoldTicket, error)
-	SecurityInfoCheck(ctx context.Context, dateFrom time.Time, accountId string) (OrderSecurity, error)
+	CalculateSoldTicket(ctx context.Context, travelDate string, trainNumber string) (SoldTicket, error)
+	SecurityInfoCheck(ctx context.Context, dateFrom string, accountId string) (OrderSecurity, error)
 	GetOrderPrice(ctx context.Context, orderId string) (string, error)
 	PayOrder(ctx context.Context, orderId string) (bool, error)
 	AddCreateNewOrder(ctx context.Context, order Order) error
@@ -92,7 +92,7 @@ func (o *OrderServiceImpl) QueryOrders(ctx context.Context, qi OrderInfo, accoun
 	return nil, nil
 }
 
-func (o *OrderServiceImpl) CalculateSoldTicket(ctx context.Context, travelDate time.Time, trainNumber string) (SoldTicket, error) {
+func (o *OrderServiceImpl) CalculateSoldTicket(ctx context.Context, travelDate string, trainNumber string) (SoldTicket, error) {
 	orders, err := o.findByTravelDateAndTrainNumber(ctx, travelDate, trainNumber)
 	if err != nil {
 		return SoldTicket{}, err
@@ -128,7 +128,7 @@ func (o *OrderServiceImpl) CalculateSoldTicket(ctx context.Context, travelDate t
 	return cstr, nil
 }
 
-func (o *OrderServiceImpl) SecurityInfoCheck(ctx context.Context, dateFrom time.Time, accountId string) (OrderSecurity, error) {
+func (o *OrderServiceImpl) SecurityInfoCheck(ctx context.Context, dateFrom string, accountId string) (OrderSecurity, error) {
 	var result OrderSecurity
 	orders, err := o.findByAccountId(ctx, accountId)
 	if err != nil {
@@ -137,14 +137,15 @@ func (o *OrderServiceImpl) SecurityInfoCheck(ctx context.Context, dateFrom time.
 	countOrderInOneHour := 0
 	countTotalValidOrder := 0
 
-	dateFrom = dateFrom.Add(-1 * time.Hour)
+	dateFromTime, _ := time.Parse(time.DateTime, dateFrom)
+	dateFromTime = dateFromTime.Add(-1 * time.Hour)
 
 	for _, order := range orders {
 		if order.Status == ORDER_STATUS_NOT_PAID || order.Status == ORDER_STATUS_PAID || order.Status == ORDER_STATUS_COLLECTED {
 			countTotalValidOrder += 1
 		}
 		boughtDate, err := time.Parse(time.DateTime, order.BoughtDate)
-		if err == nil && boughtDate.After(dateFrom) {
+		if err == nil && boughtDate.After(dateFromTime) {
 			countOrderInOneHour++
 		}
 	}
@@ -307,7 +308,7 @@ func (o *OrderServiceImpl) ModifyOrder(ctx context.Context, id string, status in
 	}
 
 	filter := bson.D{{Key: "ID", Value: id}}
-	update := bson.D{{Key: "Status", Value: status}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "Status", Value: status}}}}
 	_, err = collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
@@ -348,7 +349,7 @@ func (o *OrderServiceImpl) GetTicketListByDateAndTripID(ctx context.Context, sea
 	return leftTicketInfo, nil
 }
 
-func (o *OrderServiceImpl) findByTravelDateAndTrainNumber(ctx context.Context, travelDate time.Time, trainNumber string) ([]Order, error) {
+func (o *OrderServiceImpl) findByTravelDateAndTrainNumber(ctx context.Context, travelDate string, trainNumber string) ([]Order, error) {
 	collection, err := o.orderDB.GetCollection(ctx, "order_db", "order")
 	if err != nil {
 		return nil, err
@@ -422,7 +423,7 @@ func (o *OrderServiceImpl) update(ctx context.Context, order Order) error {
 	if err != nil {
 		return err
 	}
-	if updated {
+	if !updated {
 		return fmt.Errorf("order not found for id (%s)", order.ID)
 	}
 	return nil

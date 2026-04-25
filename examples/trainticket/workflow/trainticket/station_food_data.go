@@ -1,11 +1,11 @@
 package trainticket
 
 type StationFoodStore struct {
-	ID           string
-	StationName  string
-	StoreName    string
-	Telephone    string
-	BusinessTime string
-	DeliveryFee  float64
-	Foods        Food
+	ID           string  `bson:"ID"`
+	StationName  string  `bson:"StationName"`
+	StoreName    string  `bson:"StoreName"`
+	Telephone    string  `bson:"Telephone"`
+	BusinessTime string  `bson:"BusinessTime"`
+	DeliveryFee  float64 `bson:"DeliveryFee"`
+	Foods        Food    `bson:"Foods"`
 }

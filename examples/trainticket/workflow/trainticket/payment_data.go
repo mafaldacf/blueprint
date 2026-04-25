@@ -1,24 +1,20 @@
 package trainticket
 
-type PaymentType string
-
-const (
-	PaymentType_P PaymentType = "P"
-	PaymentType_D PaymentType = "D"
-	PaymentType_O PaymentType = "O"
-	PaymentType_E PaymentType = "E"
-)
+const PaymentType_P = "P"
+const PaymentType_D = "D"
+const PaymentType_O = "O"
+const PaymentType_E = "E"
 
 type Payment struct {
-	ID          string
-	OrderID     string
-	UserID      string
-	Price       string
-	PaymentType PaymentType
+	ID          string `bson:"ID"`
+	OrderID     string `bson:"OrderID"`
+	UserID      string `bson:"UserID"`
+	Price       string `bson:"Price"`
+	PaymentType string `bson:"PaymentType"`
 }
 
 type Money struct {
-	ID     string
-	UserID string
-	Money  string
+	ID     string `bson:"ID"`
+	UserID string `bson:"UserID"`
+	Money  string `bson:"Money"`
 }

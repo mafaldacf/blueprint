@@ -1,11 +1,11 @@
 package trainticket
 
 type User struct {
-	UserID       string
-	Username     string
-	Password     string
-	Gender       int64
-	DocumentType int64
-	DocumentNum  string
-	Email        string
+	UserID       string `bson:"UserID"`
+	Username     string `bson:"Username"`
+	Password     string `bson:"Password"`
+	Gender       int64  `bson:"Gender"`
+	DocumentType int64  `bson:"DocumentType"`
+	DocumentNum  string `bson:"DocumentNum"`
+	Email        string `bson:"Email"`
 }

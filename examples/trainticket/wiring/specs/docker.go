@@ -4,7 +4,6 @@ import (
 	"github.com/blueprint-uservices/blueprint/blueprint/pkg/wiring"
 	"github.com/blueprint-uservices/blueprint/examples/trainticket/workflow/trainticket"
 	"github.com/blueprint-uservices/blueprint/plugins/cmdbuilder"
-	"github.com/blueprint-uservices/blueprint/plugins/gotests"
 	"github.com/blueprint-uservices/blueprint/plugins/mongodb"
 	"github.com/blueprint-uservices/blueprint/plugins/rabbitmq"
 	"github.com/blueprint-uservices/blueprint/plugins/workflow"
@@ -231,9 +230,6 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	dashboard_ctr := applyHTTPDefaults(spec, dashboard, "dashboard_proc", "dashboard_container")
 	containers = append(containers, dashboard_ctr)
 	allServices = append(allServices, dashboard)
-
-	tests := gotests.Test(spec, allServices...)
-	containers = append(containers, tests)
 
 	return containers, nil
 }

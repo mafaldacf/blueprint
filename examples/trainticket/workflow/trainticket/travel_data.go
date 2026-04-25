@@ -1,15 +1,15 @@
 package trainticket
 
 type Trip struct {
-	ID                  string
-	TripID              string
-	TrainTypeName       string
-	RouteID             string
-	StartStationName    string
-	StationsName        string
-	TerminalStationName string
-	StartTime           string
-	EndTime             string
+	ID                  string `bson:"ID"`
+	TripID              string `bson:"TripID"`
+	TrainTypeName       string `bson:"TrainTypeName"`
+	RouteID             string `bson:"RouteID"`
+	StartStationName    string `bson:"StartStationName"`
+	StationsName        string `bson:"StationsName"`
+	TerminalStationName string `bson:"TerminalStationName"`
+	StartTime           string `bson:"StartTime"`
+	EndTime             string `bson:"EndTime"`
 }
 
 type AdminTrip struct {

@@ -1,7 +1,7 @@
 package trainticket
 
 type Config struct {
-	Name        string
-	Value       string
-	Description string
+	Name        string `bson:"Name"`
+	Value       string `bson:"Value"`
+	Description string `bson:"Description"`
 }

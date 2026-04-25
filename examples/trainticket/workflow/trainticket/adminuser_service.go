@@ -1,8 +1,6 @@
 package trainticket
 
-import (
-	"context"
-)
+import "context"
 
 type AdminUserService interface {
 	GetAllUsers(ctx context.Context) ([]User, error)

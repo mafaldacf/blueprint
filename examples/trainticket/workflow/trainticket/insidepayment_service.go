@@ -85,7 +85,7 @@ func (s *InsidePaymentServiceImpl) Drawback(ctx context.Context, userID string, 
 	}
 
 	filter := bson.D{{Key: "UserID", Value: userID}}
-	update := bson.D{{Key: "Money", Value: money}, {Key: "Type", Value: INSIDE_MONEY_TYPE_DRAWBACK}}
+	update := bson.D{{Key: "$set", Value: bson.D{{Key: "Money", Value: money}, {Key: "Type", Value: INSIDE_MONEY_TYPE_DRAWBACK}}}}
 	_, err = collection.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err

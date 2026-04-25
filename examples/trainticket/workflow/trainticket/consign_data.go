@@ -15,15 +15,15 @@ type ConsignRequest struct {
 }
 
 type ConsignRecord struct {
-	ID         string
-	OrderID    string
-	AccountID  string
-	HandleDate string
-	TargetDate string
-	FromPlace  string
-	ToPlace    string
-	Consignee  string
-	Phone      string
-	Price      float64
-	Weight     float64
+	ID         string  `bson:"ID"`
+	OrderID    string  `bson:"OrderID"`
+	AccountID  string  `bson:"AccountID"`
+	HandleDate string  `bson:"HandleDate"`
+	TargetDate string  `bson:"TargetDate"`
+	FromPlace  string  `bson:"FromPlace"`
+	ToPlace    string  `bson:"ToPlace"`
+	Consignee  string  `bson:"Consignee"`
+	Phone      string  `bson:"Phone"`
+	Price      float64 `bson:"Price"`
+	Weight     float64 `bson:"Weight"`
 }

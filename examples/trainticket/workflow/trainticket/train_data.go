@@ -2,9 +2,9 @@
 package trainticket
 
 type TrainType struct {
-	ID           string
-	Name         string
-	EconomyClass int
-	ComfortClass int
-	AvgSpeed     int64
+	ID           string `bson:"ID"`
+	Name         string `bson:"Name"`
+	EconomyClass int    `bson:"EconomyClass"`
+	ComfortClass int    `bson:"ComfortClass"`
+	AvgSpeed     int64  `bson:"AvgSpeed"`
 }

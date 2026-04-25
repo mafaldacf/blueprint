@@ -272,7 +272,8 @@ func (t *TravelServiceImpl) save(ctx context.Context, trip Trip) error {
 	if err != nil {
 		return err
 	}
-	return collection.InsertOne(ctx, trip)
+	_, err = collection.Upsert(ctx, bson.D{{Key: "TripID", Value: trip.TripID}}, trip)
+	return err
 }
 
 func (t *TravelServiceImpl) findByTripId(ctx context.Context, tripId string) (Trip, error) {
@@ -333,7 +334,7 @@ func (t *TravelServiceImpl) findAll(ctx context.Context) ([]Trip, error) {
 	}
 
 	var trips []Trip
-	err = cursor.All(ctx, trips)
+	err = cursor.All(ctx, &trips)
 	if err != nil {
 		return nil, err
 	}

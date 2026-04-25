@@ -1,7 +1,5 @@
 package trainticket
 
-import "time"
-
 const (
 	ORDER_STATUS_NOT_PAID  = iota // 0
 	ORDER_STATUS_PAID             // 1
@@ -24,22 +22,22 @@ const (
 )
 
 type Order struct {
-	ID                     string
-	BoughtDate             string
-	TravelDate             string
-	TravelTime             string
-	AccountID              string
-	ContactsName           string
-	DocumentType           int
-	ContactsDocumentNumber string
-	TrainNumber            string
-	CoachNumber            int
-	SeatClass              int
-	SeatNumber             string
-	FromStation            string
-	ToStation              string
-	Status                 int
-	Price                  string
+	ID                     string `bson:"ID"`
+	BoughtDate             string `bson:"BoughtDate"`
+	TravelDate             string `bson:"TravelDate"`
+	TravelTime             string `bson:"TravelTime"`
+	AccountID              string `bson:"AccountID"`
+	ContactsName           string `bson:"ContactsName"`
+	DocumentType           int    `bson:"DocumentType"`
+	ContactsDocumentNumber string `bson:"ContactsDocumentNumber"`
+	TrainNumber            string `bson:"TrainNumber"`
+	CoachNumber            int    `bson:"CoachNumber"`
+	SeatClass              int    `bson:"SeatClass"`
+	SeatNumber             string `bson:"SeatNumber"`
+	FromStation            string `bson:"FromStation"`
+	ToStation              string `bson:"ToStation"`
+	Status                 int    `bson:"Status"`
+	Price                  string `bson:"Price"`
 }
 
 type LeftTicketInfo struct {
@@ -58,7 +56,7 @@ type OrderSecurity struct {
 }
 
 type SoldTicket struct {
-	TravelDate      time.Time
+	TravelDate      string
 	TrainNumber     string
 	NoSeat          int
 	BusinessSeat    int

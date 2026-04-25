@@ -1,9 +1,9 @@
 package trainticket
 
 type InsideMoney struct {
-	UserID string
-	Money  string
-	Type   MoneyType
+	UserID string `bson:"UserID"`
+	Money  string `bson:"Money"`
+	Type   string `bson:"Type"`
 }
 
 const (
@@ -18,12 +18,7 @@ type PaymentInfo struct {
 	Price   string
 }
 
-type MoneyType string
-
-const (
-	MoneyType_A MoneyType = "A"
-)
-
+const MoneyType_A = "A"
 type AccountInfo struct {
 	UserId string
 	Money  string

@@ -177,7 +177,7 @@ func (s *StationServiceImpl) FindAll(ctx context.Context) ([]Station, error) {
 		return nil, err
 	}
 	var stations []Station
-	err = cursor.All(ctx, stations)
+	err = cursor.All(ctx, &stations)
 	if err != nil {
 		return nil, err
 	}
