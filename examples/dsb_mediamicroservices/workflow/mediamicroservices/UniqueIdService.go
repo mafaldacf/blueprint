@@ -8,9 +8,8 @@ import (
 	"time"
 )
 
-
 type UniqueIdService interface {
-	UploadUniqueId(ctx context.Context, reqID int64) error
+	UploadNewUniqueId(ctx context.Context, reqID int64) error
 }
 
 type UniqueIdServiceImpl struct {
@@ -25,7 +24,7 @@ func NewUniqueIdServiceImpl(ctx context.Context, composeReviewService ComposeRev
 	return s, nil
 }
 
-func (s *UniqueIdServiceImpl) UploadUniqueId(ctx context.Context, reqID int64) error {
+func (s *UniqueIdServiceImpl) UploadNewUniqueId(ctx context.Context, reqID int64) error {
 	reviewID, err := s.GenerateUniqueId()
 	if err != nil {
 		return err

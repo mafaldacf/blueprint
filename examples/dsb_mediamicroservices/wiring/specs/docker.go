@@ -23,11 +23,16 @@ var Docker = cmdbuilder.SpecOption{
 func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	var containers []string
 
-	compose_review_cache := memcached.Container(spec, "compose_review_cache")
+	// notes:
+	// - memcached does not support increment operation when key does not exist yet 
+	// 		=> use redis for caching movieid and uniqueid
+	// - memcached does not support keys with spaces 
+	// 		=> use redis for caching compose review data which has keys with spaces for title (e.g. "123:text")
+	compose_review_cache := redis.Container(spec, "compose_review_cache")
 	user_review_db := mongodb.Container(spec, "user_review_db")
 	user_review_cache := memcached.Container(spec, "user_review_cache")
 	movieid_db := mongodb.Container(spec, "movie_id_db")
-	movieid_cache := memcached.Container(spec, "movie_id_cache")
+	movieid_cache := redis.Container(spec, "movie_id_cache")
 	review_storage_db := mongodb.Container(spec, "review_storage_db")
 	review_storage_cache := memcached.Container(spec, "review_storage_cache")
 	movie_review_db := mongodb.Container(spec, "movie_review_db")
@@ -38,7 +43,7 @@ func makeDockerSpec(spec wiring.WiringSpec) ([]string, error) {
 	movieinfo_cache := memcached.Container(spec, "movie_info_cache")
 	socialgraph_db := mongodb.Container(spec, "social_graph_db")
 	castinfo_db := mongodb.Container(spec, "cast_info_db")
-	castinfo_cache := mongodb.Container(spec, "cast_info_cache")
+	castinfo_cache := memcached.Container(spec, "cast_info_cache")
 	plot_db := mongodb.Container(spec, "plot_db")
 	plot_cache := memcached.Container(spec, "plot_cache")
 	rating_cache := redis.Container(spec, "rating_cache")

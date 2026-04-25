@@ -97,7 +97,7 @@ func (api *APIServiceImpl) RegisterMovie(ctx context.Context, req RegisterMovieR
 		return MovieId{}, MovieInfo{}, Plot{}, err
 	}
 
-	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, req.reqID, movie.MovieID, req.title, casts, req.plotID, 
+	movieInfo, err := api.movieInfoService.WriteMovieInfo(ctx, req.reqID, movie.MovieID, req.title, casts, req.plotID,
 		req.thumbnailIDs, req.photoIDs, req.videoIDs, req.avgRating, req.numRating)
 	if err != nil {
 		return MovieId{}, MovieInfo{}, Plot{}, err
@@ -149,13 +149,13 @@ func (api *APIServiceImpl) UploadUserWithUsername(ctx context.Context, reqID int
 }
 
 func (api *APIServiceImpl) UploadText(ctx context.Context, reqID int64, text string) error {
-	return api.textService.UploadText(ctx, reqID, text)
+	return api.textService.UploadNewText(ctx, reqID, text)
 }
 
 func (api *APIServiceImpl) UploadMovieId(ctx context.Context, reqID int64, title string, rating int) error {
-	return api.movieIdService.UploadMovieId(ctx, reqID, title, rating)
+	return api.movieIdService.UploadNewMovieId(ctx, reqID, title, rating)
 }
 
 func (api *APIServiceImpl) UploadUniqueId(ctx context.Context, reqID int64) error {
-	return api.uniqueIdService.UploadUniqueId(ctx, reqID)
+	return api.uniqueIdService.UploadNewUniqueId(ctx, reqID)
 }

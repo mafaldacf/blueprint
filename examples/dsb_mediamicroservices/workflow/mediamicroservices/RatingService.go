@@ -7,7 +7,7 @@ import (
 )
 
 type RatingService interface {
-	UploadRating(ctx context.Context, reqID int64, movieID string, rating int) error
+	UploadNewRating(ctx context.Context, reqID int64, movieID string, rating int) error
 }
 
 type RatingServiceImpl struct {
@@ -20,7 +20,7 @@ func NewRatingServiceImpl(ctx context.Context, cache backend.Cache, composeRevie
 	return s, nil
 }
 
-func (s *RatingServiceImpl) UploadRating(ctx context.Context, reqID int64, movieID string, rating int) error {
+func (s *RatingServiceImpl) UploadNewRating(ctx context.Context, reqID int64, movieID string, rating int) error {
 	err := s.composeReviewService.UploadRating(ctx, reqID, rating)
 	if err != nil {
 		return err

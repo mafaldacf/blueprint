@@ -10,13 +10,13 @@ import (
 )
 
 type UserReviewData struct {
-	ReviewID  int64
-	Timestamp int64
+	ReviewID  int64 `bson:"ReviewID"`
+	Timestamp int64 `bson:"Timestamp"`
 }
 
 type UserReview struct {
-	UserID  int64 `bson:"_id"`
-	Reviews []UserReviewData
+	UserID  int64            `bson:"UserID"`
+	Reviews []UserReviewData `bson:"Reviews"`
 }
 
 type UserReviewService interface {
@@ -116,12 +116,12 @@ func (s *UserReviewServiceImpl) ReadUserReviews(ctx context.Context, reqID int64
 	db_start := start + len(reviewIds)
 	var new_reviews_ids []int64
 	if db_start < stop {
-		collection, err := s.database.GetCollection(ctx, "movie_review_db", "movie_review")
+		collection, err := s.database.GetCollection(ctx, "user_review_db", "user_review")
 		if err != nil {
 			return nil, err
 		}
 
-		query := bson.D{{Key: "UserID", Value: userIDStr}}
+		query := bson.D{{Key: "UserID", Value: userID}}
 
 		projection := bson.D{
 			{Key: "posts", Value: bson.D{

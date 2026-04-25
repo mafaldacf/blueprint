@@ -10,10 +10,10 @@ import (
 )
 
 type CastInfo struct {
-	CastInfoID string `bson:"_id"`
-	Name       string
-	Gender     string
-	Intro      string
+	CastInfoID string `bson:"CastInfoID"`
+	Name       string `bson:"Name"`
+	Gender     string `bson:"Gender"`
+	Intro      string `bson:"Intro"`
 }
 
 type CastInfoService interface {
@@ -117,7 +117,7 @@ func (s *CastInfoServiceImpl) ReadCastInfos(ctx context.Context, reqID int64, ca
 
 		// append to return values
 		ret_cast_infos = append(ret_cast_infos, new_cast_infos...)
-		
+
 		// update cast-info to memcached
 		for _, new_cast_info := range new_cast_infos {
 			s.cache.Put(ctx, new_cast_info.CastInfoID, new_cast_info)

@@ -10,10 +10,10 @@ import (
 const NUM_COMPONENTS = 5
 
 type ComposeReview struct {
-	MovieID string `bson:"_id"`
-	Title   string
-	CastID  string
-	PlotID  string
+	MovieID string `bson:"MovieID"`
+	Title   string `bson:"Title"`
+	CastID  string `bson:"CastID"`
+	PlotID  string `bson:"PlotID"`
 }
 
 type ComposeReviewService interface {
@@ -45,7 +45,7 @@ func (s *ComposeReviewServiceImpl) _ComposeAndUpload(ctx context.Context, reqID 
 
 	var newReview Review
 	var keys = []string{keyUniqueID, keyMovieID, keyUserID, keyText, keyRating}
-	var vals []interface{}
+	vals := []interface{}{new(int64), new(string), new(int64), new(string), new(int)}
 	err := s.cache.Mget(ctx, keys, vals)
 	if err != nil {
 		return err
@@ -55,15 +55,15 @@ func (s *ComposeReviewServiceImpl) _ComposeAndUpload(ctx context.Context, reqID 
 		key := keys[i]
 		switch key {
 		case keyUniqueID:
-			newReview.ReviewID = val.(int64)
+			newReview.ReviewID = *val.(*int64)
 		case keyMovieID:
-			newReview.MovieID = val.(string)
+			newReview.MovieID = *val.(*string)
 		case keyUserID:
-			newReview.UserID = val.(int64)
+			newReview.UserID = *val.(*int64)
 		case keyText:
-			newReview.Text = val.(string)
+			newReview.Text = *val.(*string)
 		case keyRating:
-			newReview.Rating = val.(int)
+			newReview.Rating = *val.(*int)
 		}
 	}
 
@@ -113,8 +113,7 @@ func (s *ComposeReviewServiceImpl) UploadRating(ctx context.Context, reqID int64
 	// Store rating to memcached
 	var counterValue int64
 	keyUserID := strconv.FormatInt(reqID, 10) + ":rating"
-	ratingStr := strconv.Itoa(rating)
-	err := s.cache.Put(ctx, keyUserID, ratingStr)
+	err := s.cache.Put(ctx, keyUserID, rating)
 	if err != nil {
 		return err
 	}
@@ -180,8 +179,7 @@ func (s *ComposeReviewServiceImpl) UploadUserId(ctx context.Context, reqID int64
 	// Store user_id to memcached
 	var counterValue int64
 	keyUserID := strconv.FormatInt(reqID, 10) + ":user_id"
-	userIDStr := strconv.FormatInt(userID, 10)
-	err := s.cache.Put(ctx, keyUserID, userIDStr)
+	err := s.cache.Put(ctx, keyUserID, userID)
 	if err != nil {
 		return err
 	}

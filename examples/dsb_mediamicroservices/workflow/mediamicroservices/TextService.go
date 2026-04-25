@@ -5,14 +5,14 @@ import (
 )
 
 type Text struct {
-	MovieID string `bson:"_id"`
-	Title   string
-	CastID  string
-	PlotID  string
+	MovieID string `bson:"MovieID"`
+	Title   string `bson:"Title"`
+	CastID  string `bson:"CastID"`
+	PlotID  string `bson:"PlotID"`
 }
 
 type TextService interface {
-	UploadText(ctx context.Context, reqID int64, text string) error
+	UploadNewText(ctx context.Context, reqID int64, text string) error
 }
 
 type TextServiceImpl struct {
@@ -24,6 +24,6 @@ func NewTextServiceImpl(ctx context.Context, composeReviewService ComposeReviewS
 	return s, nil
 }
 
-func (s *TextServiceImpl) UploadText(ctx context.Context, reqID int64, text string) error {
+func (s *TextServiceImpl) UploadNewText(ctx context.Context, reqID int64, text string) error {
 	return s.composeReviewService.UploadText(ctx, reqID, text)
 }
